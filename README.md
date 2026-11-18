@@ -1,12 +1,12 @@
-# 💜 Portafolio Profesional · Allison Vargas
+# Portafolio Profesional · Allison Vargas
 
 Portafolio personal de **Allison Rocío Vargas Mejía**, técnico en desarrollo de software en formación en **Campuslands Guatemala**.
 
-🔗 **Sitio en vivo:** https://allisonrvargas.github.io/portafolio_profesional/
+**Sitio en vivo:** https://allisonrvargas.github.io/portafolio_profesional/
 
 ---
 
-## ✨ Secciones
+## Secciones
 
 | Sección | Contenido |
 | --- | --- |
@@ -18,7 +18,7 @@ Portafolio personal de **Allison Rocío Vargas Mejía**, técnico en desarrollo 
 | **Cómo trabajo** | Mi proceso: entender, diseñar, construir y probar, y entregar |
 | **Contacto** | Correo, LinkedIn, GitHub y CV en PDF |
 
-## 🎨 Características
+## Características
 
 - Diseño responsivo para computadora, tablet y celular.
 - Modo claro y oscuro, que se recuerda entre visitas.
@@ -27,7 +27,7 @@ Portafolio personal de **Allison Rocío Vargas Mejía**, técnico en desarrollo 
 - Menú adaptable para celular.
 - Sin frameworks: HTML, CSS y JavaScript puro.
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
@@ -36,7 +36,7 @@ Portafolio personal de **Allison Rocío Vargas Mejía**, técnico en desarrollo 
 
 Tipografías: Instrument Serif, Manrope y JetBrains Mono (Google Fonts).
 
-## 📁 Estructura
+## Estructura
 
 ```
 portafolio_profesional/
@@ -52,7 +52,7 @@ portafolio_profesional/
 └── README.md
 ```
 
-## 🚀 Cómo verlo en local
+## Cómo verlo en local
 
 1. Clona el repositorio:
    ```bash
@@ -60,7 +60,7 @@ portafolio_profesional/
    ```
 2. Abre `index.html` en el navegador, o usa la extensión **Live Server** de VS Code.
 
-## ➕ Cómo agregar un proyecto
+## Cómo agregar un proyecto
 
 Los proyectos están en el arreglo `proyectos` de `js/main.js`. Para agregar uno, copia un objeto y cambia sus datos:
 
@@ -76,7 +76,7 @@ Los proyectos están en el arreglo `proyectos` de `js/main.js`. Para agregar uno
 }
 ```
 
-## 📬 Contacto
+## Contacto
 
 - **Correo:** av503640@gmail.com
 - **LinkedIn:** [linkedin.com/in/allisonrvargas](https://www.linkedin.com/in/allisonrvargas)
