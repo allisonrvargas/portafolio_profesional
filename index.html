@@ -185,7 +185,13 @@
             <span class="url tiny" id="appUrl"></span>
           </div>
           <div class="screen-frame">
-            <iframe id="appFrame" title="Aplicación" loading="lazy"></iframe>
+            <iframe id="appFrame" title="Aplicación" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            <div class="app-ph" id="appPlaceholder" hidden>
+              <div class="ph-icon" aria-hidden="true">▶</div>
+              <p class="ph-title">Esta aplicación se juega en su propia ventana</p>
+              <p>Usa un menú con ventanas emergentes que no puede funcionar dentro de otra página.</p>
+              <a class="pix-btn big" id="phOpen" target="_blank" rel="noopener">JUGAR <small>se abre en otra pestaña</small></a>
+            </div>
           </div>
           <div class="screen-info">
             <div>

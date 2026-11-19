@@ -19,41 +19,14 @@ const proyectos = [
   { t: 'Simulador de personalidades', cat: ['ia', 'frontend'], d: 'Chat que cambia la personalidad de un modelo de IA (Animador, Estricto o Mentor) con prompts basados en los rasgos del modelo Big Five.', tags: ['JavaScript', 'Prompts', 'API de IA'], nota: 'Inteligencia Artificial' }
 ];
 
+
+const aplicaciones = [
+  { n: 'CampusShop', url: 'https://allisonrvargas.github.io/Campushop/', code: GH + 'Campushop', d: 'Tienda en línea mobile-first con catálogo, carrito, checkout, perfil e historial, maquetada solo con HTML y CSS.', tags: ['HTML5', 'CSS3', 'Mobile-first'] },
+  { n: 'Campus Parking', url: 'https://allisonrvargas.github.io/Campus-Parking/', code: GH + 'Campus-Parking', d: 'Aplicación de una sola página para administrar un estacionamiento: inicio de sesión, mapa de espacios, servicios y reportes.', tags: ['HTML', 'CSS', 'JavaScript'] },
+  { n: 'Gestión de Hotel', url: 'https://allisonrvargas.github.io/Taller-1-Allis-y-Sofi/', code: GH + 'Taller-1-Allis-y-Sofi', d: 'Taller en pareja: la lógica de un hotel con arreglos de objetos, funciones, callbacks y setTimeout para simular procesos reales. Funciona con un menú de ventanas emergentes, por eso se abre en su propia pestaña.', tags: ['JavaScript', 'Callbacks', 'Asincronía'], embed: false }
+];
+
 const catName = { backend: 'Backend', frontend: 'Frontend', movil: 'Móvil', datos: 'Datos', ia: 'IA y automatización' };
-
-const cartas = [
-  { a: 'JS', n: 'JavaScript', tipo: 'Lenguaje', c: ['#ec4899', '#f9a8d4'], u: 'Campus Parking, Simulador de personalidades y todos mis proyectos de Node.js.' },
-  { a: 'TS', n: 'TypeScript', tipo: 'Lenguaje', c: ['#db2777', '#f472b6'], u: 'El motor de movimiento de Kid-Fit.' },
-  { a: 'NODE', n: 'Node.js', tipo: 'Backend', c: ['#be185d', '#f472b6'], u: 'Gym Manager, API de postulaciones, Librarian y Gremio de Cazadores.' },
-  { a: 'EXP', n: 'Express', tipo: 'Backend', c: ['#9d174d', '#ec4899'], u: 'MarisolliFlix, Librarian y mis APIs REST con JWT.' },
-  { a: 'RN', n: 'React Native', tipo: 'Móvil', c: ['#a21caf', '#f0abfc'], u: 'Kid-Fit, la app de ejercicio para niños.' },
-  { a: 'HTML', n: 'HTML y CSS', tipo: 'Frontend', c: ['#ec4899', '#fda4af'], u: 'CampusShop, Campus Parking y este portafolio.' },
-  { a: 'SQL', n: 'MySQL', tipo: 'Datos', c: ['#db2777', '#fbcfe8'], u: 'Gaseosas del Valle, MarisolliFlix y la API de postulaciones.' },
-  { a: 'PG', n: 'PostgreSQL', tipo: 'Datos', c: ['#be185d', '#f9a8d4'], u: 'TechZone y la veterinaria.' },
-  { a: 'MDB', n: 'MongoDB', tipo: 'Datos', c: ['#9d174d', '#f472b6'], u: 'Gym Manager, con transacciones y agregaciones.' },
-  { a: 'PY', n: 'Python', tipo: 'Lenguaje', c: ['#a21caf', '#f9a8d4'], u: 'Scripts y mis primeros ejercicios de programación.' },
-  { a: 'DKR', n: 'Docker', tipo: 'Herramienta', c: ['#ec4899', '#c4b5fd'], u: 'MySQL para la API de postulaciones y el replica set de Gym Manager.' },
-  { a: 'GIT', n: 'Git y GitHub', tipo: 'Herramienta', c: ['#db2777', '#fda4af'], u: 'Ramas por funcionalidad, pull requests y code reviews en Kid-Fit.' },
-  { a: 'n8n', n: 'n8n', tipo: 'Automatización', c: ['#be185d', '#fcd34d'], u: 'TutorBot, con Telegram y Google Sheets.' },
-  { a: 'IA', n: 'IA aplicada', tipo: 'IA', c: ['#9d174d', '#c4b5fd'], u: 'MediaPipe en Kid-Fit, embeddings con Gemini y Qdrant.' },
-  { a: 'TEST', n: 'Jest y node:test', tipo: 'Calidad', c: ['#a21caf', '#5eead4'], u: '123 pruebas en la API de postulaciones y 26 en Librarian.' },
-  { a: 'SCRUM', n: 'Scrum', tipo: 'Equipo', c: ['#ec4899', '#5eead4'], u: 'Sprints de Kid-Fit, MarisolliFlix y Gym Manager en ClickUp.' }
-];
-
-const logros = [
-  { i: '>_', t: 'Primer commit', d: 'Empecé mi camino con Git y GitHub.' },
-  { i: '◉', t: 'Visión artificial', d: 'Reconocimiento de movimientos con MediaPipe en Kid-Fit.' },
-  { i: '✔', t: '123 pruebas en verde', d: 'Toda la suite de la API de postulaciones pasando.' },
-  { i: '↺', t: 'Rollback maestro', d: 'Transacciones reales en MongoDB en Gym Manager.' },
-  { i: '3x', t: 'Triple rol', d: 'Product Owner, Scrum Master y desarrolladora a la vez.' },
-  { i: '⛨', t: 'Guardiana de APIs', d: 'JWT, Passport, roles y límites de peticiones.' },
-  { i: '#', t: 'Cero JavaScript', d: 'Una tienda completa solo con HTML y CSS.' },
-  { i: '⇄', t: 'Code review cruzado', d: 'Revisé y aprobé código de otras células.' },
-  { i: '∿', t: 'Vectores', d: 'Embeddings con Gemini guardados en Qdrant.' },
-  { i: '⚙', t: 'Automatizadora', d: 'Un bot de Telegram con n8n y Google Sheets.' },
-  { i: '▦', t: 'Arquitecta de datos', d: 'Triggers, funciones, vistas y procedimientos en MySQL.' },
-  { i: 'B1', t: 'Políglota', d: 'Inglés nivel B1 y subiendo.' }
-];
 
 /* ============ SONIDO ============ */
 let ctx = null, master = null, analyser = null, soundOn = false;
@@ -136,7 +109,7 @@ const tl = $('#tracklist');
 pistas.forEach((p, i) => {
   const li = document.createElement('li');
   li.innerHTML = `<button type="button"><span>${p.name}</span></button>`;
-  li.firstChild.addEventListener('click', () => { track = i; soundOn = true; $('#soundBtn').setAttribute('aria-pressed', 'true'); play(); unlockAch('dj'); });
+  li.firstChild.addEventListener('click', () => { track = i; soundOn = true; $('#soundBtn').setAttribute('aria-pressed', 'true'); play(); });
   tl.appendChild(li);
 });
 function updatePlayer() {
@@ -167,7 +140,7 @@ function start(withMusic) {
   if (withMusic) { setSound(true); } else { audio(); }
   sfx('start');
   showToast('▶', 'PARTIDA INICIADA', '¡Que empiece la aventura!');
-  document.getElementById('jugadora').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('sobre-mi').scrollIntoView({ behavior: 'smooth' });
 }
 $('#startMusic').addEventListener('click', () => start(true));
 $('#startQuiet').addEventListener('click', () => start(false));
@@ -195,10 +168,10 @@ function hash(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(
 function pixelArt(name, w = 12, h = 8) {
   let x = hash(name);
   const rnd = () => (x = Math.imul(x ^ (x >>> 15), 2246822507) ^ Math.imul(x ^ (x >>> 13), 3266489909), (x >>> 0) / 4294967296);
-  const pal = ['#ec4899', '#f472b6', '#f9a8d4', '#fbcfe8', '#db2777', '#be185d'];
+  const pal = ['#ec4899', '#f472b6', '#f9a8d4', '#db2777', '#be185d', '#f9a8d4'];
   const base = Math.floor(rnd() * pal.length);
-  let r = `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${w}" height="${h}" fill="#26102c"/>`;
-  for (let i = 0; i < 18; i++) r += `<rect x="${Math.floor(rnd() * w)}" y="${Math.floor(rnd() * h)}" width="1" height="1" fill="#3b1a44"/>`;
+  let r = `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${w}" height="${h}" fill="#fff0f7"/>`;
+  for (let i = 0; i < 18; i++) r += `<rect x="${Math.floor(rnd() * w)}" y="${Math.floor(rnd() * h)}" width="1" height="1" fill="#fde2ef"/>`;
   const half = w / 2;
   for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < half; xx++) {
     if (rnd() < 0.55) {
@@ -244,42 +217,35 @@ $('#mClose').addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
 
-// Mazo
-const deck = $('#deck');
-cartas.forEach((c, i) => {
-  const el = document.createElement('button');
-  el.type = 'button'; el.className = 'card reveal';
-  el.setAttribute('aria-label', `${c.n}: ${c.u}`);
-  el.innerHTML = `<div class="card-in">
-    <div class="face front" style="--c1:${c.c[0]};--c2:${c.c[1]}"><span class="abbr">${c.a}</span><span class="name">${c.n}</span><span class="type">${c.tipo.toUpperCase()}</span></div>
-    <div class="face back"><span class="tiny">USADA EN</span><p>${c.u}</p></div></div>`;
-  el.addEventListener('click', () => { el.classList.toggle('flip'); sfx('blip'); });
-  deck.appendChild(el);
-});
 
-// Logros
-const achEl = $('#achievements');
-logros.forEach(l => {
-  const d = document.createElement('div');
-  d.className = 'ach';
-  d.innerHTML = `<div class="ic">${l.i}</div><div><h4>${l.t}</h4><p>${l.d}</p></div>`;
-  achEl.appendChild(d);
+// Aplicaciones (demos insertadas)
+const carts = $('#cartridges'), frame = $('#appFrame');
+let appLoaded = false, appIndex = 0;
+function showApp(i, load) {
+  appIndex = i; const a = aplicaciones[i];
+  carts.querySelectorAll('button').forEach((b, k) => { b.classList.toggle('on', k === i); b.setAttribute('aria-selected', k === i); });
+  $('#appUrl').textContent = a.url.replace('https://', '');
+  $('#appName').textContent = a.n; $('#appDesc').textContent = a.d;
+  $('#appTags').innerHTML = '<span>HECHO CON</span>' + a.tags.map(t => `<i>${t}</i>`).join('');
+  $('#appOpen').href = a.url; $('#appCode').href = a.code;
+  const ph = $('#appPlaceholder');
+  if (a.embed === false) {
+    frame.removeAttribute('src'); frame.hidden = true; ph.hidden = false;
+    $('#phOpen').href = a.url;
+    return;
+  }
+  frame.hidden = false; ph.hidden = true;
+  if (load || appLoaded) { frame.src = a.url; frame.title = 'Aplicación ' + a.n; appLoaded = true; }
+}
+aplicaciones.forEach((a, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'cart'; b.setAttribute('role', 'tab');
+  b.innerHTML = `${pixelArt(a.n, 8, 6)}<span>${a.n}</span>`;
+  b.addEventListener('click', () => { showApp(i, true); sfx('open'); });
+  carts.appendChild(b);
 });
-$('#achTotal').textContent = logros.length;
-let achDone = 0, achStarted = false;
-function unlockLogros() {
-  if (achStarted) return; achStarted = true;
-  const items = [...achEl.children];
-  items.forEach((el, i) => setTimeout(() => {
-    el.classList.add('on', 'pop'); achDone++; $('#achCount').textContent = achDone;
-    if (i < 3 || i === items.length - 1) { sfx('unlock'); showToast(logros[i].i, 'LOGRO DESBLOQUEADO', logros[i].t); }
-  }, 350 + i * 260));
-}
-const extra = {};
-function unlockAch(key) {
-  if (extra[key]) return; extra[key] = true;
-  if (key === 'dj') showToast('♪', 'LOGRO SECRETO', 'DJ de la partida');
-}
+showApp(0, false);
+new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { showApp(appIndex, true); ob.disconnect(); } }), { rootMargin: '300px' }).observe(frame);
 
 // Toasts
 function showToast(ic, small, text) {
@@ -306,7 +272,7 @@ function onScroll() {
   menu.querySelectorAll('a').forEach(a => a.classList.toggle('here', a.getAttribute('href') === '#' + current.id));
   if (current.id !== 'start' && !seen.has(current.id)) {
     seen.add(current.id);
-    if (current.id !== 'logros') { sfx('blip'); showToast('★', current.dataset.level + ' ALCANZADO', current.querySelector('h2').textContent); }
+    sfx('blip'); showToast('★', current.dataset.level === 'CONTACTO' ? 'ÚLTIMO NIVEL' : current.dataset.level + ' ALCANZADO', current.querySelector('h2').textContent);
   }
 }
 addEventListener('scroll', onScroll, { passive: true });
@@ -318,7 +284,6 @@ const io = new IntersectionObserver(es => es.forEach(e => {
   e.target.classList.add('in'); io.unobserve(e.target);
 }), { threshold: 0.12 });
 $$('.reveal, .pixel-box').forEach(el => { el.classList.add('reveal'); io.observe(el); });
-new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { unlockLogros(); ob.disconnect(); } }), { threshold: 0.25 }).observe(achEl);
 
 // Cielo pixelado: estrellas y bloques flotantes
 const cv = $('#sky'), g = cv.getContext('2d');
@@ -334,7 +299,7 @@ function draw(t) {
   const off = scrollY;
   stars.forEach(s => {
     const a = 0.35 + 0.65 * Math.abs(Math.sin(t / 900 + s.p));
-    g.fillStyle = `rgba(255,228,242,${a})`;
+    g.fillStyle = `rgba(236,72,153,${a * 0.55})`;
     const y = ((s.y - off * 0.08) % H + H) % H;
     g.fillRect(Math.round(s.x), Math.round(y), s.s, s.s);
   });
@@ -342,7 +307,7 @@ function draw(t) {
     if (!reduce) c.y -= c.v;
     if (c.y < -20) { c.y = H + 20; c.x = Math.random() * W; }
     const y = ((c.y - off * c.d * 0.25) % (H + 40) + H + 40) % (H + 40) - 20;
-    g.globalAlpha = 0.35; g.fillStyle = c.c;
+    g.globalAlpha = 0.28; g.fillStyle = c.c;
     g.fillRect(Math.round(c.x), Math.round(y), c.s, c.s);
     g.globalAlpha = 0.5; g.fillStyle = '#fff';
     g.fillRect(Math.round(c.x), Math.round(y), c.s / 4, c.s / 4);
