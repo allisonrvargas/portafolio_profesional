@@ -1,66 +1,372 @@
+/* ============ DATOS ============ */
+const GH = 'https://github.com/allisonrvargas/';
+
 const proyectos = [
-  {t:'Kid-Fit',cat:['movil'],d:'App móvil que cuenta ejercicios con la cámara del teléfono y registra la hidratación de niños de 5 a 13 años. Aporté al motor de movimiento: validación de la caída del salto y pruebas a distintos FPS.',tags:['React Native','TypeScript','MediaPipe','Jest'],link:'https://github.com/allisonrvargas/Kid_Fit_allison-vargas',c:['#ec4899','#fbcfe8'],ic:'move'},
-  {t:'Gym Manager CLI',cat:['backend','datos'],d:'Aplicación de consola para un gimnasio: clientes, planes, contratos, seguimiento, nutrición y finanzas. Transacciones en MongoDB con rollback, SOLID y patrones de diseño.',tags:['Node.js','MongoDB','Docker','Scrum'],link:'https://github.com/allisonrvargas/gym_manager',c:['#f472b6','#fde2ef'],ic:'term'},
-  {t:'MarisolliFlix',cat:['backend','frontend'],d:'Plataforma para reseñar películas, series y animes, con un ranking ponderado, likes y dislikes, panel de administración y API documentada.',tags:['Express','MySQL','JWT','Swagger'],nota:'Proyecto en equipo',c:['#db2777','#f9a8d4'],ic:'star'},
-  {t:'Librarian',cat:['backend','frontend'],d:'Sistema de biblioteca con préstamos, ventas, clientes e inventario. Roles de administrador y usuario, tres límites de peticiones y 26 pruebas.',tags:['Express 5','express-rate-limit','Vite','node:test'],link:'https://github.com/allisonrvargas/review_express_backend',c:['#f9a8d4','#fff1f7'],ic:'book'},
-  {t:'API de postulaciones',cat:['backend','datos'],d:'API REST que calcula el puntaje y la prioridad de cada candidato a una vacante. Reglas de negocio, filtros, control de estados y 123 pruebas.',tags:['Express','MySQL','Jest','Docker'],link:'https://github.com/allisonrvargas/evaluacion-allison_rocio_vargas_mejia',c:['#ec4899','#fda4af'],ic:'list'},
-  {t:'Gremio de Cazadores',cat:['backend'],d:'API REST modular y segura con autenticación por JWT y Passport.js, organizada en una arquitectura limpia por capas.',tags:['Node.js','Express','Passport','JWT'],link:'https://github.com/allisonrvargas/jwt_and_passport',c:['#be185d','#f472b6'],ic:'lock'},
-  {t:'Campus Parking',cat:['frontend'],d:'Aplicación de una sola página para administrar un estacionamiento: inicio de sesión, mapa de espacios, servicios de parqueo y reportes.',tags:['HTML','CSS','JavaScript'],link:'https://github.com/allisonrvargas/Campus-Parking',c:['#ec4899','#fbcfe8'],ic:'car'},
-  {t:'CampusShop',cat:['frontend'],d:'Tienda en línea mobile-first con catálogo, carrito, checkout, perfil e historial, maquetada solo con HTML y CSS, sin JavaScript.',tags:['HTML5','CSS3','Mobile-first'],link:'https://github.com/allisonrvargas/Campushop',c:['#f472b6','#fde2ef'],ic:'cart'},
-  {t:'TechZone',cat:['datos'],d:'Sistema de inventario y ventas en PostgreSQL: modelo entidad-relación, procedimientos que descuentan existencias y consultas de reportes.',tags:['PostgreSQL','PL/pgSQL'],link:'https://github.com/allisonrvargas/gesti-n_de_Inventario_examen',c:['#db2777','#f9a8d4'],ic:'box'},
-  {t:'Veterinaria en PostgreSQL',cat:['datos'],d:'Base de datos de una veterinaria: CRUD, consultas, funciones de ventana, CTE, vistas y procedimientos almacenados.',tags:['PostgreSQL','SQL'],link:'https://github.com/allisonrvargas/review_postgresql',c:['#f9a8d4','#fff1f7'],ic:'db'},
-  {t:'Adapter y reportes HTML',cat:['backend','datos'],d:'Patrón de diseño Adapter con cajas de cambios mecánica y automática, y reportes HTML de estudiantes, profesores y horarios generados desde MySQL.',tags:['Node.js','mysql2','Patrones'],link:'https://github.com/allisonrvargas/review_node.js',c:['#ec4899','#fda4af'],ic:'code'},
-  {t:'Embeddings con Gemini y Qdrant',cat:['ia','datos'],d:'App de consola que convierte un texto en un vector con Gemini y lo guarda en Qdrant junto con sus palabras clave.',tags:['Node.js','Gemini','Qdrant'],nota:'Inteligencia Artificial',c:['#be185d','#f472b6'],ic:'vec'},
-  {t:'Simulador de personalidades',cat:['ia','frontend'],d:'Chat que cambia la personalidad de un modelo de IA (Animador, Estricto o Mentor) con prompts basados en los rasgos del modelo Big Five.',tags:['JavaScript','Prompts','API de IA'],nota:'Inteligencia Artificial',c:['#ec4899','#fbcfe8'],ic:'chat'}
+  { t: 'Kid-Fit', cat: ['movil'], d: 'App móvil que cuenta los ejercicios de niños con la cámara del teléfono y registra su hidratación, con 15 niveles. Trabajé en el motor de movimiento: lógica de ángulos con MediaPipe Pose, validación de la caída del salto y pruebas de 10 a 30 FPS.', tags: ['React Native', 'TypeScript', 'MediaPipe', 'Firebase'], link: GH + 'Kid_Fit_allison-vargas' },
+  { t: 'Gym Manager CLI', cat: ['backend', 'datos'], d: 'Aplicación de consola para un gimnasio: clientes, planes, contratos, seguimiento, nutrición y finanzas. Transacciones en MongoDB con rollback, consultas de agregación, SOLID y patrones de diseño.', tags: ['Node.js', 'MongoDB', 'Docker', 'Scrum'], link: GH + 'gym_manager' },
+  { t: 'MarisolliFlix', cat: ['backend', 'frontend'], d: 'Plataforma para reseñar películas, series y animes con un ranking ponderado, likes y dislikes, panel de administración y API documentada en Swagger.', tags: ['Express', 'MySQL', 'JWT', 'Swagger'], nota: 'Proyecto en equipo' },
+  { t: 'Librarian', cat: ['backend', 'frontend'], d: 'Sistema de biblioteca con préstamos, ventas, clientes e inventario. Roles de administrador y usuario, tres límites de peticiones y 26 pruebas automatizadas.', tags: ['Express 5', 'Rate limit', 'Vite', 'node:test'], link: GH + 'review_express_backend' },
+  { t: 'API de postulaciones', cat: ['backend', 'datos'], d: 'API REST que calcula el puntaje y la prioridad de cada candidato a una vacante. Reglas de negocio, filtros, control de estados y 123 pruebas.', tags: ['Express', 'MySQL', 'Jest', 'Docker'], link: GH + 'evaluacion-allison_rocio_vargas_mejia' },
+  { t: 'Gremio de Cazadores', cat: ['backend'], d: 'API REST modular y segura con autenticación por JWT y Passport.js, organizada en una arquitectura limpia por capas.', tags: ['Node.js', 'Express', 'Passport', 'JWT'], link: GH + 'jwt_and_passport' },
+  { t: 'Campus Parking', cat: ['frontend'], d: 'Aplicación de una sola página para administrar un estacionamiento: inicio de sesión, mapa de espacios, servicios de parqueo, reportes y almacenamiento local.', tags: ['HTML', 'CSS', 'JavaScript', 'localStorage'], link: GH + 'Campus-Parking' },
+  { t: 'CampusShop', cat: ['frontend'], d: 'Tienda en línea mobile-first con catálogo, carrito, checkout, perfil e historial, maquetada solo con HTML y CSS, sin JavaScript.', tags: ['HTML5', 'CSS3', 'Mobile-first'], link: GH + 'Campushop' },
+  { t: 'Gaseosas del Valle', cat: ['datos'], d: 'Diseño e implementación de una base de datos relacional en MySQL con triggers, funciones, procedimientos almacenados y vistas optimizadas.', tags: ['MySQL', 'Triggers', 'Procedimientos'], nota: 'Base de datos' },
+  { t: 'TechZone', cat: ['datos'], d: 'Sistema de inventario y ventas en PostgreSQL: modelo entidad-relación, procedimientos que descuentan existencias y consultas de reportes.', tags: ['PostgreSQL', 'PL/pgSQL'], link: GH + 'gesti-n_de_Inventario_examen' },
+  { t: 'Veterinaria SQL', cat: ['datos'], d: 'Base de datos de una veterinaria en PostgreSQL: CRUD, consultas, funciones de ventana, CTE, vistas y procedimientos almacenados.', tags: ['PostgreSQL', 'SQL'], link: GH + 'review_postgresql' },
+  { t: 'Adapter y reportes', cat: ['backend', 'datos'], d: 'Patrón de diseño Adapter con cajas de cambios mecánica y automática, y reportes HTML de estudiantes, profesores y horarios generados desde MySQL.', tags: ['Node.js', 'mysql2', 'Patrones'], link: GH + 'review_node.js' },
+  { t: 'TutorBot', cat: ['ia'], d: 'Automatización de flujos con n8n: un bot de Telegram que integra sus datos con Google Sheets.', tags: ['n8n', 'Telegram', 'Google Sheets'], nota: 'Automatización' },
+  { t: 'Embeddings + Qdrant', cat: ['ia', 'datos'], d: 'App de consola que convierte un texto en un vector con Gemini y lo guarda en Qdrant junto con sus palabras clave.', tags: ['Node.js', 'Gemini', 'Qdrant'], nota: 'Inteligencia Artificial' },
+  { t: 'Simulador de personalidades', cat: ['ia', 'frontend'], d: 'Chat que cambia la personalidad de un modelo de IA (Animador, Estricto o Mentor) con prompts basados en los rasgos del modelo Big Five.', tags: ['JavaScript', 'Prompts', 'API de IA'], nota: 'Inteligencia Artificial' }
 ];
-const icons={
- lock:'<rect x="-22" y="-6" width="44" height="34" rx="5"/><path d="M-12-6v-10a12 12 0 0 1 24 0v10"/><circle cx="0" cy="11" r="4"/>',
- car:'<path d="M-32 10v-10l8-16h48l8 16v10z"/><circle cx="-18" cy="14" r="6"/><circle cx="18" cy="14" r="6"/><path d="M-22-4h44"/>',
- cart:'<path d="M-34-24h10l8 34h34l8-24h-46"/><circle cx="-12" cy="20" r="4"/><circle cx="16" cy="20" r="4"/>',
- box:'<path d="M0-28l28 14v28L0 28-28 14v-28z"/><path d="M-28-14L0 0l28-14M0 0v28"/>',
- move:'<circle cx="0" cy="-30" r="9"/><path d="M0-20v26M0 6l-14 22M0 6l14 22M-20-8h40"/>',
- grid:'<rect x="-30" y="-24" width="26" height="20" rx="3"/><rect x="4" y="-24" width="26" height="20" rx="3"/><rect x="-30" y="4" width="60" height="20" rx="3"/>',
- star:'<path d="M0-28l8 17 18 2-13 12 4 18-17-9-17 9 4-18-13-12 18-2z"/>',
- book:'<path d="M-28-22h22a6 6 0 0 1 6 6v38a5 5 0 0 0-5-5h-23zM28-22H6a6 6 0 0 0-6 6v38a5 5 0 0 1 5-5h23z"/>',
- term:'<rect x="-32" y="-24" width="64" height="48" rx="5"/><path d="M-20-8l10 8-10 8M0 10h16"/>',
- list:'<path d="M-14-18h40M-14 0h40M-14 18h40"/><circle cx="-26" cy="-18" r="3"/><circle cx="-26" cy="0" r="3"/><circle cx="-26" cy="18" r="3"/>',
- vec:'<circle cx="-20" cy="14" r="4"/><circle cx="18" cy="-16" r="4"/><circle cx="20" cy="18" r="4"/><circle cx="-14" cy="-20" r="4"/><path d="M-20 14L18-16M-14-20L20 18"/>',
- chat:'<path d="M-30-20h44v28h-26l-12 10v-10h-6z"/><path d="M20-8h12v24h-4v8l-10-8h-14"/>',
- db:'<ellipse cx="0" cy="-20" rx="26" ry="9"/><path d="M-26-20v40c0 5 12 9 26 9s26-4 26-9v-40M-26 0c0 5 12 9 26 9s26-4 26-9"/>',
- code:'<path d="M-12-18l-18 18 18 18M12-18l18 18-18 18M6-26l-12 52"/>'
-};
-const catName={backend:'Backend',frontend:'Frontend',movil:'Móvil',datos:'Datos',ia:'IA'};
-const grid=document.getElementById('grid');
-proyectos.forEach((p,i)=>{
-  const el=document.createElement('article');
-  el.className='proj';el.dataset.cat=p.cat.join(' ');
-  el.innerHTML=`<div class="cover"><svg viewBox="0 0 400 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <defs><linearGradient id="g${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.c[0]}"/><stop offset="1" stop-color="${p.c[1]}"/></linearGradient></defs>
-    <rect width="400" height="150" fill="url(#g${i})"/>
-    <g fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1">${Array.from({length:9},(_,k)=>`<path d="M${k*50} 0v150"/>`).join('')}${Array.from({length:4},(_,k)=>`<path d="M0 ${k*50}h400"/>`).join('')}</g>
-    <g transform="translate(320 70) scale(1.4)" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${icons[p.ic]}</g>
-  </svg><span class="badge">${p.cat.map(c=>catName[c]).join(' · ')}</span></div>
-  <div class="proj-body"><h3>${p.t}</h3><p>${p.d}</p>
-  <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-  <div class="foot">${p.link?`<a href="${p.link}">Ver código ↗</a>`:`<span>${p.nota}</span>`}<span>${String(i+1).padStart(2,'0')}</span></div></div>`;
-  grid.appendChild(el);
+
+const catName = { backend: 'Backend', frontend: 'Frontend', movil: 'Móvil', datos: 'Datos', ia: 'IA y automatización' };
+
+const cartas = [
+  { a: 'JS', n: 'JavaScript', tipo: 'Lenguaje', c: ['#ec4899', '#f9a8d4'], u: 'Campus Parking, Simulador de personalidades y todos mis proyectos de Node.js.' },
+  { a: 'TS', n: 'TypeScript', tipo: 'Lenguaje', c: ['#db2777', '#f472b6'], u: 'El motor de movimiento de Kid-Fit.' },
+  { a: 'NODE', n: 'Node.js', tipo: 'Backend', c: ['#be185d', '#f472b6'], u: 'Gym Manager, API de postulaciones, Librarian y Gremio de Cazadores.' },
+  { a: 'EXP', n: 'Express', tipo: 'Backend', c: ['#9d174d', '#ec4899'], u: 'MarisolliFlix, Librarian y mis APIs REST con JWT.' },
+  { a: 'RN', n: 'React Native', tipo: 'Móvil', c: ['#a21caf', '#f0abfc'], u: 'Kid-Fit, la app de ejercicio para niños.' },
+  { a: 'HTML', n: 'HTML y CSS', tipo: 'Frontend', c: ['#ec4899', '#fda4af'], u: 'CampusShop, Campus Parking y este portafolio.' },
+  { a: 'SQL', n: 'MySQL', tipo: 'Datos', c: ['#db2777', '#fbcfe8'], u: 'Gaseosas del Valle, MarisolliFlix y la API de postulaciones.' },
+  { a: 'PG', n: 'PostgreSQL', tipo: 'Datos', c: ['#be185d', '#f9a8d4'], u: 'TechZone y la veterinaria.' },
+  { a: 'MDB', n: 'MongoDB', tipo: 'Datos', c: ['#9d174d', '#f472b6'], u: 'Gym Manager, con transacciones y agregaciones.' },
+  { a: 'PY', n: 'Python', tipo: 'Lenguaje', c: ['#a21caf', '#f9a8d4'], u: 'Scripts y mis primeros ejercicios de programación.' },
+  { a: 'DKR', n: 'Docker', tipo: 'Herramienta', c: ['#ec4899', '#c4b5fd'], u: 'MySQL para la API de postulaciones y el replica set de Gym Manager.' },
+  { a: 'GIT', n: 'Git y GitHub', tipo: 'Herramienta', c: ['#db2777', '#fda4af'], u: 'Ramas por funcionalidad, pull requests y code reviews en Kid-Fit.' },
+  { a: 'n8n', n: 'n8n', tipo: 'Automatización', c: ['#be185d', '#fcd34d'], u: 'TutorBot, con Telegram y Google Sheets.' },
+  { a: 'IA', n: 'IA aplicada', tipo: 'IA', c: ['#9d174d', '#c4b5fd'], u: 'MediaPipe en Kid-Fit, embeddings con Gemini y Qdrant.' },
+  { a: 'TEST', n: 'Jest y node:test', tipo: 'Calidad', c: ['#a21caf', '#5eead4'], u: '123 pruebas en la API de postulaciones y 26 en Librarian.' },
+  { a: 'SCRUM', n: 'Scrum', tipo: 'Equipo', c: ['#ec4899', '#5eead4'], u: 'Sprints de Kid-Fit, MarisolliFlix y Gym Manager en ClickUp.' }
+];
+
+const logros = [
+  { i: '>_', t: 'Primer commit', d: 'Empecé mi camino con Git y GitHub.' },
+  { i: '◉', t: 'Visión artificial', d: 'Reconocimiento de movimientos con MediaPipe en Kid-Fit.' },
+  { i: '✔', t: '123 pruebas en verde', d: 'Toda la suite de la API de postulaciones pasando.' },
+  { i: '↺', t: 'Rollback maestro', d: 'Transacciones reales en MongoDB en Gym Manager.' },
+  { i: '3x', t: 'Triple rol', d: 'Product Owner, Scrum Master y desarrolladora a la vez.' },
+  { i: '⛨', t: 'Guardiana de APIs', d: 'JWT, Passport, roles y límites de peticiones.' },
+  { i: '#', t: 'Cero JavaScript', d: 'Una tienda completa solo con HTML y CSS.' },
+  { i: '⇄', t: 'Code review cruzado', d: 'Revisé y aprobé código de otras células.' },
+  { i: '∿', t: 'Vectores', d: 'Embeddings con Gemini guardados en Qdrant.' },
+  { i: '⚙', t: 'Automatizadora', d: 'Un bot de Telegram con n8n y Google Sheets.' },
+  { i: '▦', t: 'Arquitecta de datos', d: 'Triggers, funciones, vistas y procedimientos en MySQL.' },
+  { i: 'B1', t: 'Políglota', d: 'Inglés nivel B1 y subiendo.' }
+];
+
+/* ============ SONIDO ============ */
+let ctx = null, master = null, analyser = null, soundOn = false;
+function audio() {
+  if (!ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = 0.14;
+    analyser = ctx.createAnalyser(); analyser.fftSize = 64;
+    master.connect(analyser); analyser.connect(ctx.destination);
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+const freq = n => 440 * Math.pow(2, (n - 69) / 12);
+function tone(note, t, dur, type = 'square', vol = 0.5) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = freq(note);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function sfx(kind) {
+  if (!soundOn || !audio()) return;
+  const t = ctx.currentTime;
+  if (kind === 'blip') tone(84, t, 0.06, 'square', 0.25);
+  if (kind === 'open') { tone(76, t, 0.07); tone(83, t + 0.07, 0.1); }
+  if (kind === 'unlock') { [72, 76, 79, 84].forEach((n, i) => tone(n, t + i * 0.08, 0.14, 'square', 0.35)); }
+  if (kind === 'start') { [60, 64, 67, 72, 76, 79, 84].forEach((n, i) => tone(n, t + i * 0.06, 0.12, 'square', 0.3)); }
+}
+
+/* Pistas chiptune originales: progresión de acordes + arpegio + bajo */
+const pistas = [
+  { name: 'Compilando sueños', bpm: 118, root: 60, chords: [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], arp: [0, 1, 2, 1, 0, 2, 1, 2], mel: [12, null, 14, 16, null, 16, 14, 12, 11, null, 12, 14, null, 11, 9, null] },
+  { name: 'Bucle de depuración', bpm: 96, root: 57, chords: [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]], arp: [0, 2, 1, 2, 0, 2, 1, 2], mel: [15, null, null, 14, 12, null, 10, null, 12, null, null, 10, 7, null, null, null] },
+  { name: 'Deploy a medianoche', bpm: 140, root: 62, chords: [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]], arp: [0, 1, 2, 3, 2, 1, 0, 1], mel: [12, 10, 12, 15, null, 14, 12, null, 10, 12, null, 7, 10, null, 12, null] }
+];
+let track = 0, playing = false, step = 0, nextTime = 0, timer = null;
+function schedule() {
+  const p = pistas[track], s = 60 / p.bpm / 2; // corcheas
+  while (nextTime < ctx.currentTime + 0.12) {
+    const bar = Math.floor(step / 8) % p.chords.length, ch = p.chords[bar], st = step % 8;
+    const notes = [...ch, ch[0] + 12];
+    tone(p.root + 12 + notes[p.arp[st] % notes.length], nextTime, s * 0.9, 'square', 0.22);
+    if (st % 4 === 0) tone(p.root - 12 + ch[0], nextTime, s * 3.6, 'triangle', 0.6);
+    const m = p.mel[step % 16];
+    if (m !== null && Math.floor(step / 16) % 2 === 1) tone(p.root + 12 + m, nextTime, s * 1.6, 'square', 0.18);
+    if (st % 2 === 1) noise(nextTime);
+    nextTime += s; step++;
+  }
+}
+let noiseBuf = null;
+function noise(t) {
+  if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = noiseBuf;
+  g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+  src.connect(g); g.connect(master); src.start(t);
+}
+function play() {
+  if (!audio()) return;
+  playing = true; step = 0; nextTime = ctx.currentTime + 0.05;
+  clearInterval(timer); timer = setInterval(schedule, 25);
+  updatePlayer();
+}
+function stop() { playing = false; clearInterval(timer); updatePlayer(); }
+function setSound(on) {
+  soundOn = on;
+  const b = document.getElementById('soundBtn');
+  b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', on ? 'Silenciar música' : 'Activar música');
+  if (on) play(); else stop();
+}
+
+/* ============ UI ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// Reproductor
+const tl = $('#tracklist');
+pistas.forEach((p, i) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<button type="button"><span>${p.name}</span></button>`;
+  li.firstChild.addEventListener('click', () => { track = i; soundOn = true; $('#soundBtn').setAttribute('aria-pressed', 'true'); play(); unlockAch('dj'); });
+  tl.appendChild(li);
 });
-document.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));ch.classList.add('on');
-  const f=ch.dataset.f;
-  document.querySelectorAll('.proj').forEach(p=>p.classList.toggle('hide',f!=='todos'&&!p.dataset.cat.split(' ').includes(f)));
+function updatePlayer() {
+  $('#trackName').textContent = playing ? pistas[track].name : 'En pausa';
+  $('#playBtn').textContent = playing ? '❚❚' : '▶';
+  $('#playBtn').setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir');
+  tl.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', playing && i === track));
+}
+$('#playBtn').addEventListener('click', () => { if (playing) setSound(false); else setSound(true); });
+$('#nextBtn').addEventListener('click', () => { track = (track + 1) % pistas.length; setSound(true); });
+$('#prevBtn').addEventListener('click', () => { track = (track + pistas.length - 1) % pistas.length; setSound(true); });
+$('#soundBtn').addEventListener('click', () => setSound(!soundOn));
+updatePlayer();
+
+// Ecualizador
+const bars = $$('#eq i');
+const fdata = new Uint8Array(32);
+(function eqLoop() {
+  if (analyser && playing) {
+    analyser.getByteFrequencyData(fdata);
+    bars.forEach((b, i) => { b.style.height = Math.max(6, fdata[i + 1] / 255 * 60) + 'px'; });
+  } else bars.forEach(b => { b.style.height = '6px'; });
+  requestAnimationFrame(eqLoop);
+})();
+
+// START
+function start(withMusic) {
+  if (withMusic) { setSound(true); } else { audio(); }
+  sfx('start');
+  showToast('▶', 'PARTIDA INICIADA', '¡Que empiece la aventura!');
+  document.getElementById('jugadora').scrollIntoView({ behavior: 'smooth' });
+}
+$('#startMusic').addEventListener('click', () => start(true));
+$('#startQuiet').addEventListener('click', () => start(false));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && window.scrollY < window.innerHeight * 0.5 && document.activeElement === document.body) start(false);
+});
+
+// Menú de niveles
+const menu = $('#levelMenu'), menuBtn = $('#menuBtn');
+menuBtn.addEventListener('click', () => { const o = menu.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', o); sfx('blip'); });
+menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); }));
+document.addEventListener('click', e => { if (!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menu.classList.remove('open'); });
+
+// Estadísticas
+const counts = {};
+proyectos.forEach(p => p.cat.forEach(c => counts[c] = (counts[c] || 0) + 1));
+const maxC = Math.max(...Object.values(counts));
+$('#stats').innerHTML = Object.keys(catName).map(k => {
+  const n = counts[k] || 0, cells = 10, on = Math.round(n / maxC * cells);
+  return `<div class="stat"><span>${catName[k]}</span><div class="bar">${Array.from({ length: cells }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div><b>${n}</b></div>`;
+}).join('');
+
+// Arte pixelado de cada bloque (generado a partir del nombre)
+function hash(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function pixelArt(name, w = 12, h = 8) {
+  let x = hash(name);
+  const rnd = () => (x = Math.imul(x ^ (x >>> 15), 2246822507) ^ Math.imul(x ^ (x >>> 13), 3266489909), (x >>> 0) / 4294967296);
+  const pal = ['#ec4899', '#f472b6', '#f9a8d4', '#fbcfe8', '#db2777', '#be185d'];
+  const base = Math.floor(rnd() * pal.length);
+  let r = `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true"><rect width="${w}" height="${h}" fill="#26102c"/>`;
+  for (let i = 0; i < 18; i++) r += `<rect x="${Math.floor(rnd() * w)}" y="${Math.floor(rnd() * h)}" width="1" height="1" fill="#3b1a44"/>`;
+  const half = w / 2;
+  for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < half; xx++) {
+    if (rnd() < 0.55) {
+      const c = pal[(base + Math.floor(rnd() * 3)) % pal.length];
+      r += `<rect x="${xx}" y="${yy}" width="1" height="1" fill="${c}"/><rect x="${w - 1 - xx}" y="${yy}" width="1" height="1" fill="${c}"/>`;
+    }
+  }
+  return r + '</svg>';
+}
+
+// Bloques de proyectos
+const blocksEl = $('#blocks');
+proyectos.forEach((p, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'block reveal'; b.dataset.cat = p.cat.join(' ');
+  b.innerHTML = `${pixelArt(p.t)}<div class="b-body"><b>${p.t}</b><span>${p.cat.map(c => catName[c].toUpperCase()).join(' · ')}</span></div>`;
+  b.addEventListener('click', () => openModal(i));
+  blocksEl.appendChild(b);
+});
+let usedFilter = false;
+$$('.biomes .chip').forEach(ch => ch.addEventListener('click', () => {
+  $$('.biomes .chip').forEach(c => c.classList.remove('on')); ch.classList.add('on'); sfx('blip');
+  const f = ch.dataset.f;
+  $$('.block').forEach(b => b.classList.toggle('hide', f !== 'todos' && !b.dataset.cat.split(' ').includes(f)));
+  if (!usedFilter && f !== 'todos') { usedFilter = true; showToast('⛏', 'BIOMA DESCUBIERTO', catName[f]); }
 }));
-// tema
-const root=document.documentElement;
-try{const s=localStorage.getItem('tema');if(s)root.dataset.theme=s;else if(matchMedia('(prefers-color-scheme: dark)').matches)root.dataset.theme='dark';}catch(e){}
-document.getElementById('theme').addEventListener('click',()=>{
-  root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';
-  try{localStorage.setItem('tema',root.dataset.theme)}catch(e){}
+
+// Modal
+const modal = $('#modal');
+let lastFocus = null;
+function openModal(i) {
+  const p = proyectos[i]; lastFocus = document.activeElement;
+  $('#mArt').innerHTML = pixelArt(p.t, 24, 8);
+  $('#mCat').textContent = p.cat.map(c => catName[c].toUpperCase()).join(' · ');
+  $('#mTitle').textContent = p.t;
+  $('#mDesc').textContent = p.d;
+  $('#mTags').innerHTML = '<span>BOTÍN</span>' + p.tags.map(t => `<i>${t}</i>`).join('');
+  $('#mLink').innerHTML = p.link ? `<a class="pix-btn big" href="${p.link}" target="_blank" rel="noopener">VER CÓDIGO <small>en GitHub</small></a>` : `<span class="muted">${p.nota.toUpperCase()}</span>`;
+  modal.hidden = false; sfx('open'); $('#mClose').focus();
+}
+function closeModal() { modal.hidden = true; if (lastFocus) lastFocus.focus(); }
+$('#mClose').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+// Mazo
+const deck = $('#deck');
+cartas.forEach((c, i) => {
+  const el = document.createElement('button');
+  el.type = 'button'; el.className = 'card reveal';
+  el.setAttribute('aria-label', `${c.n}: ${c.u}`);
+  el.innerHTML = `<div class="card-in">
+    <div class="face front" style="--c1:${c.c[0]};--c2:${c.c[1]}"><span class="abbr">${c.a}</span><span class="name">${c.n}</span><span class="type">${c.tipo.toUpperCase()}</span></div>
+    <div class="face back"><span class="tiny">USADA EN</span><p>${c.u}</p></div></div>`;
+  el.addEventListener('click', () => { el.classList.toggle('flip'); sfx('blip'); });
+  deck.appendChild(el);
 });
-// menú móvil
-const links=document.getElementById('links');
-document.getElementById('menu').addEventListener('click',()=>links.classList.toggle('open'));
-links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>links.classList.remove('open')));
-// aparición al hacer scroll
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// Logros
+const achEl = $('#achievements');
+logros.forEach(l => {
+  const d = document.createElement('div');
+  d.className = 'ach';
+  d.innerHTML = `<div class="ic">${l.i}</div><div><h4>${l.t}</h4><p>${l.d}</p></div>`;
+  achEl.appendChild(d);
+});
+$('#achTotal').textContent = logros.length;
+let achDone = 0, achStarted = false;
+function unlockLogros() {
+  if (achStarted) return; achStarted = true;
+  const items = [...achEl.children];
+  items.forEach((el, i) => setTimeout(() => {
+    el.classList.add('on', 'pop'); achDone++; $('#achCount').textContent = achDone;
+    if (i < 3 || i === items.length - 1) { sfx('unlock'); showToast(logros[i].i, 'LOGRO DESBLOQUEADO', logros[i].t); }
+  }, 350 + i * 260));
+}
+const extra = {};
+function unlockAch(key) {
+  if (extra[key]) return; extra[key] = true;
+  if (key === 'dj') showToast('♪', 'LOGRO SECRETO', 'DJ de la partida');
+}
+
+// Toasts
+function showToast(ic, small, text) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<div class="ic">${ic}</div><div><small>${small}</small><b>${text}</b></div>`;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 2600);
+}
+
+// HUD, XP y niveles
+const hud = $('#hud'), xpFill = $('#xpFill');
+const levels = [...$$('[data-level]')];
+const seen = new Set();
+function onScroll() {
+  const max = document.documentElement.scrollHeight - innerHeight;
+  const pct = max > 0 ? Math.min(100, Math.round(scrollY / max * 100)) : 0;
+  xpFill.style.width = pct + '%';
+  $('#hudXp').textContent = 'XP ' + pct + '%';
+  hud.classList.toggle('show', scrollY > innerHeight * 0.45);
+  let current = levels[0];
+  levels.forEach(s => { if (s.getBoundingClientRect().top < innerHeight * 0.45) current = s; });
+  $('#hudLevel').textContent = current.dataset.level;
+  menu.querySelectorAll('a').forEach(a => a.classList.toggle('here', a.getAttribute('href') === '#' + current.id));
+  if (current.id !== 'start' && !seen.has(current.id)) {
+    seen.add(current.id);
+    if (current.id !== 'logros') { sfx('blip'); showToast('★', current.dataset.level + ' ALCANZADO', current.querySelector('h2').textContent); }
+  }
+}
+addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+// Aparición y disparadores
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in'); io.unobserve(e.target);
+}), { threshold: 0.12 });
+$$('.reveal, .pixel-box').forEach(el => { el.classList.add('reveal'); io.observe(el); });
+new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { unlockLogros(); ob.disconnect(); } }), { threshold: 0.25 }).observe(achEl);
+
+// Cielo pixelado: estrellas y bloques flotantes
+const cv = $('#sky'), g = cv.getContext('2d');
+let W, H, stars = [], cubes = [];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function resize() {
+  W = cv.width = innerWidth; H = cv.height = innerHeight;
+  stars = Array.from({ length: Math.round(W * H / 9000) }, () => ({ x: Math.random() * W, y: Math.random() * H, s: Math.random() < 0.15 ? 4 : 2, p: Math.random() * 6 }));
+  cubes = Array.from({ length: 14 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: [8, 12, 16][Math.floor(Math.random() * 3)], v: 0.15 + Math.random() * 0.35, c: ['#ec4899', '#f472b6', '#f9a8d4', '#be185d'][Math.floor(Math.random() * 4)], d: Math.random() * 0.6 + 0.2 }));
+}
+function draw(t) {
+  g.clearRect(0, 0, W, H);
+  const off = scrollY;
+  stars.forEach(s => {
+    const a = 0.35 + 0.65 * Math.abs(Math.sin(t / 900 + s.p));
+    g.fillStyle = `rgba(255,228,242,${a})`;
+    const y = ((s.y - off * 0.08) % H + H) % H;
+    g.fillRect(Math.round(s.x), Math.round(y), s.s, s.s);
+  });
+  cubes.forEach(c => {
+    if (!reduce) c.y -= c.v;
+    if (c.y < -20) { c.y = H + 20; c.x = Math.random() * W; }
+    const y = ((c.y - off * c.d * 0.25) % (H + 40) + H + 40) % (H + 40) - 20;
+    g.globalAlpha = 0.35; g.fillStyle = c.c;
+    g.fillRect(Math.round(c.x), Math.round(y), c.s, c.s);
+    g.globalAlpha = 0.5; g.fillStyle = '#fff';
+    g.fillRect(Math.round(c.x), Math.round(y), c.s / 4, c.s / 4);
+    g.globalAlpha = 1;
+  });
+  if (!reduce) requestAnimationFrame(draw);
+}
+addEventListener('resize', () => { resize(); if (reduce) draw(0); });
+resize(); requestAnimationFrame(draw);
+
+// Código secreto: ↑ ↑ ↓ ↓ ← → ← → B A
+const code = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let pos = 0;
+document.addEventListener('keydown', e => {
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  pos = k === code[pos] ? pos + 1 : (k === code[0] ? 1 : 0);
+  if (pos === code.length) {
+    pos = 0; sfx('unlock'); showToast('♥', 'CÓDIGO SECRETO', '¡Vida extra para ti!');
+    for (let i = 0; i < 80; i++) {
+      const c = document.createElement('i'); c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-12px';
+      c.style.background = ['#ec4899', '#f472b6', '#fcd34d', '#5eead4', '#fbcfe8'][i % 5];
+      c.style.animationDelay = Math.random() * 0.8 + 's';
+      document.body.appendChild(c); setTimeout(() => c.remove(), 2800);
+    }
+  }
+});

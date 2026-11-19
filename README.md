@@ -1,30 +1,35 @@
 # Portafolio Profesional · Allison Vargas
 
-Portafolio personal de **Allison Rocío Vargas Mejía**, técnico en desarrollo de software en formación en **Campuslands Guatemala**.
+Portafolio interactivo de **Allison Rocío Vargas Mejía**, técnico en desarrollo de software en formación en **Campuslands Guatemala** y estudiante de Ingeniería en Ciencias y Sistemas.
 
 **Sitio en vivo:** https://allisonrvargas.github.io/portafolio_profesional/
 
 ---
 
+## La idea
+
+El portafolio es un videojuego. Quien lo visita pulsa START y recorre mi perfil nivel por nivel, como en los juegos de estrategia y construcción que me gustan, con música chiptune de fondo.
+
 ## Secciones
 
 | Sección | Contenido |
 | --- | --- |
-| **Inicio** | Presentación, fotografía, tecnologías principales y accesos rápidos |
-| **Sobre mí** | Quién soy, formación, enfoque, trabajo en equipo e idiomas |
-| **Experiencia** | Kid-Fit, MarisolliFlix y Gym Manager CLI, mostrados como un historial de commits |
-| **Proyectos** | 13 proyectos con filtros por área: Backend, Frontend, Móvil, Bases de datos e IA |
-| **Habilidades** | Backend, frontend y móvil, datos e IA, y herramientas |
-| **Cómo trabajo** | Mi proceso: entender, diseñar, construir y probar, y entregar |
-| **Contacto** | Correo, LinkedIn, GitHub y CV en PDF |
+| Inicio | Pantalla de START, con o sin música |
+| 01 · Sobre mí | Tarjeta de jugadora, historia, estadísticas, formación y lo que me gusta: videojuegos y música, con una radio integrada |
+| 02 · Proyectos | 15 proyectos como bloques, con filtros por bioma y ventana de detalle |
+| 03 · Aplicaciones | Demos en vivo de mis páginas publicadas, insertadas en la página: CampusShop, Campus Parking y Gestión de Hotel |
+| Contacto | Correo, LinkedIn, GitHub y CV. También hay accesos en la tarjeta de jugadora y en el menú |
 
 ## Características
 
-- Diseño responsivo para computadora, tablet y celular.
-- Modo claro y oscuro, que se recuerda entre visitas.
-- Filtros de proyectos por categoría.
-- Animaciones suaves al hacer scroll, desactivadas si el sistema pide reducir el movimiento.
-- Menú adaptable para celular.
+- HUD fijo con barra de XP según el avance del scroll y el nivel actual.
+- Menú para saltar a cualquier nivel.
+- Música chiptune original generada con la Web Audio API, con ecualizador animado.
+- Efectos de sonido y notificaciones al llegar a cada nivel.
+- Cielo pixelado animado con estrellas y bloques flotantes en canvas.
+- Arte pixelado único para cada proyecto, generado a partir de su nombre.
+- Código secreto escondido.
+- Diseño responsivo y respeto por la opción de reducir el movimiento.
 - Sin frameworks: HTML, CSS y JavaScript puro.
 
 ## Tecnologías
@@ -32,19 +37,20 @@ Portafolio personal de **Allison Rocío Vargas Mejía**, técnico en desarrollo 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-8B5CF6?style=for-the-badge&logo=github&logoColor=white)
+![Web Audio API](https://img.shields.io/badge/Web%20Audio%20API-EC4899?style=for-the-badge)
+![Canvas](https://img.shields.io/badge/Canvas-EC4899?style=for-the-badge)
 
-Tipografías: Instrument Serif, Manrope y JetBrains Mono (Google Fonts).
+Tipografías: Great Vibes (nombre y títulos), Bubblegum Sans y Manrope (Google Fonts).
 
 ## Estructura
 
 ```
 portafolio_profesional/
-├── index.html          # Estructura de la página
+├── index.html          # Niveles y estructura de la página
 ├── css/
-│   └── styles.css      # Colores, tipografía, diseño y modo oscuro
+│   └── styles.css      # Estilo pixel art, HUD, bloques, demos y animaciones
 ├── js/
-│   └── main.js         # Proyectos, filtros, tema, menú y animaciones
+│   └── main.js         # Datos, música, HUD, proyectos, demos y cielo animado
 ├── img/
 │   └── allison.jpg     # Fotografía de perfil
 ├── cv/
@@ -60,21 +66,13 @@ portafolio_profesional/
    ```
 2. Abre `index.html` en el navegador, o usa la extensión **Live Server** de VS Code.
 
-## Cómo agregar un proyecto
+## Cómo editar el contenido
 
-Los proyectos están en el arreglo `proyectos` de `js/main.js`. Para agregar uno, copia un objeto y cambia sus datos:
+Todo el contenido que cambia está al inicio de `js/main.js`:
 
-```js
-{
-  t: 'Nombre del proyecto',
-  cat: ['backend'],            // backend, frontend, movil, datos o ia
-  d: 'Descripción corta.',
-  tags: ['Node.js', 'MySQL'],
-  link: 'https://github.com/allisonrvargas/repositorio',
-  c: ['#7c3aed', '#c4b5fd'],   // colores del degradado de la portada
-  ic: 'code'                   // ícono de la portada
-}
-```
+- `proyectos`: los bloques del modo construcción.
+- `aplicaciones`: las demos insertadas en la sección Aplicaciones.
+- `pistas`: las canciones de la radio.
 
 ## Contacto
 
