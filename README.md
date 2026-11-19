@@ -14,8 +14,8 @@ El portafolio es un videojuego. Quien lo visita pulsa START y recorre mi perfil 
 
 | Sección | Contenido |
 | --- | --- |
-| Inicio | Pantalla de START, con o sin música |
-| 01 · Sobre mí | Tarjeta de jugadora, historia, estadísticas, formación y lo que me gusta: videojuegos y música, con una radio integrada |
+| Inicio | Pantalla de START con un bloque 3D que se puede girar, con o sin música |
+| 01 · Sobre mí | Tarjeta de jugadora, historia, estadísticas, inventario de habilidades, la línea de tiempo "Bloque a bloque" y lo que me gusta: videojuegos y música, con una radio integrada |
 | 02 · Proyectos | 15 proyectos como bloques, con filtros por bioma y ventana de detalle |
 | 03 · Aplicaciones | Demos en vivo de mis páginas publicadas, insertadas en la página: CampusShop, Campus Parking y Gestión de Hotel |
 | Contacto | Correo, LinkedIn, GitHub y CV. También hay accesos en la tarjeta de jugadora y en el menú |

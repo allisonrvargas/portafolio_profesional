@@ -44,6 +44,15 @@
   <!-- START -->
   <section class="start" id="start" data-level="INICIO">
     <div class="start-inner">
+      <div class="cube-wrap" id="cubeWrap" aria-hidden="true">
+        <div class="cube" id="cube">
+          <div class="face f-front"></div><div class="face f-back"></div>
+          <div class="face f-right"></div><div class="face f-left"></div>
+          <div class="face f-top"></div><div class="face f-bottom"></div>
+        </div>
+        <div class="cube-shadow"></div>
+      </div>
+      <p class="drag-hint tiny">Arrastra el bloque</p>
       <p class="press tiny">CAMPUSLANDS GT · 2026 · GUATEMALA</p>
       <h1 class="title">
         <span class="t1">Allison</span>
@@ -97,16 +106,71 @@
             <h4 class="box-title">ESTADÍSTICAS <small>proyectos por área</small></h4>
             <div class="stats" id="stats"></div>
           </div>
-          <div class="pixel-box">
-            <h4 class="box-title">ENTRENAMIENTO</h4>
-            <ul class="training">
-              <li><b>2026 – hoy</b> Técnico en desarrollo de software · Campuslands GT</li>
-              <li><b>En curso</b> Ingeniería en Ciencias y Sistemas</li>
-              <li><b>2026 · en curso</b> Programa de inglés · Instituto Guatemalteco Americano (IGA)</li>
-              <li><b>2020 – 2024</b> Bachillerato en Ciencias y Letras con orientación en Computación</li>
-            </ul>
-          </div>
         </div>
+      </div>
+      <h3 class="sub-head">Mi inventario</h3>
+      <p class="tl-intro">Las herramientas que llevo a cada misión. Pasa el cursor o toca una casilla para ver dónde la usé.</p>
+      <div class="inventory">
+        <div class="inv-grid pixel-box" id="invGrid" role="list"></div>
+        <div class="inv-detail pixel-box" id="invDetail" aria-live="polite">
+          <div class="inv-icon" id="invIcon"></div>
+          <span class="tl-date" id="invType"></span>
+          <h4 id="invName"></h4>
+          <p id="invUse"></p>
+        </div>
+      </div>
+      <h3 class="sub-head">Bloque a bloque</h3>
+      <p class="tl-intro">Así he ido construyendo mi camino, una pieza a la vez.</p>
+      <div class="timeline" id="timeline">
+        <div class="tl-line" aria-hidden="true"><i id="tlFill"></i></div>
+        <article class="tl-item reveal">
+          <div class="tl-block" aria-hidden="true"></div>
+          <div class="tl-card pixel-box">
+            <span class="tl-date">2020 – 2024 · Colegio Nuestra Señora de los Ángeles</span>
+            <h4>Puse el primer bloque</h4>
+            <p>Estudié el Bachillerato en Ciencias y Letras con orientación en Computación. Ahí conocí la tecnología y supe que quería construir con ella.</p>
+          </div>
+        </article>
+        <article class="tl-item reveal">
+          <div class="tl-block" aria-hidden="true"></div>
+          <div class="tl-card pixel-box">
+            <span class="tl-date">En curso · Universidad</span>
+            <h4>Armé la estrategia</h4>
+            <p>Empecé Ingeniería en Ciencias y Sistemas para entender la base de todo: la lógica, los datos y cómo se diseña un sistema.</p>
+          </div>
+        </article>
+        <article class="tl-item reveal">
+          <div class="tl-block" aria-hidden="true"></div>
+          <div class="tl-card pixel-box">
+            <span class="tl-date">2026 · Campuslands GT</span>
+            <h4>Aprendí a construir</h4>
+            <p>Me formo como técnico en desarrollo de software: JavaScript, Node.js, Express, bases de datos SQL y NoSQL, Docker y trabajo en equipo con Scrum, Git y GitHub.</p>
+          </div>
+        </article>
+        <article class="tl-item reveal">
+          <div class="tl-block" aria-hidden="true"></div>
+          <div class="tl-card pixel-box">
+            <span class="tl-date">Mayo 2026 · Kid-Fit</span>
+            <h4>Construí en equipo</h4>
+            <p>Como desarrolladora backend en un equipo por células, ayudé a crear una app móvil que reconoce los ejercicios de los niños con visión artificial.</p>
+          </div>
+        </article>
+        <article class="tl-item reveal">
+          <div class="tl-block" aria-hidden="true"></div>
+          <div class="tl-card pixel-box">
+            <span class="tl-date">2026 · Instituto Guatemalteco Americano</span>
+            <h4>Subí de nivel</h4>
+            <p>Fortalezco mi inglés, hoy en nivel B1, con vocabulario técnico de TI para trabajar en equipos más grandes.</p>
+          </div>
+        </article>
+        <article class="tl-item now reveal">
+          <div class="tl-block" aria-hidden="true"></div>
+          <div class="tl-card pixel-box">
+            <span class="tl-date">Hoy</span>
+            <h4>Sigo construyendo</h4>
+            <p>Creo APIs, interfaces web y apps móviles, y busco mi siguiente misión en equipo. La lógica y la planificación de mis juegos favoritos van conmigo en cada proyecto.</p>
+          </div>
+        </article>
       </div>
       <h3 class="sub-head">Lo que me gusta</h3>
       <div class="lounge">

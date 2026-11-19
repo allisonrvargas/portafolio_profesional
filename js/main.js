@@ -26,6 +26,28 @@ const aplicaciones = [
   { n: 'Gestión de Hotel', url: 'https://allisonrvargas.github.io/Taller-1-Allis-y-Sofi/', code: GH + 'Taller-1-Allis-y-Sofi', d: 'Taller en pareja: la lógica de un hotel con arreglos de objetos, funciones, callbacks y setTimeout para simular procesos reales. Funciona con un menú de ventanas emergentes, por eso se abre en su propia pestaña.', tags: ['JavaScript', 'Callbacks', 'Asincronía'], embed: false }
 ];
 
+
+const inventario = [
+  { a: 'JS', n: 'JavaScript', tipo: 'Lenguaje', c: '#ec4899', u: 'Campus Parking, el Simulador de personalidades, el taller del hotel y todos mis proyectos con Node.js.' },
+  { a: 'TS', n: 'TypeScript', tipo: 'Lenguaje', c: '#db2777', u: 'El motor de movimiento de Kid-Fit.' },
+  { a: 'PY', n: 'Python', tipo: 'Lenguaje', c: '#a21caf', u: 'Scripts y mis primeros ejercicios de programación.' },
+  { a: '</>', n: 'HTML y CSS', tipo: 'Frontend', c: '#f472b6', u: 'CampusShop, Campus Parking y este portafolio.' },
+  { a: 'RN', n: 'React Native', tipo: 'Móvil', c: '#c026d3', u: 'Kid-Fit, la app de ejercicio e hidratación para niños.' },
+  { a: 'NODE', n: 'Node.js', tipo: 'Backend', c: '#be185d', u: 'Gym Manager, la API de postulaciones, Librarian y Gremio de Cazadores.' },
+  { a: 'EXP', n: 'Express', tipo: 'Backend', c: '#9d174d', u: 'MarisolliFlix, Librarian y mis APIs REST con JWT y Passport.' },
+  { a: 'SQL', n: 'MySQL', tipo: 'Base de datos', c: '#db2777', u: 'Gaseosas del Valle, MarisolliFlix y la API de postulaciones.' },
+  { a: 'PG', n: 'PostgreSQL', tipo: 'Base de datos', c: '#be185d', u: 'TechZone y la base de datos de la veterinaria.' },
+  { a: 'MDB', n: 'MongoDB', tipo: 'Base de datos', c: '#9d174d', u: 'Gym Manager, con transacciones reales y consultas de agregación.' },
+  { a: 'QD', n: 'Qdrant', tipo: 'Base vectorial', c: '#a21caf', u: 'Mi app de embeddings con Gemini.' },
+  { a: 'DKR', n: 'Docker', tipo: 'Herramienta', c: '#ec4899', u: 'El MySQL de la API de postulaciones y el replica set de Gym Manager.' },
+  { a: 'GIT', n: 'Git y GitHub', tipo: 'Herramienta', c: '#db2777', u: 'Ramas por funcionalidad, pull requests y code reviews entre células en Kid-Fit.' },
+  { a: 'n8n', n: 'n8n', tipo: 'Automatización', c: '#d97706', u: 'TutorBot, con Telegram y Google Sheets.' },
+  { a: 'IA', n: 'IA aplicada', tipo: 'Inteligencia Artificial', c: '#c026d3', u: 'MediaPipe en Kid-Fit, embeddings con Gemini y prompts para simular personalidades.' },
+  { a: 'TEST', n: 'Jest y node:test', tipo: 'Calidad', c: '#0d9488', u: '123 pruebas en la API de postulaciones y 26 en Librarian.' },
+  { a: 'API', n: 'Swagger y Postman', tipo: 'Documentación', c: '#0d9488', u: 'Documentar y probar las APIs de MarisolliFlix y mis ejercicios de Express.' },
+  { a: 'SCRUM', n: 'Scrum y ClickUp', tipo: 'Equipo', c: '#ec4899', u: 'Sprints de Kid-Fit y MarisolliFlix, y los 3 sprints de Gym Manager.' }
+];
+
 const catName = { backend: 'Backend', frontend: 'Frontend', movil: 'Móvil', datos: 'Datos', ia: 'IA y automatización' };
 
 /* ============ SONIDO ============ */
@@ -247,6 +269,45 @@ aplicaciones.forEach((a, i) => {
 showApp(0, false);
 new IntersectionObserver((es, ob) => es.forEach(e => { if (e.isIntersecting) { showApp(appIndex, true); ob.disconnect(); } }), { rootMargin: '300px' }).observe(frame);
 
+
+// Inventario
+const invGrid = $('#invGrid');
+function showItem(i) {
+  const it = inventario[i];
+  invGrid.querySelectorAll('.slot').forEach((s, k) => s.classList.toggle('on', k === i));
+  const ic = $('#invIcon'); ic.textContent = it.a; ic.style.setProperty('--c1', it.c);
+  $('#invType').textContent = it.tipo; $('#invName').textContent = it.n; $('#invUse').textContent = 'Usada en: ' + it.u;
+}
+inventario.forEach((it, i) => {
+  const s = document.createElement('button');
+  s.type = 'button'; s.className = 'slot'; s.setAttribute('role', 'listitem');
+  s.setAttribute('aria-label', it.n);
+  const ico = document.createElement('span'); ico.className = 'ico' + (it.a.length > 3 ? ' long' : ''); ico.style.setProperty('--c1', it.c); ico.textContent = it.a;
+  const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = it.n;
+  s.append(ico, lbl);
+  ['mouseenter', 'focus', 'click'].forEach(ev => s.addEventListener(ev, () => { showItem(i); if (ev === 'click') sfx('blip'); }));
+  invGrid.appendChild(s);
+});
+showItem(0);
+
+// Bloque 3D: gira solo y se puede arrastrar
+const cube = $('#cube'), cubeWrap = $('#cubeWrap');
+let rx = -24, ry = 35, vy = 0.35, dragging = false, lx = 0, ly = 0;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function spin() {
+  if (!dragging && !reduceMotion) ry += vy * (playing ? 2.4 : 1);
+  cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  requestAnimationFrame(spin);
+}
+cubeWrap.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; cubeWrap.setPointerCapture(e.pointerId); });
+cubeWrap.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  ry += (e.clientX - lx) * 0.6; rx = Math.max(-80, Math.min(80, rx - (e.clientY - ly) * 0.6));
+  lx = e.clientX; ly = e.clientY;
+});
+['pointerup', 'pointercancel'].forEach(ev => cubeWrap.addEventListener(ev, () => { if (dragging) { dragging = false; sfx('blip'); } }));
+spin();
+
 // Toasts
 function showToast(ic, small, text) {
   const t = document.createElement('div');
@@ -275,6 +336,16 @@ function onScroll() {
     sfx('blip'); showToast('★', current.dataset.level === 'CONTACTO' ? 'ÚLTIMO NIVEL' : current.dataset.level + ' ALCANZADO', current.querySelector('h2').textContent);
   }
 }
+// Línea de tiempo: los bloques se apilan al bajar
+const tlEl = document.getElementById('timeline'), tlFill = document.getElementById('tlFill');
+function onTimeline() {
+  if (!tlEl) return;
+  const r = tlEl.getBoundingClientRect();
+  const p = Math.min(1, Math.max(0, (innerHeight * 0.6 - r.top) / r.height));
+  tlFill.style.height = (p * 100) + '%';
+}
+addEventListener('scroll', onTimeline, { passive: true });
+onTimeline();
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
