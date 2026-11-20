@@ -1,4 +1,4 @@
-# Portafolio Profesional · Allison Vargas
+# La Arena de Allison · Portafolio 3D
 
 Portafolio interactivo de **Allison Rocío Vargas Mejía**, técnico en desarrollo de software en formación en **Campuslands Guatemala** y estudiante de Ingeniería en Ciencias y Sistemas.
 
@@ -8,51 +8,58 @@ Portafolio interactivo de **Allison Rocío Vargas Mejía**, técnico en desarrol
 
 ## La idea
 
-El portafolio es un videojuego. Quien lo visita pulsa START y recorre mi perfil nivel por nivel, como en los juegos de estrategia y construcción que me gustan, con música chiptune de fondo.
+Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los juegos de **construcción** y de **estrategia**. Es una arena con un río, dos puentes, torres y un castillo, rodeada de cerezos rosas. Caminas con mi personaje, entras a cada edificio para conocer una parte de mí y picas los bloques brillantes para descubrir mis habilidades.
 
-## Secciones
+## El mapa
 
-| Sección | Contenido |
+| Lugar | Sección |
 | --- | --- |
-| Inicio | Pantalla de START con un bloque 3D que se puede girar, con o sin música |
-| 01 · Sobre mí | Tarjeta de jugadora, historia, estadísticas, inventario de habilidades, la línea de tiempo "Bloque a bloque" y lo que me gusta: videojuegos y música, con una radio integrada |
-| 02 · Proyectos | 15 proyectos como bloques, con filtros por bioma y ventana de detalle |
-| 03 · Aplicaciones | Demos en vivo de mis páginas publicadas, insertadas en la página: CampusShop, Campus Parking y Gestión de Hotel |
-| Contacto | Correo, LinkedIn, GitHub y CV. También hay accesos en la tarjeta de jugadora y en el menú |
+| La casa | Sobre mí: historia, línea de tiempo "Bloque a bloque" y lo que me gusta |
+| Torre de proyectos | Mis 15 proyectos, con filtros por área y detalle de cada uno |
+| Torre arcade | Aplicaciones: mis páginas publicadas, funcionando dentro del portafolio |
+| Escenario | Radio Allison: música chiptune original |
+| Castillo | Contacto: correo, LinkedIn, GitHub y CV |
+| Cofre | Mi CV para abrir o descargar |
+| Bloques brillantes | 18 habilidades para picar y llenar el inventario |
 
-## Características
+## Cómo se juega
 
-- HUD fijo con barra de XP según el avance del scroll y el nivel actual.
-- Menú para saltar a cualquier nivel.
-- Música chiptune original generada con la Web Audio API, con ecualizador animado.
-- Efectos de sonido y notificaciones al llegar a cada nivel.
-- Cielo pixelado animado con estrellas y bloques flotantes en canvas.
-- Arte pixelado único para cada proyecto, generado a partir de su nombre.
-- Código secreto escondido.
-- Diseño responsivo y respeto por la opción de reducir el movimiento.
-- Sin frameworks: HTML, CSS y JavaScript puro.
+- **W A S D** o las flechas para caminar, **Shift** para correr.
+- **E** para entrar a un edificio o picar un bloque.
+- También puedes **tocar el suelo** para caminar hasta ahí, o tocar un edificio o un bloque.
+- El **mapa** de la esquina y el menú **Viajar a…** te llevan a cualquier lugar.
+- Las **misiones** marcan lo que ya visitaste. Si picas las 18 habilidades, ganas la corona.
+- **M** pone o pausa la música.
+
+¿Prefieres leer? El **modo clásico** (`clasico.html`) tiene todo el contenido en una página normal.
 
 ## Tecnologías
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=threedotjs&logoColor=white)
 ![Web Audio API](https://img.shields.io/badge/Web%20Audio%20API-EC4899?style=for-the-badge)
-![Canvas](https://img.shields.io/badge/Canvas-EC4899?style=for-the-badge)
 
-Tipografías: Great Vibes (nombre y títulos), Bubblegum Sans y Manrope (Google Fonts).
+- **Three.js** para el mundo 3D: bloques con texturas pixel art generadas en código, sombras, agua animada, nubes y pétalos.
+- **Web Audio API** para la música chiptune y los efectos de sonido.
+- **Canvas** para el minimapa, las etiquetas y la pantalla de la torre arcade.
+- Tipografías: Great Vibes, Bubblegum Sans y Manrope (Google Fonts).
 
 ## Estructura
 
 ```
 portafolio_profesional/
-├── index.html          # Niveles y estructura de la página
+├── index.html          # La Arena 3D
+├── clasico.html        # Modo clásico
 ├── css/
-│   └── styles.css      # Estilo pixel art, HUD, bloques, demos y animaciones
+│   ├── arena.css       # Estilos de la arena (HUD, paneles, menú)
+│   └── styles.css      # Estilos del modo clásico
 ├── js/
-│   └── main.js         # Datos, música, HUD, proyectos, demos y cielo animado
+│   ├── arena.js        # Mundo 3D, personaje, misiones, habilidades y secciones
+│   └── main.js         # Modo clásico
 ├── img/
-│   └── allison.jpg     # Fotografía de perfil
+│   └── allison.jpg
 ├── cv/
 │   └── CV_Allison_Rocio_Vargas_Mejia.pdf
 └── README.md
@@ -60,18 +67,22 @@ portafolio_profesional/
 
 ## Cómo verlo en local
 
+La arena usa módulos de JavaScript, así que necesita un servidor local:
+
 1. Clona el repositorio:
    ```bash
    git clone https://github.com/allisonrvargas/portafolio_profesional.git
    ```
-2. Abre `index.html` en el navegador, o usa la extensión **Live Server** de VS Code.
+2. Ábrelo con la extensión **Live Server** de VS Code.
 
 ## Cómo editar el contenido
 
-Todo el contenido que cambia está al inicio de `js/main.js`:
+Los datos están al inicio de `js/arena.js`:
 
-- `proyectos`: los bloques del modo construcción.
-- `aplicaciones`: las demos insertadas en la sección Aplicaciones.
+- `proyectos`: los proyectos de la torre.
+- `aplicaciones`: las demos de la torre arcade.
+- `habilidades`: los bloques para picar.
+- `historia`: la línea de tiempo.
 - `pistas`: las canciones de la radio.
 
 ## Contacto

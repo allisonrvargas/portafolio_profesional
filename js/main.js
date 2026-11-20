@@ -117,6 +117,7 @@ function play() {
 function stop() { playing = false; clearInterval(timer); updatePlayer(); }
 function setSound(on) {
   soundOn = on;
+  setTimeout(() => { if (typeof label === 'function') { label(); resetIdle(); } }, 0);
   const b = document.getElementById('soundBtn');
   b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', on ? 'Silenciar música' : 'Activar música');
   if (on) play(); else stop();
@@ -290,23 +291,63 @@ inventario.forEach((it, i) => {
 });
 showItem(0);
 
-// Bloque 3D: gira solo y se puede arrastrar
+// Bloque de navegación: cada cara lleva a una parte del portafolio
 const cube = $('#cube'), cubeWrap = $('#cubeWrap');
-let rx = -24, ry = 35, vy = 0.35, dragging = false, lx = 0, ly = 0;
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-function spin() {
-  if (!dragging && !reduceMotion) ry += vy * (playing ? 2.4 : 1);
-  cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-  requestAnimationFrame(spin);
+const caras = [
+  { n: 'Sobre mí', go: () => $('#sobre-mi').scrollIntoView({ behavior: 'smooth' }) },
+  { n: 'Proyectos', go: () => $('#proyectos').scrollIntoView({ behavior: 'smooth' }) },
+  { n: 'Aplicaciones', go: () => $('#aplicaciones').scrollIntoView({ behavior: 'smooth' }) },
+  { n: 'Contacto', go: () => $('#contacto').scrollIntoView({ behavior: 'smooth' }) },
+  { n: 'Música', go: () => { setSound(!soundOn); showToast('♪', 'RADIO ALLISON', soundOn ? pistas[track].name : 'Música en pausa'); } },
+  { n: 'Mi CV', go: () => window.open('cv/CV_Allison_Rocio_Vargas_Mejia.pdf', '_blank', 'noopener') }
+];
+// rotación (grados) que deja cada cara de frente
+const poses = [[0, 0], [0, -90], [0, -180], [0, 90], [-90, 0], [90, 0]];
+let rx = -12, ry = 18, face = 0, dragging = false, moved = 0, lx = 0, ly = 0, idle = null;
+function render() { cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`; }
+function currentFace() {
+  if (rx <= -45) return 4;
+  if (rx >= 45) return 5;
+  const n = ((Math.round(-ry / 90) % 4) + 4) % 4;
+  return n;
 }
-cubeWrap.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; cubeWrap.setPointerCapture(e.pointerId); });
+function label() { $('#cubeLabel').innerHTML = (face === 4 ? 'Toca el bloque para ' + (soundOn ? 'pausar' : 'poner') + ': ' : face === 5 ? 'Toca el bloque para abrir: ' : 'Toca el bloque para ir a: ') + '<b>' + caras[face].n + '</b>'; }
+function snap(f) {
+  face = f;
+  const [px, py] = poses[f];
+  // elegir el giro más corto en Y
+  if (f < 4) { let target = py; while (target - ry > 180) target -= 360; while (ry - target > 180) target += 360; ry = target; } 
+  rx = px === 0 ? -12 : px;
+  if (f < 4) ry += 18 * 0; 
+  render(); label();
+}
+function rotateBy(dir) { const base = face >= 4 ? 0 : face; snap((base + dir + 4) % 4); sfx('blip'); }
+$('#cubePrev').addEventListener('click', () => { rotateBy(-1); resetIdle(); });
+$('#cubeNext').addEventListener('click', () => { rotateBy(1); resetIdle(); });
+cubeWrap.addEventListener('pointerdown', e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; cube.classList.add('dragging'); cubeWrap.setPointerCapture(e.pointerId); resetIdle(); });
 cubeWrap.addEventListener('pointermove', e => {
   if (!dragging) return;
-  ry += (e.clientX - lx) * 0.6; rx = Math.max(-80, Math.min(80, rx - (e.clientY - ly) * 0.6));
-  lx = e.clientX; ly = e.clientY;
+  const dx = e.clientX - lx, dy = e.clientY - ly; moved += Math.abs(dx) + Math.abs(dy);
+  ry += dx * 0.7; rx = Math.max(-90, Math.min(90, rx - dy * 0.7)); lx = e.clientX; ly = e.clientY; render();
 });
-['pointerup', 'pointercancel'].forEach(ev => cubeWrap.addEventListener(ev, () => { if (dragging) { dragging = false; sfx('blip'); } }));
-spin();
+function endDrag() {
+  if (!dragging) return; dragging = false; cube.classList.remove('dragging');
+  if (moved < 6) { activate(); return; }
+  snap(currentFace()); sfx('blip');
+}
+cubeWrap.addEventListener('pointerup', endDrag);
+cubeWrap.addEventListener('pointercancel', endDrag);
+cubeWrap.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); rotateBy(-1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); rotateBy(1); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); snap(4); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); snap(5); }
+});
+function activate() { sfx('open'); caras[face].go(); label(); }
+// gira sola a la siguiente cara mientras nadie la toca
+function resetIdle() { clearInterval(idle); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) idle = setInterval(() => { if (!dragging && scrollY < innerHeight * 0.6) { const base = face >= 4 ? 0 : face; snap((base + 1) % 4); } }, playing ? 1600 : 3200); }
+snap(0); resetIdle();
 
 // Toasts
 function showToast(ic, small, text) {
