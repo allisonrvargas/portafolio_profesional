@@ -657,7 +657,7 @@ const lugares = [
   { id: 'proyectos', n: 'Proyectos', l: 'Torre de proyectos', door: [-9, -8.6], at: [-9, -12, 13.6], c: '#a78bfa', q: 'Explora la torre de proyectos', open: () => panelProyectos() },
   { id: 'apps', n: 'Aplicaciones', l: 'Torre arcade · Apps', door: [9, -8.6], at: [9, -12, 13.6], c: '#db2777', q: 'Juega en la torre arcade', open: () => panelApps() },
   { id: 'castillo', n: 'Contacto', l: 'Castillo · Sube las gradas', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
-  { id: 'granja', n: 'Granja', l: 'Granja · Corral', door: [0, -2.4], at: [0, -5, 3.4], c: '#16a34a', open: () => toast('➰', 'LA GRANJA', 'Junta a los animales', 'Busca los 6 animales por la arena, lázalos con E y tráelos al corral. Cada uno te muestra un proyecto.', '#16a34a') },
+  { id: 'granja', n: 'Granja', l: 'Granja · Corral', door: [0, -2.4], at: [0, -5, 3.4], c: '#16a34a', open: () => panelGranja() },
   { id: 'cofre', n: 'Mi CV', l: 'Cofre · Mi CV', door: [5.5, -13.9], at: [5.5, -15.5, 2.6], c: '#0d9488', open: () => panelCofre() }
 ];
 const visited = new Set();
@@ -1043,6 +1043,22 @@ function animalOk(x, z, from) {
   if (z > -1.9 && z < 0.9 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4)) return false;
   return Math.abs(groundBelow(x, z, from + 1.2) - from) <= 0.6;
 }
+
+function panelGranja() {
+  const rows = animals.map(a => {
+    const st = a.state === 'corral' ? 'En el corral' : a.state === 'mascota' ? 'Tu mascota' : a.state === 'lazo' ? 'Te sigue' : 'Suelto';
+    return `<li class="${a.state === 'libre' ? '' : 'ok'}"><b>${a.n}</b><span>${st}</span>${a.state === 'libre' ? `<button class="btn" data-find="${a.i}">Llévame</button>` : `<em>${proyectos[a.p].t}</em>`}</li>`;
+  }).join('');
+  showPanel(`<p class="p-kicker">LA GRANJA · ${penned}/${animals.length} EN EL CORRAL</p><h2 id="panelTitle">Junta a los animales</h2>
+    <p class="lead">Hay 6 animales sueltos por la arena. Acércate a uno y pulsa <strong>E</strong> para lazarlo; te seguirá. Tráelo a este corral y te mostrará uno de mis proyectos. Con los 6 adentro ganas una <strong>mascota</strong>.</p>
+    <p>En el mapa de la esquina los ves como cabecitas. Toca <strong>Llévame</strong> para ir hasta uno.</p>
+    <ul class="farm-list">${rows}</ul>`, () => {
+    panelBody.querySelectorAll('[data-find]').forEach(bt => bt.addEventListener('click', () => {
+      const a = animals[+bt.dataset.find]; closePanel(); planTo(a.g.position.x, a.g.position.z + 1.3, () => { if (a.state === 'libre' && Math.hypot(player.position.x - a.g.position.x, player.position.z - a.g.position.z) < 3) lasso(a); });
+      toast('➰', 'VAMOS POR ÉL', a.n, 'Al llegar lo lazo automáticamente.', '#16a34a');
+    }));
+  });
+}
 function lasso(a) {
   if (a.state === 'corral' && penned === animals.length) { choosePet(a); return; }
   if (a.state !== 'libre') return;
@@ -1424,16 +1440,16 @@ function update(dt, t) {
   const speed = keys.shift ? 8.5 : 5;
   if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
     const c = Math.cos(camYaw), sN = Math.sin(camYaw); const wx = mx * c + mz * sN, wz = -mx * sN + mz * c; mx = wx; mz = wz; }
-  // Q y R giran la cámara; C la centra
-  if (started && !panelOpen && !selecting) { if (keys.q) camYaw += dt * 2; if (keys.r) camYaw -= dt * 2; if (keys.c) { camYaw = 0; camPitch = 1; } }
   else if (target && !mining) {
     const dx = target[0] - p.x, dz = target[1] - p.z, d = Math.hypot(dx, dz);
-    if (d < 0.2) { if (waypoints.length) { target = waypoints.shift(); } else { target = null; marker.visible = false; const cb = onArrive; onArrive = null; if (cb) cb(); } }
+    if (d < 0.2) { if (waypoints.length) { target = waypoints.shift(); lastDist = Infinity; stuckT = 0; } else { target = null; marker.visible = false; const cb = onArrive; onArrive = null; if (cb) cb(); } }
     else {
       mx = dx / d; mz = dz / d;
-      if (d < lastDist - 0.01) { lastDist = d; stuckT = 0; } else if ((stuckT += dt) > 0.7) { target = null; waypoints = []; onArrive = null; marker.visible = false; }
+      if (d < lastDist - 0.01) { lastDist = d; stuckT = 0; } else if ((stuckT += dt) > 1.2) { target = null; waypoints = []; onArrive = null; marker.visible = false; }
     }
   }
+  // Q y R giran la cámara; C la centra
+  if (started && !panelOpen && !selecting) { if (keys.q) camYaw += dt * 2; if (keys.r) camYaw -= dt * 2; if (keys.c) { camYaw = 0; camPitch = 1; } }
   autoWalk = !!target && !(keys.w || keys.a || keys.s || keys.d || keys.arrowup || keys.arrowdown || keys.arrowleft || keys.arrowright);
   if (mx || mz) {
     let hitWall = false;
@@ -1735,9 +1751,9 @@ function talkNpc() {
     <p>Cada edificio es una parte de mí: la <strong>casa</strong> es quién soy, la <strong>torre de proyectos</strong> guarda lo que he construido, la <strong>torre arcade</strong> tiene mis apps funcionando y en el <strong>castillo</strong> está mi historia y mi contacto.</p>
     <p>Los <strong>bloques brillantes</strong> son mis habilidades: pícalos. Los <strong>animales</strong> llévalos al corral y cada uno te mostrará un proyecto.</p>
     <h3>¿A dónde te llevo?</h3>
-    <div class="row"><button class="btn" data-go="casa">La casa</button><button class="btn" data-go="proyectos">Proyectos</button><button class="btn" data-go="granja">La granja</button><button class="btn big" id="npcQuick">Ver todo rápido <small>sin jugar</small></button></div>
+    <div class="row"><button class="btn" data-go="casa">La casa</button><button class="btn" data-go="proyectos">Proyectos</button><button class="btn" data-go="apps">Torre arcade</button><button class="btn" data-go="granja">La granja</button><button class="btn" data-go="musica">Escenario</button><button class="btn" data-go="castillo">Castillo</button><button class="btn big" id="npcQuick">Ver todo rápido <small>sin jugar</small></button></div>
     </div></div>`, () => {
-    panelBody.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { closePanel(); travel(lugares.find(l => l.id === b.dataset.go)); }));
+    panelBody.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { const L = lugares.find(l => l.id === b.dataset.go); closePanel(); travel(L); toast('➜', 'LA GUÍA TE LLEVA', L.n, 'Camino solo hasta allá. Si tocas una tecla de movimiento, tomas el control.', '#be185d'); }));
     $('#npcQuick').addEventListener('click', openQuick);
   });
   progress.npc = true; saveProgress();
