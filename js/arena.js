@@ -109,6 +109,10 @@ function sfx(k) {
   if (k === 'open') { tone(72, t, 0.07); tone(79, t + 0.07, 0.12); }
   if (k === 'jump') { tone(67, t, 0.06, 'square', 0.15); tone(74, t + 0.05, 0.08, 'square', 0.15); }
   if (k === 'land') noise(t, 0.12);
+  if (k === 'spawn') { [52, 49, 46].forEach((n, i) => tone(n, t + i * 0.09, 0.14, 'sawtooth', 0.18)); }
+  if (k === 'hurt') { tone(58, t, 0.12, 'sawtooth', 0.3); tone(52, t + 0.08, 0.14, 'sawtooth', 0.3); }
+  if (k === 'fuse') { for (let i = 0; i < 6; i++) grit(t + i * 0.18, 0.12, 3000, 0.25); }
+  if (k === 'boom') { grit(t, 0.7, 1200, 2.2, 80); tone(36, t, 0.5, 'triangle', 0.9); }
   if (k === 'win') { [60, 64, 67, 72, 76, 79, 84, 88].forEach((n, i) => tone(n, t + i * 0.08, 0.16, 'square', 0.3)); }
 }
 const pistas = [
@@ -178,11 +182,11 @@ const scene = new THREE.Scene();
 { // cielo degradado
   const c = document.createElement('canvas'); c.width = 2; c.height = 256; const g = c.getContext('2d');
   const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#ffc9e3'); gr.addColorStop(0.55, '#ffe4f1'); gr.addColorStop(1, '#fff6fa');
-  g.fillStyle = gr; g.fillRect(0, 0, 2, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; scene.background = t;
+  g.fillStyle = gr; g.fillRect(0, 0, 2, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; scene.background = t; window.__daySky = t;
 }
 scene.fog = new THREE.Fog(0xffe4f1, 60, 120);
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 300);
-scene.add(new THREE.HemisphereLight(0xfff4fa, 0xd8a7c0, 1.05));
+const hemi = new THREE.HemisphereLight(0xfff4fa, 0xd8a7c0, 1.05); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 1.7);
 sun.position.set(20, 34, 14); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -34, right: 34, top: 34, bottom: -34, near: 1, far: 90 }); sun.shadow.bias = -0.0006;
@@ -687,6 +691,159 @@ function sleep() {
   }, 2200);
 }
 
+
+/* ---------------- MODO NOCHE Y MONSTRUOS ---------------- */
+const nightSky = (() => {
+  const c = document.createElement('canvas'); c.width = 2; c.height = 256; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#0f0a24'); gr.addColorStop(0.6, '#2a1747'); gr.addColorStop(1, '#4a2160');
+  g.fillStyle = gr; g.fillRect(0, 0, 2, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const starGeo = new THREE.BufferGeometry(), starPos = new Float32Array(500 * 3);
+for (let i = 0; i < 500; i++) { const a = Math.random() * Math.PI * 2, r = 70 + Math.random() * 30; starPos[i * 3] = Math.cos(a) * r; starPos[i * 3 + 1] = 25 + Math.random() * 45; starPos[i * 3 + 2] = Math.sin(a) * r; }
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfdf2ff, size: 0.6, fog: false })); stars.visible = false; scene.add(stars);
+const moon = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d');
+  g.fillStyle = '#fff7fb'; g.fillRect(4, 4, 24, 24); g.fillStyle = '#f3d6e6'; [[9, 9, 5, 4], [18, 16, 6, 5], [11, 20, 3, 3]].forEach(a => g.fillRect(...a));
+  const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false })); sp.scale.set(9, 9, 1); sp.visible = false; scene.add(sp); return sp;
+})();
+const lantern = new THREE.PointLight(0xffc4e1, 0, 11, 1.4); scene.add(lantern);
+let night = false, spawnT = 0;
+const monsters = [];
+function setNight(on) {
+  night = on;
+  scene.background = on ? nightSky : window.__daySky;
+  scene.fog.color.set(on ? 0x2a1747 : 0xffe4f1); scene.fog.near = on ? 25 : 60; scene.fog.far = on ? 75 : 120;
+  hemi.intensity = on ? 0.32 : 1.05; hemi.color.set(on ? 0x9aa4ff : 0xfff4fa); hemi.groundColor.set(on ? 0x3b2050 : 0xd8a7c0);
+  sun.intensity = on ? 0.35 : 1.7; sun.color.set(on ? 0xb9c4ff : 0xffffff);
+  lantern.intensity = on ? 9 : 0; stars.visible = moon.visible = on;
+  ores.forEach(o => { if (!o.mined) o.m.material.emissiveIntensity = on ? 0.7 : 0.18; });
+  const b = $('#nightBtn'); b.setAttribute('aria-pressed', on); b.textContent = on ? '☀' : '☾'; b.setAttribute('aria-label', on ? 'Cambiar a modo día' : 'Cambiar a modo noche');
+  spawnT = 0;
+  if (on) {
+    if (minedCount < habilidades.length) toast('☾', 'CAYÓ LA NOCHE', '¡Cuidado con los monstruos!', 'Aparece uno cada 20 segundos y te persigue. Pica un bloque de habilidad para hacerlos desaparecer.', '#7c3aed');
+    else toast('☾', 'NOCHE TRANQUILA', 'Ya no hay monstruos', 'Encontraste todas las habilidades: la arena es tuya.', '#7c3aed');
+  } else { clearMonsters(false); toast('☀', 'AMANECIÓ', 'Modo día', 'Los monstruos se fueron.'); }
+}
+
+function monsterModel(kind) {
+  const g = new THREE.Group(); const legs = [];
+  if (kind === 'esqueleto') {
+    const bone = 0xf1ece4, dark = 0x2b2033;
+    [-0.13, 0.13].forEach(x => { const l = new THREE.Group(); l.position.set(x, 0.62, 0); g.add(l); part(0.12, 0.62, 0.12, bone, 0, -0.31, 0, l); legs.push(l); });
+    part(0.5, 0.08, 0.2, bone, 0, 0.66, 0, g); part(0.08, 0.62, 0.08, bone, 0, 0.98, 0, g);
+    [0.82, 0.96, 1.1].forEach(y => part(0.46, 0.06, 0.24, bone, 0, y, 0, g));
+    [-0.3, 0.3].forEach(x => { const a = new THREE.Group(); a.position.set(x, 1.24, 0); a.rotation.x = -1.3; g.add(a); part(0.1, 0.62, 0.1, bone, 0, -0.31, 0, a); legs.push(a); });
+    part(0.52, 0.5, 0.48, bone, 0, 1.54, 0, g);
+    part(0.13, 0.13, 0.02, dark, -0.12, 1.57, 0.245, g); part(0.13, 0.13, 0.02, dark, 0.12, 1.57, 0.245, g);
+    part(0.07, 0.07, 0.02, 0xec4899, -0.12, 1.57, 0.26, g); part(0.07, 0.07, 0.02, 0xec4899, 0.12, 1.57, 0.26, g);
+    part(0.3, 0.05, 0.02, dark, 0, 1.38, 0.245, g);
+    part(0.56, 0.12, 0.52, 0xbe185d, 0, 1.76, 0, g); // pañoleta
+  } else if (kind === 'arana') {
+    const body = 0x3b1f4f;
+    part(0.9, 0.5, 1.0, body, 0, 0.55, -0.15, g); part(0.6, 0.45, 0.5, 0x4c2a63, 0, 0.55, 0.5, g);
+    [[-0.15, 0.62, 0.76], [0.15, 0.62, 0.76], [-0.08, 0.5, 0.76], [0.08, 0.5, 0.76]].forEach(([x, y, z]) => part(0.1, 0.1, 0.02, 0xf472b6, x, y, z, g));
+    part(0.6, 0.06, 0.6, 0xec4899, 0, 0.81, -0.2, g);
+    for (let i = 0; i < 4; i++) for (const side of [-1, 1]) {
+      const l = new THREE.Group(); l.position.set(side * 0.42, 0.6, 0.35 - i * 0.28); l.rotation.z = side * 0.7; g.add(l);
+      part(0.9, 0.08, 0.08, 0x2b1638, side * 0.45, 0, 0, l); legs.push(l);
+    }
+  } else {
+    // Petardín: bomba andante original con mecha encendida
+    [-0.15, 0.15].forEach(x => { const l = new THREE.Group(); l.position.set(x, 0.32, 0); g.add(l); part(0.18, 0.32, 0.2, 0x1f1530, 0, -0.16, 0, l); legs.push(l); });
+    part(0.8, 0.75, 0.8, 0x3a2a55, 0, 0.72, 0, g); part(0.84, 0.12, 0.84, 0xf472b6, 0, 0.62, 0, g); part(0.84, 0.12, 0.84, 0xf472b6, 0, 0.86, 0, g);
+    part(0.16, 0.12, 0.02, 0xffffff, -0.17, 0.8, 0.41, g); part(0.16, 0.12, 0.02, 0xffffff, 0.17, 0.8, 0.41, g);
+    part(0.08, 0.08, 0.02, 0x111111, -0.15, 0.78, 0.42, g); part(0.08, 0.08, 0.02, 0x111111, 0.15, 0.78, 0.42, g);
+    part(0.3, 0.06, 0.02, 0x111111, 0, 0.6, 0.41, g);
+    part(0.12, 0.3, 0.12, 0x7a4e3a, 0, 1.24, 0, g);
+    const spark = part(0.16, 0.16, 0.16, 0xfcd34d, 0, 1.44, 0, g); spark.material.emissive = new THREE.Color(0xf59e0b); spark.material.emissiveIntensity = 1; g.userData.spark = spark;
+  }
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return { g, legs };
+}
+const monsterInfo = {
+  esqueleto: { n: 'Esqueleto', speed: 2.6 },
+  arana: { n: 'Araña', speed: 3.4 },
+  petardin: { n: 'Petardín', speed: 2.1 }
+};
+function spawnMonster() {
+  if (monsters.length >= 6) return;
+  const kinds = Object.keys(monsterInfo), kind = kinds[Math.floor(Math.random() * kinds.length)];
+  const p = player.position; let pos = null;
+  for (let tries = 0; tries < 40 && !pos; tries++) {
+    const a = Math.random() * Math.PI * 2, r = 9 + Math.random() * 5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
+    if (x < -15 || x > 15 || z < -25 || z > 22) continue;
+    if (!blocked(x, z) && (z > -0.5) === (p.z > -0.5)) pos = [x, z];
+  }
+  if (!pos) return;
+  const { g, legs } = monsterModel(kind); const y = groundBelow(pos[0], pos[1], 6);
+  g.position.set(pos[0], y, pos[1]); g.scale.setScalar(0.01); scene.add(g);
+  monsters.push({ kind, g, legs, y, t: Math.random() * 6, born: 0, cool: 0, fuse: 0 });
+  poof(pos[0], y + 0.6, pos[1], 0x7c3aed); sfx('spawn');
+  toast(kind === 'arana' ? '✶' : kind === 'petardin' ? '✸' : '☠', 'APARECIÓ UN MONSTRUO', monsterInfo[kind].n, 'Pica un bloque de habilidad para hacerlo desaparecer.', '#7c3aed');
+}
+function poof(x, y, z, color) {
+  for (let i = 0; i < 16; i++) {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshLambertMaterial({ color: i % 2 ? color : 0xe5e7eb }));
+    d.position.set(x, y, z); d.userData.v = new THREE.Vector3((Math.random() - 0.5) * 6, 2 + Math.random() * 4, (Math.random() - 0.5) * 6); d.userData.life = 1; scene.add(d); debris.push(d);
+  }
+}
+function killMonster(m, color = 0xf9a8d4) { scene.remove(m.g); poof(m.g.position.x, m.g.position.y + 0.6, m.g.position.z, color); }
+function clearMonsters(announce) {
+  if (!monsters.length) return;
+  const n = monsters.length; monsters.forEach(m => killMonster(m)); monsters.length = 0;
+  if (announce) { sfx('pop'); toast('✦', 'MONSTRUOS DERROTADOS', n === 1 ? '¡Desapareció el monstruo!' : `¡Desaparecieron ${n} monstruos!`, 'Romper un bloque de habilidad los espanta.', '#ec4899'); }
+}
+function hurt(m, power) {
+  const p = player.position, dx = p.x - m.g.position.x, dz = p.z - m.g.position.z, d = Math.hypot(dx, dz) || 1;
+  for (let i = 0; i < 10; i++) { const nx = p.x + dx / d * power * 0.12, nz = p.z + dz / d * power * 0.12; if (!hits(nx, feet, nz)) { p.x = nx; p.z = nz; } }
+  vy = 5; onGround = false; target = null; waypoints = []; mining = null; crack.visible = false;
+  const f = $('#hurt'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); sfx('hurt');
+}
+function updateMonsters(dt, t) {
+  if (!started || selecting) return;
+  const cleared = minedCount >= habilidades.length;
+  if (cleared && monsters.length) clearMonsters(true);
+  if (night && !cleared && !panelOpen) { spawnT += dt; if (spawnT >= 20) { spawnT = 0; spawnMonster(); } }
+  const p = player.position;
+  for (let i = monsters.length - 1; i >= 0; i--) {
+    const m = monsters[i], info = monsterInfo[m.kind]; m.t += dt; m.born = Math.min(1, m.born + dt * 2.5); m.g.scale.setScalar(m.born); m.cool = Math.max(0, m.cool - dt);
+    const dx = p.x - m.g.position.x, dz = p.z - m.g.position.z, d = Math.hypot(dx, dz);
+    let moving = false;
+    if (!panelOpen && d > 0.9 && m.fuse === 0) {
+      const sp = info.speed * dt, nx = m.g.position.x + dx / d * sp, nz = m.g.position.z + dz / d * sp;
+      const gy = groundBelow(nx, nz, m.y + 1.2);
+      const ok = (x, z) => Math.abs(groundBelow(x, z, m.y + 1.2) - m.y) <= 1.01 && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4));
+      if (ok(nx, nz)) { m.g.position.x = nx; m.g.position.z = nz; moving = true; }
+      else if (ok(nx, m.g.position.z)) { m.g.position.x = nx; moving = true; }
+      else if (ok(m.g.position.x, nz)) { m.g.position.z = nz; moving = true; }
+      const gy2 = groundBelow(m.g.position.x, m.g.position.z, m.y + 1.2); m.y += (gy2 - m.y) * Math.min(1, dt * 10); m.g.position.y = m.y;
+      m.g.rotation.y = Math.atan2(dx, dz);
+    }
+    const sw = moving ? Math.sin(m.t * (m.kind === 'arana' ? 16 : 10)) : 0;
+    m.legs.forEach((l, k) => { if (m.kind === 'arana') l.rotation.x = sw * 0.4 * (k % 2 ? 1 : -1); else l.rotation.x = (m.kind === 'esqueleto' && k > 1) ? -1.3 + sw * 0.2 : sw * 0.7 * (k % 2 ? 1 : -1); });
+    if (m.g.userData.spark) m.g.userData.spark.visible = Math.floor(t * 10) % 2 === 0 || m.fuse > 0;
+    const close = d < 1.2 && Math.abs(feet - m.y) < 1.6;
+    if (m.kind === 'petardin') {
+      if (close && m.fuse === 0) { m.fuse = 0.01; sfx('fuse'); }
+      if (m.fuse > 0) {
+        m.fuse += dt; const k = 1 + Math.sin(m.fuse * 30) * 0.08 + m.fuse * 0.25; m.g.scale.setScalar(k);
+        m.g.traverse(o => { if (o.isMesh && o !== m.g.userData.spark) o.material.emissive?.setHex(Math.floor(m.fuse * 8) % 2 ? 0x664455 : 0x000000); });
+        if (m.fuse > 1.2) {
+          sfx('boom'); poof(m.g.position.x, m.g.position.y + 0.6, m.g.position.z, 0xfcd34d); poof(m.g.position.x, m.g.position.y + 0.8, m.g.position.z, 0xec4899);
+          if (Math.hypot(p.x - m.g.position.x, p.z - m.g.position.z) < 3) { hurt(m, 9); toast('✸', '¡BOOM!', 'Te alcanzó la explosión', 'El Petardín explotó cerca de ti.', '#f59e0b'); }
+          scene.remove(m.g); monsters.splice(i, 1);
+        }
+      }
+    } else if (close && m.cool === 0) {
+      m.cool = 1.4; hurt(m, 5);
+      toast(m.kind === 'arana' ? '✶' : '☠', '¡AUCH!', `Te atrapó ${m.kind === 'arana' ? 'la araña' : 'el esqueleto'}`, 'Corre con Shift o pica un bloque para salvarte.', '#e11d48');
+    }
+  }
+  lantern.position.set(p.x, feet + 2.2, p.z);
+  if (night) { moon.position.set(camLook.x - 30, 38, camLook.z - 55); stars.position.set(camLook.x, 0, camLook.z); }
+}
+
 function nearest() {
   const p = player.position; let best = null, bd = 1e9;
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
@@ -731,6 +888,7 @@ function breakOre(o) {
   $('#invCount').textContent = minedCount;
   toast(h.a.length > 3 ? h.a.slice(0, 3) : h.a, `HABILIDAD ${minedCount}/${habilidades.length}`, h.n, 'Usada en: ' + h.u, h.c);
   renderQuests();
+  clearMonsters(true);
   if (minedCount === habilidades.length) setTimeout(() => { if (crown) crown.visible = true; sfx('win'); confetti(); toast('♛', 'LOGRO DESBLOQUEADO', 'Maestra constructora', 'Encontraste todas mis habilidades. ¡Ganaste la corona!', '#d97706'); }, 700);
 }
 
@@ -755,6 +913,7 @@ const menu = $('#menu'), menuBtn = $('#menuBtn');
 function closeMenu() { menu.hidden = true; menuBtn.setAttribute('aria-expanded', 'false'); }
 menuBtn.addEventListener('click', () => { menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', String(!menu.hidden)); sfx('blip'); });
 $('#soundBtn').addEventListener('click', () => setMusic(!soundOn));
+$('#nightBtn').addEventListener('click', () => setNight(!night));
 $('#promptBtn').addEventListener('click', interact);
 $('#jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
 
@@ -896,6 +1055,7 @@ addEventListener('keydown', e => {
   if ((k === 'e' || k === 'enter') && !e.repeat) interact();
   if (k === ' ' && !e.repeat) jumpReq = true;
   if (k === 'm' && !e.repeat) setMusic(!soundOn);
+  if (k === 'n' && !e.repeat) setNight(!night);
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 addEventListener('blur', () => Object.keys(keys).forEach(k => keys[k] = false));
@@ -1011,6 +1171,7 @@ function update(dt, t) {
   debris.forEach((d, i) => { d.userData.v.y -= 14 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.6) { d.position.y = 0.6; d.userData.v.multiplyScalar(0.5); } d.userData.life -= dt * 1.2; d.scale.setScalar(Math.max(0.01, d.userData.life)); if (d.userData.life <= 0) { scene.remove(d); debris.splice(i, 1); } });
 
   if (started && !selecting) checkHitos();
+  updateMonsters(dt, t);
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
   ores.forEach(o => { if (o.mined || mining?.o === o) return; o.m.position.y = 1 + Math.sin(t * 2 + o.i) * 0.08; o.m.rotation.y = Math.sin(t * 0.8 + o.i) * 0.25; o.m.material.emissiveIntensity = 0.18 + Math.max(0, Math.sin(t * 3 + o.i)) * 0.3; });
@@ -1130,4 +1291,4 @@ buildCharacter(0);
 })();
 
 // acceso para depurar desde la consola del navegador
-window.arena = { hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
+window.arena = { setNight, spawnMonster, monsters, hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };

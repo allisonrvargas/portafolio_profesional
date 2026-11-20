@@ -30,6 +30,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - El **mapa** de la esquina y el menú **Viajar a…** te llevan a cualquier lugar.
 - Las **misiones** marcan lo que ya visitaste. Si picas las 18 habilidades, ganas la corona.
 - **M** pone o pausa la música.
+- **N** o el botón de la luna activan el **modo noche**: cada 20 segundos aparece un monstruo original (Esqueleto, Araña o Petardín, una bomba andante) que te persigue. Al romper un bloque de habilidad desaparecen todos, y cuando tienes las 18 habilidades ya no aparecen más.
 - **Arrastra con el mouse** (o el dedo) para girar e inclinar la cámara alrededor de tu personaje; **Q** y **R** también la giran y **C** la centra. Una flecha rosa sobre tu personaje se ve incluso detrás de árboles y torres.
 - Al empezar eliges tu **personaje en forma de carta**: 10 personajes originales al estilo de cartas de batalla (Allison, Caballera Rosa, Arquera del Bosque, Maga de Código, Byte, Martilla de Cristal, Gólem de Musgo, Calaverita DJ, Minera Exploradora y Alquimista Lila). Puedes cambiarlo desde el menú.
 - Picas con **herramientas** que mejoran mientras avanzas: madera, piedra, hierro, oro y diamante. Cada una pica más rápido y el bloque se va agrietando con sonido de piedra.

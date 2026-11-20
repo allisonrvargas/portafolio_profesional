@@ -40,6 +40,7 @@
       <span><kbd>Shift</kbd> correr</span>
       <span><kbd>Espacio</kbd> saltar</span>
       <span><kbd>E</kbd> entrar / picar</span>
+      <span><kbd>N</kbd> modo noche</span>
       <span>arrastra para girar la cámara · <kbd>Q</kbd><kbd>R</kbd> girar · <kbd>C</kbd> centrar</span>
       <span>o toca el suelo para ir ahí</span>
     </div>
@@ -71,6 +72,7 @@
   </div>
   <div class="hud-right">
     <div class="hud-btns">
+      <button class="btn icon" id="nightBtn" aria-pressed="false" aria-label="Cambiar a modo noche">☾</button>
       <button class="btn icon" id="soundBtn" aria-pressed="false" aria-label="Activar música">♪</button>
       <button class="btn icon" id="menuBtn" aria-expanded="false" aria-label="Abrir menú de viaje">☰</button>
     </div>
@@ -106,6 +108,7 @@
   <ol class="tl-list" id="tlList"></ol>
 </aside>
 <div class="fade" id="fade" hidden><p>Zzz…</p></div>
+<div class="hurt" id="hurt" aria-hidden="true"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="module" src="js/arena.js"></script>
