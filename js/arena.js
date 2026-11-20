@@ -106,6 +106,7 @@ function sfx(k) {
   if (k === 'hit') { noise(t, 0.35); tone(45, t, 0.08, 'square', 0.3); }
   if (k === 'dig') grit(t, 0.09, 600 + Math.random() * 500, 0.9);
   if (k === 'break') { grit(t, 0.28, 900, 1.2, 250); [0.05, 0.11, 0.17, 0.24].forEach((d, i) => grit(t + d, 0.06, 500 + i * 180, 0.6)); tone(40, t, 0.12, 'triangle', 0.5); }
+  if (k === 'arrow') { grit(t, 0.12, 2400, 0.35); tone(81, t, 0.05, 'triangle', 0.15); }
   if (k === 'pop') { [76, 83, 88].forEach((n, i) => tone(n, t + i * 0.05, 0.1, 'square', 0.3)); }
   if (k === 'open') { tone(72, t, 0.07); tone(79, t + 0.07, 0.12); }
   if (k === 'jump') { tone(67, t, 0.06, 'square', 0.15); tone(74, t + 0.05, 0.08, 'square', 0.15); }
@@ -327,10 +328,12 @@ function castle(cx, cz) {
   for (let z = z1; z <= z2; z++) if (z % 2 === 0) { put(x1, 6, z, 'quartz'); put(x2, 6, z, 'quartz'); }
   [[x1, z1], [x2, z1], [x1, z2], [x2, z2]].forEach(([x, z]) => {
     fill(x - 1, 1, z - 1, x + 1, 8, z + 1, 'cobble');
-    fill(x - 1, 9, z - 1, x + 1, 9, z + 1, 'woolPink'); put(x, 10, z, 'woolPink'); put(x, 11, z, 'woolRose');
+    fill(x - 1, 9, z - 1, x + 1, 9, z + 1, 'woolPink');
+    if (z === z2) { [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => put(x + a, 10, z + b, 'woolRose')); } // torre de princesa: almenas
+    else { put(x, 10, z, 'woolPink'); put(x, 11, z, 'woolRose'); }
   });
   fill(cx - 2, 1, cz - 2, cx + 2, 9, cz, 'quartz'); fill(cx - 2, 10, cz - 2, cx + 2, 10, cz, 'gold');
-  fill(cx - 1, 11, cz - 1, cx + 1, 11, cz - 1, 'woolPink'); put(cx, 12, cz - 1, 'woolPink');
+  fill(cx - 1, 11, cz - 1, cx + 1, 11, cz - 1, 'woolPink'); 
   [[cx - 3, z2 + 1], [cx + 3, z2 + 1]].forEach(([x, z]) => { put(x, 1, z, 'gold'); });
   solid(x1 - 1.5, z1 - 1.5, x2 + 1.5, z2 + 1.5);
 }
@@ -791,6 +794,85 @@ part(2, 0.3, 1, 0x7a4e3a, 0, 0.15, 0, bed); part(1.96, 0.18, 0.96, 0xec4899, 0.1
 part(0.1, 0.7, 1, 0x7a4e3a, -1, 0.35, 0, bed); part(0.1, 0.45, 1, 0x7a4e3a, 1, 0.22, 0, bed);
 put(0, 10, -20, 'gold'); put(1, 10, -20, 'gold'); put(2, 10, -20, 'gold');
 const bedSign = label('Cama · Volver al inicio', '#9d174d'); bedSign.scale.set(4.4, 1.1, 1); bedSign.position.set(BED[0], 3.4, BED[1]); scene.add(bedSign);
+/* ---------------- GUARDIANES DEL CASTILLO (diseño original) ---------------- */
+function buildPrincess() {
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  part(0.62, 0.5, 0.5, 0x0f766e, 0, 0.25, 0, body);            // falda turquesa
+  part(0.66, 0.08, 0.54, 0xfbbf24, 0, 0.52, 0, body);           // cinturón dorado
+  part(0.5, 0.45, 0.36, 0x14b8a6, 0, 0.78, 0, body);            // blusa
+  part(0.46, 0.46, 0.46, 0xf1c9a5, 0, 1.24, 0, body);           // cara
+  part(0.5, 0.18, 0.5, 0x5b3a29, 0, 1.5, -0.01, body);          // cabello
+  part(0.5, 0.5, 0.12, 0x5b3a29, 0, 1.2, -0.24, body);          // cabello atrás
+  part(0.14, 0.6, 0.14, 0x5b3a29, 0, 0.8, -0.3, body);          // trenza
+  part(0.07, 0.07, 0.02, 0x1f2937, -0.1, 1.27, 0.235, body); part(0.07, 0.07, 0.02, 0x1f2937, 0.1, 1.27, 0.235, body);
+  part(0.36, 0.08, 0.36, 0xe5e7eb, 0, 1.63, 0, body); part(0.08, 0.1, 0.08, 0xf472b6, 0, 1.72, 0.12, body); // tiara
+  const arm = new THREE.Group(); arm.position.set(0.3, 0.95, 0); body.add(arm);
+  part(0.14, 0.42, 0.14, 0x14b8a6, 0, -0.18, 0, arm);
+  const bow = new THREE.Group(); bow.position.set(0, -0.38, 0.12); arm.add(bow);
+  part(0.06, 0.7, 0.06, 0x8b5a2b, 0, 0, 0.12, bow); part(0.02, 0.66, 0.02, 0xffffff, 0, 0, 0.02, bow);
+  part(0.14, 0.42, 0.14, 0x14b8a6, -0.3, 0.77, 0.05, body);
+  return { g, body, arm };
+}
+function buildKing() {
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  part(0.72, 0.6, 0.52, 0x6d28d9, 0, 0.3, 0, body);             // túnica lila
+  part(0.76, 0.1, 0.56, 0xfbbf24, 0, 0.62, 0, body);            // cinturón
+  part(0.64, 0.5, 0.42, 0x7c3aed, 0, 0.9, 0, body);
+  part(0.86, 0.75, 0.08, 0xdb2777, 0, 0.75, -0.26, body);       // capa rosa
+  part(0.86, 0.12, 0.5, 0xffffff, 0, 1.13, -0.02, body);        // cuello de armiño
+  part(0.5, 0.48, 0.48, 0xe8b48f, 0, 1.43, 0, body);            // cara
+  part(0.5, 0.26, 0.1, 0xf3f4f6, 0, 1.28, 0.24, body);          // barba blanca
+  part(0.08, 0.08, 0.02, 0x1f2937, -0.11, 1.5, 0.245, body); part(0.08, 0.08, 0.02, 0x1f2937, 0.11, 1.5, 0.245, body);
+  part(0.54, 0.16, 0.54, 0xfbbf24, 0, 1.74, 0, body);           // corona
+  [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2], [0, 0.2]].forEach(([x, z]) => part(0.1, 0.16, 0.1, 0xfbbf24, x, 1.88, z, body));
+  part(0.1, 0.1, 0.04, 0xec4899, 0, 1.76, 0.28, body);          // gema
+  const arm = new THREE.Group(); arm.position.set(0.4, 1.05, 0); body.add(arm);
+  part(0.16, 0.44, 0.16, 0x7c3aed, 0, -0.2, 0, arm);
+  part(0.06, 0.9, 0.06, 0xfbbf24, 0, -0.2, 0.14, arm); part(0.16, 0.16, 0.16, 0xec4899, 0, 0.28, 0.14, arm); // cetro
+  part(0.16, 0.44, 0.16, 0x7c3aed, -0.4, 0.85, 0, body);
+  return { g, body, arm };
+}
+const princesses = [-6, 6].map(x => { const pr = buildPrincess(); pr.g.position.set(x, 9.5, -17); pr.g.scale.setScalar(1.3); pr.cool = Math.random(); scene.add(pr.g); return pr; });
+const king = buildKing(); king.g.position.set(0, 11.5, -21); king.g.scale.setScalar(1.35); scene.add(king.g);
+const kingSign = label('El rey del castillo', '#6d28d9'); kingSign.scale.set(3.6, 0.9, 1); kingSign.position.set(0, 14.3, -21); scene.add(kingSign);
+const arrows = [];
+function shootArrow(pr, m) {
+  const from = new THREE.Vector3(pr.g.position.x, pr.g.position.y + 1.1, pr.g.position.z);
+  const a = new THREE.Group(); part(0.05, 0.05, 0.7, 0x8b5a2b, 0, 0, 0, a); part(0.12, 0.12, 0.12, 0xe5e7eb, 0, 0, 0.36, a); part(0.14, 0.02, 0.16, 0xf472b6, 0, 0, -0.32, a);
+  a.position.copy(from); scene.add(a); arrows.push({ a, from, m, t: 0 }); sfx('arrow');
+}
+function updateGuards(dt, t) {
+  const p = player.position;
+  princesses.forEach((pr, k) => {
+    pr.cool = Math.max(0, pr.cool - dt);
+    let target = null, bd = 11;
+    if (night) monsters.forEach(m => { const d = Math.hypot(m.g.position.x - pr.g.position.x, m.g.position.z - pr.g.position.z); if (d < bd && !arrows.some(a => a.m === m)) { bd = d; target = m; } });
+    const look = target ? target.g.position : p;
+    const want = Math.atan2(look.x - pr.g.position.x, look.z - pr.g.position.z);
+    pr.g.rotation.y += Math.atan2(Math.sin(want - pr.g.rotation.y), Math.cos(want - pr.g.rotation.y)) * Math.min(1, dt * 6);
+    pr.body.position.y = Math.sin(t * 2 + k) * 0.04;
+    pr.arm.rotation.x = target ? -1.5 : -0.2 + Math.sin(t * 1.5 + k) * 0.08;
+    if (target && pr.cool === 0) { pr.cool = 1.4; shootArrow(pr, target); }
+  });
+  for (let i = arrows.length - 1; i >= 0; i--) {
+    const ar = arrows[i]; ar.t += dt / 0.45;
+    const alive = monsters.includes(ar.m);
+    const to = alive ? ar.m.g.position : ar.last || ar.from; ar.last = to.clone ? to.clone() : to;
+    const k = Math.min(1, ar.t), x = ar.from.x + (to.x - ar.from.x) * k, z = ar.from.z + (to.z - ar.from.z) * k, y = ar.from.y + (to.y + 0.6 - ar.from.y) * k + Math.sin(k * Math.PI) * 1.5;
+    ar.a.lookAt(x, y, z); ar.a.position.set(x, y, z);
+    if (k >= 1) {
+      scene.remove(ar.a); arrows.splice(i, 1);
+      const idx = monsters.indexOf(ar.m);
+      if (idx >= 0) { killMonster(ar.m, 0x14b8a6); monsters.splice(idx, 1); sfx('pop'); if (!updateGuards.told) { updateGuards.told = true; toast('➶', 'TORRES DE PRINCESA', '¡Te están cuidando!', 'Las princesas del castillo disparan flechas a los monstruos que se acercan.', '#0d9488'); } }
+    }
+  }
+  // el rey saluda cuando te acercas
+  const dk = Math.hypot(p.x - king.g.position.x, p.z - king.g.position.z);
+  const wantK = Math.atan2(p.x - king.g.position.x, p.z - king.g.position.z);
+  king.g.rotation.y += Math.atan2(Math.sin(wantK - king.g.rotation.y), Math.cos(wantK - king.g.rotation.y)) * Math.min(1, dt * 3);
+  king.body.position.y = Math.sin(t * 1.6) * 0.03;
+  king.arm.rotation.z = dk < 9 ? 2.4 + Math.sin(t * 8) * 0.35 : 0.15;
+}
 let sleeping = false;
 function sleep() {
   if (sleeping) return; sleeping = true; sfx('open');
@@ -1515,7 +1597,7 @@ function update(dt, t) {
   debris.forEach((d, i) => { d.userData.v.y -= 14 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.6) { d.position.y = 0.6; d.userData.v.multiplyScalar(0.5); } d.userData.life -= dt * 1.2; d.scale.setScalar(Math.max(0.01, d.userData.life)); if (d.userData.life <= 0) { scene.remove(d); debris.splice(i, 1); } });
 
   if (started && !selecting) checkHitos();
-  updateMonsters(dt, t);
+  updateMonsters(dt, t); updateGuards(dt, t);
   updateAnimals(dt, t);
   if (started && !selecting && !panelOpen) { cycleT += dt; playTime += dt; }
   { const ph = (cycleT % CYCLE) / CYCLE; if ((skyT += dt) > 0.2 || !started) { skyT = 0; applySky(ph); }
@@ -1525,6 +1607,8 @@ function update(dt, t) {
   roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < r.y);
     r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
+    if (r === roofZones[3]) princesses.forEach(pr => pr.g.visible = !inside);
+    if (r.layered) king.g.visible = kingSign.visible = !inside || feet > 9.4;
     });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);

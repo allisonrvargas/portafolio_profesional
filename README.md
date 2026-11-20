@@ -50,6 +50,9 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - **Tutorial** de 4 pasos para quien juega por primera vez.
 - **Resumen**: el botón "Ver todo rápido" muestra todo el portafolio sin jugar.
 - **Pantalla final** con estadísticas al completar habilidades, granja e historia.
+- **Castillo de torres**: dos princesas arqueras en las torres del frente y el rey en lo más alto. De noche, las princesas disparan flechas a los monstruos que se acercan.
+- **Vista interior del castillo**: al entrar se ocultan el muro del frente y la torre central se corta a la altura de tus pies para ver las gradas.
+- **Cama en el patio del castillo**: al acostarte vuelves al inicio y, si era de noche, amanece.
 
 ## Tecnologías
 
