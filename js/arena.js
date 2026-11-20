@@ -173,7 +173,7 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 } catch (e) { location.href = 'clasico.html'; throw e; }
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+let pixelRatio = Math.min(devicePixelRatio, 1.5); renderer.setPixelRatio(pixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -609,7 +609,7 @@ function updateToolHud() {
 /* ---------------- MOVIMIENTO ---------------- */
 const keys = {};
 let target = null, waypoints = [], onArrive = null, stuckT = 0, lastDist = Infinity, mining = null;
-let feet = 0.5, vy = 0, onGround = true, jumpReq = false, autoWalk = false;
+let feet = 0.5, vy = 0, onGround = true, coyote = 0, jumpReq = 0, autoWalk = false;
 const PR = 0.3, PH = 1.7, JUMP = 8.6, GRAV = 26;
 const chestBox = [4.85, -16, 6.15, -15, 1.5];
 function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air') || oreCells.has(`${i},${j},${k}`); }
@@ -927,7 +927,7 @@ $('#volIcon').addEventListener('click', () => { if (volume > 0) { lastVol = volu
 setVolume(volume);
 $('#nightBtn').addEventListener('click', () => setNight(!night));
 $('#promptBtn').addEventListener('click', interact);
-$('#jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
+$('#jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = 0.18; });
 
 // Minimapa
 const mm = $('#minimap'), mg = mm.getContext('2d');
@@ -1065,13 +1065,17 @@ addEventListener('keydown', e => {
   keys[k] = true;
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
   if ((k === 'e' || k === 'enter') && !e.repeat) interact();
-  if (k === ' ' && !e.repeat) jumpReq = true;
+  if (k === ' ') {
+    e.preventDefault();
+    const a = document.activeElement; if (a && a !== document.body && (a.tagName === 'BUTTON' || a.tagName === 'INPUT' || a.tagName === 'A')) a.blur();
+    if (!e.repeat) jumpReq = 0.18;
+  }
   if (k === 'm' && !e.repeat) setMusic(!soundOn);
   if ((k === '+' || k === '=') && !e.repeat) setVolume(volume + 0.1);
   if (k === '-' && !e.repeat) setVolume(volume - 0.1);
   if (k === 'n' && !e.repeat) setNight(!night);
 });
-addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; if (e.key === ' ' && started && !panelOpen) e.preventDefault(); });
 addEventListener('blur', () => Object.keys(keys).forEach(k => keys[k] = false));
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.5);
@@ -1149,7 +1153,11 @@ function update(dt, t) {
     moving = true;
   }
   // salto y gravedad
-  if (jumpReq) { if (onGround && !panelOpen) { vy = JUMP; onGround = false; sfx('jump'); } jumpReq = false; }
+  coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
+  if (jumpReq > 0) {
+    if (coyote > 0 && !panelOpen && vy <= 0.5) { vy = JUMP; onGround = false; coyote = 0; jumpReq = 0; sfx('jump'); }
+    else jumpReq = Math.max(0, jumpReq - dt);
+  }
   vy -= GRAV * dt;
   let ny = feet + vy * dt;
   if (vy <= 0) {
@@ -1236,9 +1244,21 @@ function update(dt, t) {
 
   if ((mapT += dt) > 0.1 && started) { mapT = 0; drawMap(); }
 }
+let perfStart = 0, perfN = 0, perfLevel = 0;
+function adaptQuality() {
+  const now = performance.now(); if (!perfStart) perfStart = now; perfN++;
+  if (now - perfStart < 2500) return;
+  const fps = perfN / ((now - perfStart) / 1000); perfStart = now; perfN = 0;
+  if (fps < 38 && perfLevel < 3) {
+    perfLevel++;
+    if (perfLevel === 1) { pixelRatio = Math.max(0.85, pixelRatio - 0.4); renderer.setPixelRatio(pixelRatio); }
+    if (perfLevel === 2) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; petals.visible = false; }
+    if (perfLevel === 3) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); pixelRatio = 0.75; renderer.setPixelRatio(pixelRatio); }
+  }
+}
 function loop() {
   const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
-  update(dt, t); renderer.render(scene, camera); requestAnimationFrame(loop);
+  update(dt, t); renderer.render(scene, camera); if (started) adaptQuality(); requestAnimationFrame(loop);
 }
 
 /* ---------------- INICIO ---------------- */
