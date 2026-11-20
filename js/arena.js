@@ -801,8 +801,10 @@ function sleep() {
     rig.rotation.z = 0; rig.position.y = 0;
     player.position.set(0, 0.5, 18); feet = 0.5; vy = 0; player.rotation.y = Math.PI;
     camPos.set(0, 22, 31);
+    const wasNight = night; // si era de noche, al despertar ya amaneció
+    if (wasNight) { cycleT = CYCLE * 0.02; setNight(false, true); applySky(0.02); }
     f.classList.remove('on'); setTimeout(() => { f.hidden = true; sleeping = false; }, 900);
-    toast('☀', 'AMANECIÓ', '¡Volviste al inicio!', 'Dormiste en el castillo y despertaste en la entrada de la arena.');
+    toast('☀', 'AMANECIÓ', '¡Volviste al inicio!', wasNight ? 'Dormiste toda la noche: ya es de día y los monstruos se fueron.' : 'Dormiste en el castillo y despertaste en la entrada de la arena.');
   }, 2200);
 }
 
@@ -826,7 +828,7 @@ const lantern = new THREE.PointLight(0xffc4e1, 0, 11, 1.4); scene.add(lantern);
 let night = false, spawnT = 0;
 const monsters = [];
 function jumpToNight(on) { cycleT = on ? CYCLE * 0.665 : 0.001; }
-function setNight(on) {
+function setNight(on, quiet) {
   if (on === night) return;
   night = on;
   ores.forEach(o => { if (!o.mined) o.m.material.emissiveIntensity = on ? 0.7 : 0.18; });
@@ -835,7 +837,7 @@ function setNight(on) {
   if (on) {
     if (minedCount < habilidades.length) toast('☾', 'CAYÓ LA NOCHE', '¡Cuidado con los monstruos!', 'Aparece uno cada 20 segundos y te persigue. Pica un bloque de habilidad para hacerlos desaparecer.', '#7c3aed');
     else toast('☾', 'NOCHE TRANQUILA', 'Ya no hay monstruos', 'Encontraste todas las habilidades: la arena es tuya.', '#7c3aed');
-  } else { clearMonsters(false); toast('☀', 'AMANECIÓ', 'Modo día', 'Los monstruos se fueron.'); }
+  } else { clearMonsters(false); if (!quiet) toast('☀', 'AMANECIÓ', 'Modo día', 'Los monstruos se fueron.'); }
 }
 
 /* ---------------- CICLO DE DÍA Y NOCHE ---------------- */
