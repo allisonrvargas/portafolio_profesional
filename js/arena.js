@@ -863,7 +863,7 @@ const animalesDef = [
 ];
 // el orden de "p" apunta a la lista de proyectos: 0 Kid-Fit, 1 Gym Manager, 2 MarisolliFlix, 3 Librarian, 4 Postulaciones, 7 CampusShop
 animalesDef[0].p = 1; animalesDef[2].p = 0;
-const spawnAnimal = [[-4, 3], [3, 4], [-3, 8], [11, -6], [-12, -12], [12, 18]];
+const spawnAnimal = [[-4, 3], [3, 4], [-1, 7], [11, -6], [-12, -12], [12, 18]];
 function animalModel(id) {
   const g = new THREE.Group(); const legs = []; let headG = new THREE.Group(); g.add(headG);
   const leg = (x, z, h, c, w = 0.16) => { const l = new THREE.Group(); l.position.set(x, h, z); g.add(l); part(w, h, w, c, 0, -h / 2, 0, l); legs.push(l); };
@@ -903,7 +903,7 @@ function animalModel(id) {
 }
 const animals = animalesDef.map((d, i) => {
   const { g, legs, headG } = animalModel(d.id); const [x, z] = spawnAnimal[i];
-  g.position.set(x, groundBelow(x, z, 4), z); g.rotation.y = Math.random() * 6.28; scene.add(g);
+  g.position.set(x, groundBelow(x, z, 1.2), z); g.rotation.y = Math.random() * 6.28; scene.add(g);
   const rope = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0x9a6744 }));
   rope.visible = false; rope.frustumCulled = false; scene.add(rope);
   return { ...d, i, g, legs, headG, rope, state: 'libre', goal: null, wait: Math.random() * 3, t: Math.random() * 9, y: g.position.y };
@@ -956,6 +956,7 @@ function updateAnimals(dt, t) {
       if (d > 8) { a.g.position.set(fx - 1, groundBelow(fx - 1, fz, feet + 1), fz); a.y = a.g.position.y; }
       if (a.state === 'lazo' && inCorral(a.g.position.x, a.g.position.z, 0.2)) { penAnimal(a); return; }
     } else {
+      if (a.state === 'libre' && a.y > 1.6) { const [sx, sz] = spawnAnimal[a.i]; a.g.position.set(sx, groundBelow(sx, sz, 1.2), sz); a.y = a.g.position.y; a.goal = null; }
       a.wait -= dt;
       if (a.wait <= 0 && !a.goal) {
         for (let k = 0; k < 8 && !a.goal; k++) {
@@ -990,7 +991,7 @@ function nearest() {
   const p = player.position; let best = null, bd = 1e9;
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
-  for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
+  for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
   if (feet > 10 && Math.hypot(p.x - 1, p.z - 20 * -1) < 2.2) best = { kind: 'bed' };
   if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
   return best;
