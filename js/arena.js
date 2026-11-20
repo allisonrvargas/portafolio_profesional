@@ -909,10 +909,10 @@ function spawnMonster() {
   for (let tries = 0; tries < 40 && !pos; tries++) {
     const a = Math.random() * Math.PI * 2, r = 9 + Math.random() * 5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
     if (x < -15 || x > 15 || z < -25 || z > 22) continue;
-    if (!blocked(x, z) && (z > -0.5) === (p.z > -0.5)) pos = [x, z];
+    if (!blocked(x, z) && (z > -0.5) === (p.z > -0.5) && Math.abs(groundBelow(x, z, 1.2) - 0.5) < 0.1) pos = [x, z];
   }
   if (!pos) return;
-  const { g, legs } = monsterModel(kind); const y = groundBelow(pos[0], pos[1], 6);
+  const { g, legs } = monsterModel(kind); const y = groundBelow(pos[0], pos[1], 1.2);
   g.position.set(pos[0], y, pos[1]); g.scale.setScalar(0.01); scene.add(g);
   monsters.push({ kind, g, legs, y, t: Math.random() * 6, born: 0, cool: 0, fuse: 0 });
   poof(pos[0], y + 0.6, pos[1], 0x7c3aed); sfx('spawn');
@@ -943,7 +943,9 @@ function updateMonsters(dt, t) {
   if (night && !cleared && !panelOpen) { spawnT += dt; if (spawnT >= 20) { spawnT = 0; spawnMonster(); } }
   const p = player.position;
   for (let i = monsters.length - 1; i >= 0; i--) {
-    const m = monsters[i], info = monsterInfo[m.kind]; m.t += dt; m.born = Math.min(1, m.born + dt * 2.5); m.g.scale.setScalar(m.born); m.cool = Math.max(0, m.cool - dt);
+    const m = monsters[i], info = monsterInfo[m.kind];
+    if (m.y > 1.6 && feet < m.y - 1.5) { killMonster(m, 0x7c3aed); monsters.splice(i, 1); continue; }
+    m.t += dt; m.born = Math.min(1, m.born + dt * 2.5); m.g.scale.setScalar(m.born); m.cool = Math.max(0, m.cool - dt);
     const dx = p.x - m.g.position.x, dz = p.z - m.g.position.z, d = Math.hypot(dx, dz);
     let moving = false;
     if (!panelOpen && d > 0.9 && m.fuse === 0) {
