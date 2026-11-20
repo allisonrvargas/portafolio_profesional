@@ -308,7 +308,7 @@ stage(11, 13);
 function tower(cx, cz, roof) {
   fill(cx - 2, 1, cz - 2, cx + 2, 7, cz + 2, 'cobble');
   fill(cx - 1, 1, cz - 1, cx + 1, 6, cz + 1, 'air');
-  put(cx, 1, cz + 2, 'air'); put(cx, 2, cz + 2, 'air');
+  fill(cx - 1, 1, cz + 2, cx + 1, 3, cz + 2, 'air'); // puerta ancha (3 bloques)
   for (let x = cx - 2; x <= cx + 2; x++) for (let z = cz - 2; z <= cz + 2; z++) if ((x === cx - 2 || x === cx + 2 || z === cz - 2 || z === cz + 2) && (x + z) % 2 === 0) put(x, 8, z, 'cobble');
   fill(cx - 1, 8, cz - 1, cx + 1, 8, cz + 1, roof); fill(cx - 1, 9, cz - 1, cx + 1, 9, cz + 1, roof); put(cx, 10, cz, roof); put(cx, 11, cz, roof);
   [4, 6].forEach(y => { put(cx, y, cz + 2, 'glass'); put(cx - 2, y, cz, 'glass'); put(cx + 2, y, cz, 'glass'); });
@@ -362,7 +362,11 @@ const blockMeshes = [];
 const roofZones = [
   { x1: -15, x2: -7, z1: 9, z2: 17, y: 5, inX: [-13.6, -8.4], inZ: [10.4, 15.6], groups: {} },
   { x1: -11, x2: -7, z1: -14, z2: -10, y: 3, inX: [-10.6, -7.4], inZ: [-13.6, -10.4], groups: {} },
-  { x1: 7, x2: 11, z1: -14, z2: -10, y: 3, inX: [7.4, 10.6], inZ: [-13.6, -10.4], groups: {} }
+  { x1: 7, x2: 11, z1: -14, z2: -10, y: 3, inX: [7.4, 10.6], inZ: [-13.6, -10.4], groups: {} },
+  // castillo: al entrar se ocultan el muro y las torres del frente
+  { x1: -7, x2: 7, z1: -18, z2: -15, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, groups: {} },
+  // la torre central se corta por capas: solo se ve hasta la altura de tus pies
+  { x1: -2, x2: 2, z1: -22, z2: -20, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, layered: true, groups: {} }
 ];
 function buildBlocks() {
   const byType = {};
@@ -372,12 +376,13 @@ function buildBlocks() {
     if (t === 'air') continue;
     const [x, y, z] = k.split(',').map(Number);
     // ocultar bloques totalmente rodeados
-    if (opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
+    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
+    if (!cutLayer && opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
     const zone = roofZones.find(r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
-    if (zone) { (zone.groups[t] ||= []).push([x, y, z]); continue; }
+    if (zone) { (zone.groups[zone.layered ? t + '|' + y : t] ||= []).push([x, y, z]); continue; }
     (byType[t] ||= []).push([x, y, z]);
   }
-  roofZones.forEach(r => { r.meshes = []; for (const [t, list] of Object.entries(r.groups)) { const mesh = new THREE.InstancedMesh(unit, M[t], list.length); const mm = new THREE.Matrix4(); list.forEach(([x, y, z], i) => { mm.makeTranslation(x, y, z); mesh.setMatrixAt(i, mm); }); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); blockMeshes.push(mesh); r.meshes.push(mesh); } });
+  roofZones.forEach(r => { r.meshes = []; for (const [key, list] of Object.entries(r.groups)) { const [t, ly] = key.split('|'); const mesh = new THREE.InstancedMesh(unit, M[t], list.length); mesh.userData.layer = ly === undefined ? null : +ly; const mm = new THREE.Matrix4(); list.forEach(([x, y, z], i) => { mm.makeTranslation(x, y, z); mesh.setMatrixAt(i, mm); }); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); blockMeshes.push(mesh); r.meshes.push(mesh); } });
   const m4 = new THREE.Matrix4();
   for (const [t, list] of Object.entries(byType)) {
     const mesh = new THREE.InstancedMesh(unit, M[t], list.length);
@@ -1513,7 +1518,10 @@ function update(dt, t) {
     const shouldNight = ph > 0.63 && ph < 0.965; if (started && shouldNight !== night) setNight(shouldNight); }
   updateAmbient(dt, t); if (Math.floor(t * 15) % 2 === 0) swayGrass(t);
   updateNpc(dt, t); updateTutorial();
-  roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && feet < r.y; r.meshes.forEach(m => m.visible = !inside); if (r === roofZones[2]) arcade.visible = !inside; });
+  roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < r.y);
+    r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
+    if (r === roofZones[2]) arcade.visible = !inside;
+    if (r.layered) bed.visible = bedSign.visible = !inside || feet > 9.4; });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
