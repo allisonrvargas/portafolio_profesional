@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Great+Vibes&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/arena.css?v=202611201822">
+<link rel="stylesheet" href="css/arena.css?v=202611201249">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
@@ -41,6 +41,7 @@
       <span><kbd>Espacio</kbd> saltar</span>
       <span><kbd>E</kbd> entrar / picar</span>
       <span><kbd>N</kbd> modo noche</span>
+      <span><kbd>+</kbd><kbd>-</kbd> volumen</span>
       <span>arrastra para girar la cámara · <kbd>Q</kbd><kbd>R</kbd> girar · <kbd>C</kbd> centrar</span>
       <span>o toca el suelo para ir ahí</span>
     </div>
@@ -75,6 +76,10 @@
       <button class="btn icon" id="nightBtn" aria-pressed="false" aria-label="Cambiar a modo noche">☾</button>
       <button class="btn icon" id="soundBtn" aria-pressed="false" aria-label="Activar música">♪</button>
       <button class="btn icon" id="menuBtn" aria-expanded="false" aria-label="Abrir menú de viaje">☰</button>
+    </div>
+    <div class="vol">
+      <button class="vol-ico" id="volIcon" aria-label="Silenciar o activar el sonido">🔊</button>
+      <input type="range" id="volume" min="0" max="100" step="5" value="60" aria-label="Volumen">
     </div>
     <canvas class="minimap" id="minimap" width="150" height="210" aria-label="Mapa: toca un lugar para ir"></canvas>
     <nav class="menu" id="menu" hidden>
@@ -111,6 +116,6 @@
 <div class="hurt" id="hurt" aria-hidden="true"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script type="module" src="js/arena.js?v=202611201822"></script>
+<script type="module" src="js/arena.js?v=202611201249"></script>
 </body>
 </html>

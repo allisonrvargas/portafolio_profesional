@@ -68,11 +68,12 @@ const historia = [
 ];
 
 /* ---------------- SONIDO (chiptune original) ---------------- */
+let volume = (() => { try { const v = parseFloat(localStorage.getItem('arenaVol')); return isNaN(v) ? 0.6 : v; } catch (e) { return 0.6; } })();
 let actx = null, master = null, analyser = null, soundOn = false, playing = false, track = 0, step = 0, nextTime = 0, timer = null, noiseBuf = null;
 function audio() {
   if (!actx) {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-    actx = new AC(); master = actx.createGain(); master.gain.value = 0.13;
+    actx = new AC(); master = actx.createGain(); master.gain.value = 0.22 * volume;
     analyser = actx.createAnalyser(); analyser.fftSize = 64; master.connect(analyser); analyser.connect(actx.destination);
   }
   if (actx.state === 'suspended') actx.resume();
@@ -913,6 +914,17 @@ const menu = $('#menu'), menuBtn = $('#menuBtn');
 function closeMenu() { menu.hidden = true; menuBtn.setAttribute('aria-expanded', 'false'); }
 menuBtn.addEventListener('click', () => { menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', String(!menu.hidden)); sfx('blip'); });
 $('#soundBtn').addEventListener('click', () => setMusic(!soundOn));
+const volEl = $('#volume');
+function setVolume(v) {
+  volume = Math.max(0, Math.min(1, v)); volEl.value = Math.round(volume * 100);
+  volEl.style.setProperty('--p', volume * 100 + '%'); $('#volIcon').textContent = volume === 0 ? '🔇' : volume < 0.4 ? '🔈' : '🔊';
+  if (master) master.gain.setTargetAtTime(0.22 * volume, actx.currentTime, 0.03);
+  try { localStorage.setItem('arenaVol', String(volume)); } catch (e) { }
+}
+volEl.addEventListener('input', () => setVolume(volEl.value / 100));
+let lastVol = volume || 0.6;
+$('#volIcon').addEventListener('click', () => { if (volume > 0) { lastVol = volume; setVolume(0); } else setVolume(lastVol || 0.6); });
+setVolume(volume);
 $('#nightBtn').addEventListener('click', () => setNight(!night));
 $('#promptBtn').addEventListener('click', interact);
 $('#jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
@@ -1055,6 +1067,8 @@ addEventListener('keydown', e => {
   if ((k === 'e' || k === 'enter') && !e.repeat) interact();
   if (k === ' ' && !e.repeat) jumpReq = true;
   if (k === 'm' && !e.repeat) setMusic(!soundOn);
+  if ((k === '+' || k === '=') && !e.repeat) setVolume(volume + 0.1);
+  if (k === '-' && !e.repeat) setVolume(volume - 0.1);
   if (k === 'n' && !e.repeat) setNight(!night);
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
