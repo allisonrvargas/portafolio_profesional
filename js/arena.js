@@ -860,7 +860,8 @@ let walkT = 0, mapT = 0, wasOnStage = false;
 function update(dt, t) {
   // movimiento
   let mx = 0, mz = 0;
-  if (started && !panelOpen) {
+  if (selecting) { target = null; waypoints = []; onArrive = null; mining = null; Object.keys(keys).forEach(k => keys[k] = false); }
+  if (started && !panelOpen && !selecting) {
     if (keys.w || keys.arrowup) mz -= 1; if (keys.s || keys.arrowdown) mz += 1;
     if (keys.a || keys.arrowleft) mx -= 1; if (keys.d || keys.arrowright) mx += 1;
   }
@@ -941,7 +942,7 @@ function update(dt, t) {
   const pp = petalGeo.attributes.position.array;
   for (let i = 0; i < petalCount; i++) { pp[i * 3 + 1] -= dt * (0.6 + (i % 5) * 0.12); pp[i * 3] += Math.sin(t + i) * dt * 0.4; if (pp[i * 3 + 1] < 0.5) pp[i * 3 + 1] = 12 + Math.random() * 3; }
   petalGeo.attributes.position.needsUpdate = true;
-  lugares.forEach((L, i) => L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15);
+  lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15; L.sprite.visible = !selecting; });
   lid.rotation.x += ((lidOpen ? -1.1 : 0) - lid.rotation.x) * Math.min(1, dt * 6); lid.position.z = lidOpen ? -0.2 : 0; lid.position.y = lidOpen ? 0.95 : 0.72;
   notes.forEach(n => { n.t += dt * 0.35; if (n.t > 1) n.t -= 1; n.s.position.set(11 + Math.sin(n.t * 9 + n.s.id) * 1.2, 3 + n.t * 4, 13); n.s.material.opacity = playing ? Math.sin(n.t * Math.PI) : 0; });
   drawArcade(t);
@@ -956,7 +957,14 @@ function update(dt, t) {
   } else {
     const a = t * 0.12; camPos.set(Math.sin(a) * 44, 30, Math.cos(a) * 44); camLook.set(0, 0, -2);
   }
-  if (selecting) { player.rotation.y += dt * 0.8; if (hop > 0) { hop = Math.max(0, hop - dt * 1.6); player.position.y = feet + Math.sin((1 - hop) * Math.PI) * 0.7; P.armL.g.rotation.x = P.armR.g.rotation.x = -2.8 * hop; } }
+  if (selecting) {
+    player.rotation.y += dt * 0.6;
+    P.legL.g.rotation.x = P.legR.g.rotation.x = 0; P.armL.g.rotation.x = 0; P.armL.g.rotation.z = 0;
+    P.armR.g.rotation.x = -0.4 + Math.sin(t * 2) * 0.15; P.armR.g.rotation.z = 0;
+    head.rotation.z = 0; head.rotation.y = Math.sin(t * 0.9) * 0.15;
+    player.position.y = feet + Math.sin(t * 2) * 0.02;
+    if (hop > 0) { hop = Math.max(0, hop - dt * 2.2); const k = Math.sin((1 - hop) * Math.PI); player.position.y = feet + k * 0.5; P.armL.g.rotation.x = P.armR.g.rotation.x = -2.6 * k; }
+  } else if (head) head.rotation.y = 0;
   camera.position.copy(camPos); camera.lookAt(camLook);
   sun.position.set(camLook.x + 20, 34, camLook.z + 14); sun.target.position.set(camLook.x, 0, camLook.z); sun.target.updateMatrixWorld();
 
@@ -984,7 +992,7 @@ function makePortraits() {
   });
   r2.dispose(); r2.forceContextLoss?.(); rig = mainRig;
 }
-let selecting = false, wantMusic = false, hop = 0;
+let selecting = false, wantMusic = false, hop = 0, showcaseFrom = null;
 function renderCards() {
   const box = $('#cards'); box.innerHTML = '';
   personajes.forEach((c, i) => {
@@ -1002,9 +1010,10 @@ function openSelect(music) {
   wantMusic = music; audio(); if (music && !playing) setMusic(true);
   $('#intro').classList.add('out'); setTimeout(() => $('#intro').hidden = true, 600);
   if (!portraits.length) { makePortraits(); buildCharacter(charIndex); }
+  showcaseFrom = [player.position.x, feet, player.position.z]; player.position.set(0, 0.5, 18); feet = 0.5; vy = 0;
   selecting = true; $('#select').hidden = false; renderCards(); sfx('open');
 }
-$('#goArena').addEventListener('click', () => { $('#select').hidden = true; selecting = false; if (!started) start(wantMusic); else toast('★', 'PERSONAJE', personajes[charIndex].n, '¡Listo para seguir explorando!', personajes[charIndex].c1); });
+$('#goArena').addEventListener('click', () => { $('#select').hidden = true; selecting = false; if (started && showcaseFrom) { player.position.set(showcaseFrom[0], showcaseFrom[1], showcaseFrom[2]); feet = showcaseFrom[1]; } showcaseFrom = null; if (!started) start(wantMusic); else toast('★', 'PERSONAJE', personajes[charIndex].n, '¡Listo para seguir explorando!', personajes[charIndex].c1); });
 function start(music) {
   started = true; audio(); if (music && !playing) setMusic(true);
   $('#hud').hidden = false; drawMap(); sfx('win');
@@ -1013,7 +1022,7 @@ function start(music) {
 }
 $('#playMusic').addEventListener('click', () => openSelect(true));
 $('#playQuiet').addEventListener('click', () => openSelect(false));
-$('#changeChar').addEventListener('click', () => { closeMenu(); selecting = true; $('#select').hidden = false; renderCards(); });
+$('#changeChar').addEventListener('click', () => { closeMenu(); showcaseFrom = [player.position.x, feet, player.position.z]; player.position.set(0, 0.5, 18); feet = 0.5; vy = 0; selecting = true; $('#select').hidden = false; renderCards(); });
 buildCharacter(0);
 
 (async () => {
