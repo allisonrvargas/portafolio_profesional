@@ -616,7 +616,7 @@ function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t 
 function hits(x, y, z) {
   if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
   if (z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
-  const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.round(y + 0.05), j1 = Math.round(y + PH - 0.05);
+  const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.ceil(y - 0.5 + 0.001), j1 = Math.ceil(y + PH + 0.5 - 0.001) - 1;
   for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
   if (x + PR > chestBox[0] && x - PR < chestBox[2] && z + PR > chestBox[1] && z - PR < chestBox[3] && y < chestBox[4] - 0.01) return true;
   return false;
@@ -1114,7 +1114,7 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 /* ---------------- BUCLE ---------------- */
 const clock = new THREE.Clock();
 const camPos = new THREE.Vector3(0, 30, 50), camLook = new THREE.Vector3(0, 0, 0);
-let walkT = 0, mapT = 0, wasOnStage = false;
+let walkT = 0, mapT = 0, wasOnStage = false, airT = 0;
 function update(dt, t) {
   // movimiento
   let mx = 0, mz = 0;
@@ -1168,7 +1168,8 @@ function update(dt, t) {
   const dancing = playing && !moving && onGround && wasOnStage;
   player.position.y = feet + (!onGround ? 0 : moving ? Math.abs(Math.sin(walkT)) * 0.06 : dancing ? Math.abs(Math.sin(t * 7)) * 0.12 : Math.sin(t * 2) * 0.015);
   if (dancing && !mining) { P.armL.g.rotation.x = -2.6 + Math.sin(t * 7) * 0.5; P.armR.g.rotation.x = -2.6 - Math.sin(t * 7) * 0.5; }
-  if (!onGround) { P.legL.g.rotation.x = -0.5; P.legR.g.rotation.x = 0.4; P.armL.g.rotation.x = -2.4; P.armR.g.rotation.x = -2.4; }
+  airT = onGround ? 0 : airT + dt;
+  if (airT > 0.12) { P.legL.g.rotation.x = -0.5; P.legR.g.rotation.x = 0.4; P.armL.g.rotation.x = -2.4; P.armR.g.rotation.x = -2.4; }
   const gY = groundBelow(p.x, p.z, feet + 0.1);
   pShadow.position.set(p.x, gY + 0.02, p.z); pShadow.scale.setScalar(Math.max(0.4, 1 - (feet - gY) * 0.25));
   head.rotation.z = playing && !moving ? Math.sin(t * 6) * (dancing ? 0.15 : 0.06) : 0;
