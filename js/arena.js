@@ -186,6 +186,8 @@ const scene = new THREE.Scene();
   g.fillStyle = gr; g.fillRect(0, 0, 2, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; scene.background = t; window.__daySky = t;
 }
 scene.fog = new THREE.Fog(0xffe4f1, 60, 120);
+const skyCanvas = document.createElement('canvas'); skyCanvas.width = 2; skyCanvas.height = 256;
+const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 300);
 const hemi = new THREE.HemisphereLight(0xfff4fa, 0xd8a7c0, 1.05); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 1.7);
@@ -224,6 +226,14 @@ const lambert = (map, extra = {}) => new THREE.MeshLambertMaterial({ map, ...ext
 M.grass = [lambert(T.grassSide), lambert(T.grassSide), lambert(T.grassTop), lambert(T.dirt), lambert(T.grassSide), lambert(T.grassSide)];
 M.log = [lambert(T.log), lambert(T.log), lambert(T.logTop), lambert(T.logTop), lambert(T.log), lambert(T.log)];
 ['dirt', 'sand', 'stone', 'cobble', 'planks', 'leaves', 'woolPink', 'woolRose', 'woolWhite', 'woolLilac', 'quartz', 'gold', 'dark'].forEach(k => M[k] = lambert(T[k]));
+T.books = texture((g, r) => { g.fillStyle = '#7a4e3a'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#5e3b2c'; g.fillRect(0, 7, 16, 2); g.fillRect(0, 0, 16, 1); g.fillRect(0, 15, 16, 1);
+  const cols = ['#ec4899', '#a78bfa', '#5eead4', '#fcd34d', '#f472b6', '#60a5fa', '#f97316'];
+  [[1, 1], [1, 9]].forEach(([y0]) => { let x = 1; while (x < 15) { const w = 1 + Math.floor(r() * 2); g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(x, y0 + Math.floor(r() * 2), w, 6 - Math.floor(r() * 2)); x += w + (r() < 0.2 ? 1 : 0); } }); }, 31);
+T.screen = texture((g, r) => { g.fillStyle = '#1e1b2e'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#ec4899'; g.fillRect(2, 2, 12, 9); g.fillStyle = '#fde68a'; g.fillRect(4, 4, 3, 3); g.fillStyle = '#5eead4'; g.fillRect(9, 6, 3, 3); g.fillStyle = '#ffffff'; g.fillRect(3, 9, 10, 1); g.fillStyle = '#f472b6'; g.fillRect(4, 13, 2, 2); g.fillStyle = '#fcd34d'; g.fillRect(10, 13, 2, 2); }, 32);
+T.lamp = texture((g, r) => { g.fillStyle = '#7a4e3a'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#ffe4f1'; g.fillRect(2, 2, 12, 12); g.fillStyle = '#f9a8d4'; g.fillRect(4, 4, 8, 8); g.fillStyle = '#fff7fb'; g.fillRect(6, 6, 4, 4); }, 33);
+M.books = lambert(T.books);
+M.screen = new THREE.MeshLambertMaterial({ map: T.screen, emissive: 0xffffff, emissiveMap: T.screen, emissiveIntensity: 0.55 });
+M.lamp = new THREE.MeshLambertMaterial({ map: T.lamp, emissive: 0xffffff, emissiveMap: T.lamp, emissiveIntensity: 0.2 });
 M.glass = lambert(T.glass, { transparent: true, opacity: 0.9 });
 const unit = new THREE.BoxGeometry(1, 1, 1);
 
@@ -348,6 +358,12 @@ for (let y = 10; y <= 12; y++) for (let z = -23; z <= -19; z++) if (freeCell(-4,
 
 // Construir mallas instanciadas por tipo de bloque
 const blockMeshes = [];
+// techos que se ocultan cuando entras a un edificio
+const roofZones = [
+  { x1: -15, x2: -7, z1: 9, z2: 17, y: 5, inX: [-13.6, -8.4], inZ: [10.4, 15.6], groups: {} },
+  { x1: -11, x2: -7, z1: -14, z2: -10, y: 3, inX: [-10.6, -7.4], inZ: [-13.6, -10.4], groups: {} },
+  { x1: 7, x2: 11, z1: -14, z2: -10, y: 3, inX: [7.4, 10.6], inZ: [-13.6, -10.4], groups: {} }
+];
 function buildBlocks() {
   const byType = {};
   const key = (x, y, z) => blocks.get(`${x},${y},${z}`);
@@ -357,8 +373,11 @@ function buildBlocks() {
     const [x, y, z] = k.split(',').map(Number);
     // ocultar bloques totalmente rodeados
     if (opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
+    const zone = roofZones.find(r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
+    if (zone) { (zone.groups[t] ||= []).push([x, y, z]); continue; }
     (byType[t] ||= []).push([x, y, z]);
   }
+  roofZones.forEach(r => { r.meshes = []; for (const [t, list] of Object.entries(r.groups)) { const mesh = new THREE.InstancedMesh(unit, M[t], list.length); const mm = new THREE.Matrix4(); list.forEach(([x, y, z], i) => { mm.makeTranslation(x, y, z); mesh.setMatrixAt(i, mm); }); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); blockMeshes.push(mesh); r.meshes.push(mesh); } });
   const m4 = new THREE.Matrix4();
   for (const [t, list] of Object.entries(byType)) {
     const mesh = new THREE.InstancedMesh(unit, M[t], list.length);
@@ -367,6 +386,27 @@ function buildBlocks() {
     scene.add(mesh); blockMeshes.push(mesh);
   }
 }
+// Interior de la casa: cama, librero y escritorio con computadora
+put(-13, 1, 11, 'woolWhite'); put(-13, 1, 12, 'woolPink'); put(-12, 1, 12, 'woolPink'); put(-12, 1, 11, 'woolWhite');
+fill(-9, 1, 11, -9, 3, 12, 'books');
+put(-13, 1, 15, 'planks'); put(-12, 1, 15, 'planks'); put(-13, 2, 15, 'screen');
+put(-9, 1, 15, 'woolRose');
+// Torre de proyectos: libreros con proyectos
+fill(-10, 1, -13, -10, 3, -13, 'books'); fill(-8, 1, -13, -8, 3, -13, 'books'); fill(-9, 1, -13, -9, 2, -13, 'books');
+// Torre arcade: dos maquinitas
+put(8, 1, -13, 'dark'); put(8, 2, -13, 'screen'); put(10, 1, -13, 'dark'); put(10, 2, -13, 'screen');
+// Acantilado con cascada al este del río
+fill(16, 0, -3, 17, 5, 2, 'stone'); fill(16, 6, -2, 17, 6, 1, 'grass');
+for (let z = -1; z <= 0; z++) for (let y = 0; y <= 6; y++) blocks.set(`16,${y},${z}`, 'air');
+// Faroles junto a los caminos
+const lampSpots = [[-7, 3], [7, 3], [-7, -5], [7, -5], [-7, 10], [7, 10], [-5, 20], [5, 20], [-11, -7], [11, -7], [-2, -11], [2, -11], [-13, 18], [13, 18]];
+const lamps = [];
+lampSpots.forEach(([x, z]) => {
+  const free = y => { const t = blocks.get(`${x},${y},${z}`); return !t || t === 'air'; };
+  if (!free(1) || !free(2) || !free(3) || !blocks.get(`${x},0,${z}`)) return;
+  if (orePos.some(([ox, oz]) => Math.hypot(ox - x, oz - z) < 1.6)) return;
+  put(x, 1, z, 'log'); put(x, 2, z, 'log'); put(x, 3, z, 'lamp'); lamps.push([x, z]);
+});
 buildBlocks();
 
 // Agua animada
@@ -550,6 +590,66 @@ player.position.set(0, 0.5, 18);
 player.rotation.y = Math.PI;
 let minedCount = 0;
 
+/* ---------------- AMBIENTE ---------------- */
+function glowTexture(color) {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, color); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+const glowTex = glowTexture('rgba(255,190,225,1)');
+const lampGlows = lamps.map(([x, z]) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); s.scale.set(4, 4, 1); s.position.set(x, 3, z); s.visible = false; scene.add(s); return s; });
+// luciérnagas
+const ffN = 70, ffGeo = new THREE.BufferGeometry(), ffPos = new Float32Array(ffN * 3), ffBase = [];
+for (let i = 0; i < ffN; i++) { const [tx, tz] = trees[i % trees.length]; const b = [tx + (Math.random() - 0.5) * 6, 1 + Math.random() * 3, tz + (Math.random() - 0.5) * 6, Math.random() * 6]; ffBase.push(b); ffPos.set(b.slice(0, 3), i * 3); }
+ffGeo.setAttribute('position', new THREE.BufferAttribute(ffPos, 3));
+const fireflies = new THREE.Points(ffGeo, new THREE.PointsMaterial({ color: 0xfef08a, size: 0.22, map: glowTexture('rgba(254,240,138,1)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+fireflies.visible = false; scene.add(fireflies);
+// flores y pasto alto
+const floraSpots = [];
+{ const r = rng(77); for (let tries = 0; tries < 2500 && floraSpots.length < 260; tries++) {
+  const x = Math.floor(r() * 31) - 15, z = Math.floor(r() * 47) - 25;
+  if (blocks.get(`${x},0,${z}`) !== 'grass') continue; const up = blocks.get(`${x},1,${z}`); if (up && up !== 'air') continue;
+  if (orePos.some(([ox, oz]) => ox === x && oz === z)) continue;
+  floraSpots.push([x + (r() - 0.5) * 0.6, z + (r() - 0.5) * 0.6, r()]); } }
+const flowers = floraSpots.filter((_, i) => i % 2 === 0), grassTufts = floraSpots.filter((_, i) => i % 2 === 1);
+const stemMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 0.32, 0.05), new THREE.MeshLambertMaterial({ color: 0x4d7c0f }), flowers.length);
+const headMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 0.12, 0.16), new THREE.MeshLambertMaterial({ color: 0xffffff }), flowers.length);
+const flowerCols = [0xf472b6, 0xfde047, 0xffffff, 0xa78bfa, 0xfb7185, 0x60a5fa];
+const m4b = new THREE.Matrix4();
+flowers.forEach(([x, z, k], i) => { m4b.makeTranslation(x, 0.66, z); stemMesh.setMatrixAt(i, m4b); m4b.makeTranslation(x, 0.86, z); headMesh.setMatrixAt(i, m4b); headMesh.setColorAt(i, new THREE.Color(flowerCols[Math.floor(k * flowerCols.length)])); });
+scene.add(stemMesh, headMesh);
+const tuftMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.06, 0.38, 0.06), new THREE.MeshLambertMaterial({ color: 0x7cc464 }), grassTufts.length * 3);
+const tuftDummy = new THREE.Object3D();
+function swayGrass(t) {
+  let n = 0; grassTufts.forEach(([x, z, k]) => { for (let j = 0; j < 3; j++) { tuftDummy.position.set(x + (j - 1) * 0.1, 0.69, z + ((j * 7) % 3 - 1) * 0.08); tuftDummy.rotation.set(Math.sin(t * 1.6 + x * 0.5 + j) * 0.18, 0, Math.cos(t * 1.3 + z * 0.4) * 0.18); tuftDummy.scale.set(1, 0.8 + ((k * 10 + j) % 1) * 0.6, 1); tuftDummy.updateMatrix(); tuftMesh.setMatrixAt(n++, tuftDummy.matrix); } });
+  tuftMesh.instanceMatrix.needsUpdate = true;
+}
+swayGrass(0); scene.add(tuftMesh);
+// brillos en el agua
+const spN = 50, spGeo = new THREE.BufferGeometry(), spPos = new Float32Array(spN * 3);
+for (let i = 0; i < spN; i++) spPos.set([Math.random() * 30 - 15, 0.12, -1.4 + Math.random() * 1.8], i * 3);
+spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
+const sparkles = new THREE.Points(spGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8 })); scene.add(sparkles);
+// cascada
+const fallTex = texture((g, r) => speckle(g, r, ['#bfe6ff', '#9fd8ff', '#e0f4ff', '#8ccdf8', '#ffffff']), 41); fallTex.wrapS = fallTex.wrapT = THREE.RepeatWrapping; fallTex.repeat.set(2, 6);
+const fall = new THREE.Mesh(new THREE.PlaneGeometry(2, 6.6), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide }));
+fall.rotation.y = -Math.PI / 2; fall.position.set(16.3, 2.8, -0.5); scene.add(fall);
+const foam = []; for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 })); f.userData.t = Math.random(); scene.add(f); foam.push(f); }
+// peces que saltan
+const fish = [0xfb7185, 0xfdba74, 0xa78bfa].map(c => { const g = new THREE.Group(); part(0.4, 0.2, 0.14, c, 0, 0, 0, g); part(0.14, 0.18, 0.06, c, -0.26, 0, 0, g); part(0.05, 0.05, 0.02, 0x111111, 0.14, 0.04, 0.075, g); g.visible = false; scene.add(g); return { g, t: Math.random() * 4, x: 0, dir: 1 }; });
+function updateAmbient(dt, t) {
+  fallTex.offset.y = t * 1.6;
+  foam.forEach(f => { f.userData.t += dt * 0.9; if (f.userData.t > 1) f.userData.t = 0; const k = f.userData.t; f.position.set(15.6 - k * 1.6, 0.2 + Math.sin(k * Math.PI) * 0.6, -1 + ((f.id * 37) % 10) / 10 * 1.4); f.material.opacity = 0.85 * (1 - k); });
+  sparkles.material.opacity = 0.35 + Math.abs(Math.sin(t * 3)) * 0.5;
+  const sp = spGeo.attributes.position.array; for (let i = 0; i < spN; i++) { sp[i * 3] += dt * 0.6; if (sp[i * 3] > 15) sp[i * 3] = -15; } spGeo.attributes.position.needsUpdate = true;
+  fish.forEach(f => {
+    f.t -= dt;
+    if (f.t <= 0 && !f.g.visible) { f.x = Math.random() * 24 - 12; if (bridges.some(([a, b]) => f.x > a - 1 && f.x < b + 1)) f.x = 3; f.dir = Math.random() < 0.5 ? -1 : 1; f.g.visible = true; f.t = 1.1; f.z = -1 + Math.random(); }
+    if (f.g.visible) { const k = 1 - f.t / 1.1; f.g.position.set(f.x + f.dir * k * 1.6, -0.1 + Math.sin(k * Math.PI) * 1.4, f.z); f.g.rotation.set(0, f.dir > 0 ? 0 : Math.PI, (0.5 - k) * 1.6 * f.dir); if (f.t <= 0) { f.g.visible = false; f.t = 3 + Math.random() * 5; } }
+  });
+  if (fireflies.visible) { for (let i = 0; i < ffN; i++) { const b = ffBase[i]; ffPos[i * 3] = b[0] + Math.sin(t * 0.7 + b[3]) * 0.8; ffPos[i * 3 + 1] = b[1] + Math.sin(t * 1.3 + b[3] * 2) * 0.4; ffPos[i * 3 + 2] = b[2] + Math.cos(t * 0.6 + b[3]) * 0.8; } ffGeo.attributes.position.needsUpdate = true; fireflies.material.opacity = 0.6 + Math.sin(t * 5) * 0.4; }
+}
+
 /* ---------------- LUGARES ---------------- */
 const lugares = [
   { id: 'casa', n: 'Sobre mí', l: 'La casa · Sobre mí', door: [-11, 17.6], at: [-11, 13, 10.5], c: '#ec4899', q: 'Conoce a la jugadora (la casa)', open: () => panelCasa() },
@@ -566,7 +666,7 @@ const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, dept
 lugares.forEach(L => {
   const s = label(L.l, L.c); s.position.set(L.at[0], L.at[2], L.at[1]); scene.add(s); L.sprite = s;
 });
-[['casa', -11, 13, 8, 9, 8], ['musica', 11, 13, 8, 6, 6], ['proyectos', -9, -12, 6, 12, 6], ['apps', 9, -12, 6, 12, 6], ['castillo', 0, -20, 15, 12, 10], ['cofre', 5.5, -15.5, 1.4, 1.4, 1.2]].forEach(([id, x, z, w, h, d]) => {
+[['npc', 3.2, 16.2, 1.2, 2.2, 1.2], ['casa', -11, 13, 8, 9, 8], ['musica', 11, 13, 8, 6, 6], ['proyectos', -9, -12, 6, 12, 6], ['apps', 9, -12, 6, 12, 6], ['castillo', 0, -20, 15, 12, 10], ['cofre', 5.5, -15.5, 1.4, 1.4, 1.2]].forEach(([id, x, z, w, h, d]) => {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), hitMat); m.position.set(x, h / 2, z); m.userData = { kind: 'loc', id }; scene.add(m); hitMeshes.push(m);
 });
 // Cofre del CV
@@ -671,7 +771,7 @@ function checkHitos() {
       const box = $('#tlHud'); box.hidden = false;
       const li = document.createElement('li'); if (h.now) li.className = 'now';
       li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d;
-      $('#tlList').appendChild(li); $('#tlCount').textContent = tlShown;
+      $('#tlList').appendChild(li); $('#tlCount').textContent = tlShown; saveProgress(); checkComplete();
       if (h.i === 5) { confetti(); toast('♛', 'LLEGASTE A LA CIMA', 'Bloque a bloque', 'Recorriste toda mi historia. Hay una cama para descansar.', '#d97706'); }
     }
   }
@@ -709,7 +809,7 @@ const nightSky = (() => {
 const starGeo = new THREE.BufferGeometry(), starPos = new Float32Array(500 * 3);
 for (let i = 0; i < 500; i++) { const a = Math.random() * Math.PI * 2, r = 70 + Math.random() * 30; starPos[i * 3] = Math.cos(a) * r; starPos[i * 3 + 1] = 25 + Math.random() * 45; starPos[i * 3 + 2] = Math.sin(a) * r; }
 starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfdf2ff, size: 0.6, fog: false })); stars.visible = false; scene.add(stars);
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfdf2ff, size: 0.6, fog: false, transparent: true })); stars.visible = false; scene.add(stars);
 const moon = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d');
   g.fillStyle = '#fff7fb'; g.fillRect(4, 4, 24, 24); g.fillStyle = '#f3d6e6'; [[9, 9, 5, 4], [18, 16, 6, 5], [11, 20, 3, 3]].forEach(a => g.fillRect(...a));
@@ -718,13 +818,10 @@ const moon = (() => {
 const lantern = new THREE.PointLight(0xffc4e1, 0, 11, 1.4); scene.add(lantern);
 let night = false, spawnT = 0;
 const monsters = [];
+function jumpToNight(on) { cycleT = on ? CYCLE * 0.665 : 0.001; }
 function setNight(on) {
+  if (on === night) return;
   night = on;
-  scene.background = on ? nightSky : window.__daySky;
-  scene.fog.color.set(on ? 0x2a1747 : 0xffe4f1); scene.fog.near = on ? 25 : 60; scene.fog.far = on ? 75 : 120;
-  hemi.intensity = on ? 0.32 : 1.05; hemi.color.set(on ? 0x9aa4ff : 0xfff4fa); hemi.groundColor.set(on ? 0x3b2050 : 0xd8a7c0);
-  sun.intensity = on ? 0.35 : 1.7; sun.color.set(on ? 0xb9c4ff : 0xffffff);
-  lantern.intensity = on ? 9 : 0; stars.visible = moon.visible = on;
   ores.forEach(o => { if (!o.mined) o.m.material.emissiveIntensity = on ? 0.7 : 0.18; });
   const b = $('#nightBtn'); b.setAttribute('aria-pressed', on); b.textContent = on ? '☀' : '☾'; b.setAttribute('aria-label', on ? 'Cambiar a modo día' : 'Cambiar a modo noche');
   spawnT = 0;
@@ -732,6 +829,37 @@ function setNight(on) {
     if (minedCount < habilidades.length) toast('☾', 'CAYÓ LA NOCHE', '¡Cuidado con los monstruos!', 'Aparece uno cada 20 segundos y te persigue. Pica un bloque de habilidad para hacerlos desaparecer.', '#7c3aed');
     else toast('☾', 'NOCHE TRANQUILA', 'Ya no hay monstruos', 'Encontraste todas las habilidades: la arena es tuya.', '#7c3aed');
   } else { clearMonsters(false); toast('☀', 'AMANECIÓ', 'Modo día', 'Los monstruos se fueron.'); }
+}
+
+/* ---------------- CICLO DE DÍA Y NOCHE ---------------- */
+const CYCLE = 240; // segundos que dura un día completo
+let cycleT = 0, skyT = 0, nightness = 0;
+const skyKeys = [
+  { p: 0.00, top: '#ffc9e3', mid: '#ffe4f1', bot: '#fff6fa', hemi: 1.05, sun: 1.7, sunC: '#ffffff', n: 0 },
+  { p: 0.50, top: '#ffc9e3', mid: '#ffe4f1', bot: '#fff6fa', hemi: 1.05, sun: 1.7, sunC: '#ffffff', n: 0 },
+  { p: 0.57, top: '#f472b6', mid: '#fdba74', bot: '#fde68a', hemi: 0.8, sun: 1.25, sunC: '#ffb37a', n: 0.15 },
+  { p: 0.66, top: '#0f0a24', mid: '#2a1747', bot: '#4a2160', hemi: 0.32, sun: 0.35, sunC: '#b9c4ff', n: 1 },
+  { p: 0.92, top: '#0f0a24', mid: '#2a1747', bot: '#4a2160', hemi: 0.32, sun: 0.35, sunC: '#b9c4ff', n: 1 },
+  { p: 0.97, top: '#a78bfa', mid: '#f9a8d4', bot: '#fed7aa', hemi: 0.75, sun: 1.1, sunC: '#ffd1b3', n: 0.2 },
+  { p: 1.00, top: '#ffc9e3', mid: '#ffe4f1', bot: '#fff6fa', hemi: 1.05, sun: 1.7, sunC: '#ffffff', n: 0 }
+];
+const cA = new THREE.Color(), cB = new THREE.Color();
+const mix = (a, b, k) => '#' + cA.set(a).lerp(cB.set(b), k).getHexString();
+function applySky(phase) {
+  let i = 0; while (i < skyKeys.length - 2 && phase > skyKeys[i + 1].p) i++;
+  const A = skyKeys[i], B = skyKeys[i + 1], k = Math.min(1, Math.max(0, (phase - A.p) / (B.p - A.p || 1)));
+  const top = mix(A.top, B.top, k), mid = mix(A.mid, B.mid, k), bot = mix(A.bot, B.bot, k);
+  const g = skyCanvas.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256);
+  gr.addColorStop(0, top); gr.addColorStop(0.55, mid); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, 2, 256); skyTex.needsUpdate = true;
+  scene.background = skyTex; scene.fog.color.set(mid);
+  nightness = A.n + (B.n - A.n) * k;
+  scene.fog.near = 60 - nightness * 35; scene.fog.far = 120 - nightness * 45;
+  hemi.intensity = A.hemi + (B.hemi - A.hemi) * k; hemi.color.set(mix('#fff4fa', '#9aa4ff', nightness)); hemi.groundColor.set(mix('#d8a7c0', '#3b2050', nightness));
+  sun.intensity = A.sun + (B.sun - A.sun) * k; sun.color.set(mix(A.sunC, B.sunC, k));
+  stars.visible = nightness > 0.05; stars.material.opacity = nightness; moon.visible = nightness > 0.3;
+  lantern.intensity = nightness * 9;
+  M.lamp.emissiveIntensity = 0.2 + nightness * 1.4; lampGlows.forEach(s => { s.visible = nightness > 0.2; s.material.opacity = nightness * 0.8; });
+  fireflies.visible = nightness > 0.4;
 }
 
 function monsterModel(kind) {
@@ -924,7 +1052,7 @@ function lasso(a) {
 const farmQueue = [];
 function penAnimal(a) {
   a.state = 'corral'; a.rope.visible = false; penned++; sfx('pop'); renderQuests();
-  afterPen();
+  afterPen(); saveProgress(); checkComplete();
   if (panelOpen) { farmQueue.push([a, penned]); return; }
   showFarmCard(a, penned);
 }
@@ -942,7 +1070,7 @@ function afterPen() {
 }
 function choosePet(a) {
   if (pet) { pet.state = 'corral'; const [x, z] = [(Math.random() * 6 - 3), -5]; pet.g.position.set(x, pet.y, z); }
-  pet = a; a.state = 'mascota'; sfx('win');
+  pet = a; a.state = 'mascota'; sfx('win'); saveProgress();
   toast('♥', 'NUEVA MASCOTA', a.n, 'Ahora te acompaña por toda la arena.', '#ec4899');
 }
 function updateAnimals(dt, t) {
@@ -991,6 +1119,7 @@ function nearest() {
   const p = player.position; let best = null, bd = 1e9;
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
+  { const d = Math.hypot(p.x - npc.position.x, p.z - npc.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'npc' }; } }
   for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
   if (feet > 10 && Math.hypot(p.x - 1, p.z - 20 * -1) < 2.2) best = { kind: 'bed' };
   if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
@@ -998,11 +1127,11 @@ function nearest() {
 }
 function interact() {
   if (!near || panelOpen) return;
-  if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
+  if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }
 function openPlace(L) {
   sfx('open'); L.open();
-  if (L.q && !visited.has(L.id)) { visited.add(L.id); renderQuests(); }
+  if (L.q && !visited.has(L.id)) { visited.add(L.id); renderQuests(); saveProgress(); }
 }
 function mine(o) {
   if (mining || o.mined) return;
@@ -1032,7 +1161,7 @@ function breakOre(o) {
   $('#invCount').textContent = minedCount;
   toast(h.a.length > 3 ? h.a.slice(0, 3) : h.a, `HABILIDAD ${minedCount}/${habilidades.length}`, h.n, 'Usada en: ' + h.u, h.c);
   renderQuests();
-  clearMonsters(true);
+  clearMonsters(true); saveProgress(); checkComplete();
   if (minedCount === habilidades.length) setTimeout(() => { if (crown) crown.visible = true; sfx('win'); confetti(); toast('♛', 'LOGRO DESBLOQUEADO', 'Maestra constructora', 'Encontraste todas mis habilidades. ¡Ganaste la corona!', '#d97706'); }, 700);
 }
 
@@ -1069,7 +1198,7 @@ volEl.addEventListener('input', () => setVolume(volEl.value / 100));
 let lastVol = volume || 0.6;
 $('#volIcon').addEventListener('click', () => { if (volume > 0) { lastVol = volume; setVolume(0); } else setVolume(lastVol || 0.6); });
 setVolume(volume);
-$('#nightBtn').addEventListener('click', () => setNight(!night));
+$('#nightBtn').addEventListener('click', () => jumpToNight(!night));
 $('#promptBtn').addEventListener('click', interact);
 $('#jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = 0.18; });
 
@@ -1236,7 +1365,7 @@ addEventListener('keydown', e => {
   if (k === 'm' && !e.repeat) setMusic(!soundOn);
   if ((k === '+' || k === '=') && !e.repeat) setVolume(volume + 0.1);
   if (k === '-' && !e.repeat) setVolume(volume - 0.1);
-  if (k === 'n' && !e.repeat) setNight(!night);
+  if (k === 'n' && !e.repeat) jumpToNight(!night);
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; if (e.key === ' ' && started && !panelOpen) e.preventDefault(); });
 addEventListener('blur', () => Object.keys(keys).forEach(k => keys[k] = false));
@@ -1267,6 +1396,7 @@ canvas.addEventListener('pointerup', e => { canvas.style.cursor = '';
   if (hit) {
     const u = hit.object.userData;
     if (u.kind === 'ore') { const o = ores[u.i]; const p = player.position; const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz) || 1; planTo(o.x + dx / d * 1.25, o.z + dz / d * 1.25, () => mine(o)); }
+    else if (u.id === 'npc') planTo(3.2, 17.4, () => talkNpc());
     else { const L = lugares.find(l => l.id === u.id); planTo(L.door[0], L.door[1], () => openPlace(L)); }
     sfx('blip'); return;
   }
@@ -1281,7 +1411,7 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 /* ---------------- BUCLE ---------------- */
 const clock = new THREE.Clock();
 const camPos = new THREE.Vector3(0, 30, 50), camLook = new THREE.Vector3(0, 0, 0);
-let walkT = 0, mapT = 0, wasOnStage = false, airT = 0;
+let walkT = 0, mapT = 0, wasOnStage = false, airT = 0, lastSaveSec = -1;
 function update(dt, t) {
   // movimiento
   let mx = 0, mz = 0;
@@ -1324,7 +1454,7 @@ function update(dt, t) {
   vy -= GRAV * dt;
   let ny = feet + vy * dt;
   if (vy <= 0) {
-    if (hits(p.x, ny, p.z)) { ny = Math.floor(ny - 0.5) + 1.5; if (!onGround && vy < -6) sfx('land'); vy = 0; onGround = true; }
+    if (hits(p.x, ny, p.z)) { ny = Math.floor(ny - 0.5) + 1.5; if (!onGround && vy < -6) { sfx('land'); const g = groundType(); dust(p.x, ny, p.z, 8, dustColor[g] || 0xe5e7eb); } vy = 0; onGround = true; }
     else onGround = false;
   } else if (hits(p.x, ny, p.z)) { vy = 0; ny = feet; }
   feet = ny;
@@ -1333,6 +1463,7 @@ function update(dt, t) {
   if (onStage && !wasOnStage) toast('♪', '¡SUBISTE AL ESCENARIO!', playing ? 'A bailar' : 'Pon música para bailar', playing ? '' : 'Pulsa E junto al tocadiscos o M para la música.', '#ec4899');
   wasOnStage = onStage;
   walkT += dt * (moving ? (keys.shift ? 15 : 11) : 0);
+  if (moving && onGround && Math.floor(walkT / Math.PI) !== lastStep) { lastStep = Math.floor(walkT / Math.PI); footstep(); if (lastStep % 2 === 0) { const g = groundType(); if (dustColor[g]) dust(p.x, feet, p.z, 2, dustColor[g]); } }
   const sw = moving ? Math.sin(walkT) * 0.7 : 0;
   P.legL.g.rotation.x = sw; P.legR.g.rotation.x = -sw;
   if (!mining) { P.armL.g.rotation.x = -sw; P.armR.g.rotation.x = sw; }
@@ -1359,6 +1490,13 @@ function update(dt, t) {
   if (started && !selecting) checkHitos();
   updateMonsters(dt, t);
   updateAnimals(dt, t);
+  if (started && !selecting && !panelOpen) { cycleT += dt; playTime += dt; }
+  { const ph = (cycleT % CYCLE) / CYCLE; if ((skyT += dt) > 0.2 || !started) { skyT = 0; applySky(ph); }
+    const shouldNight = ph > 0.63 && ph < 0.965; if (started && shouldNight !== night) setNight(shouldNight); }
+  updateAmbient(dt, t); if (Math.floor(t * 15) % 2 === 0) swayGrass(t);
+  updateNpc(dt, t); updateTutorial();
+  roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && feet < r.y; r.meshes.forEach(m => m.visible = !inside); if (r === roofZones[2]) arcade.visible = !inside; });
+  if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
   ores.forEach(o => { if (o.mined || mining?.o === o) return; o.m.position.y = 1 + Math.sin(t * 2 + o.i) * 0.08; o.m.rotation.y = Math.sin(t * 0.8 + o.i) * 0.25; o.m.material.emissiveIntensity = 0.18 + Math.max(0, Math.sin(t * 3 + o.i)) * 0.3; });
@@ -1368,7 +1506,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
@@ -1425,6 +1563,114 @@ function loop() {
   update(dt, t); renderer.render(scene, camera); if (started) adaptQuality(); requestAnimationFrame(loop);
 }
 
+/* ---------------- PROGRESO GUARDADO ---------------- */
+let progress = (() => { try { return JSON.parse(localStorage.getItem('arenaSave') || '{}'); } catch (e) { return {}; } })();
+let playTime = progress.time || 0;
+function saveProgress() {
+  progress.mined = ores.filter(o => o.mined).map(o => o.i);
+  progress.penned = animals.filter(a => a.state === 'corral' || a.state === 'mascota').map(a => a.id);
+  progress.pet = pet ? pet.id : null; progress.char = charIndex; progress.visited = [...visited]; progress.tl = tlShown; progress.time = Math.round(playTime);
+  try { localStorage.setItem('arenaSave', JSON.stringify(progress)); } catch (e) { }
+}
+function restoreProgress() {
+  let any = false;
+  (progress.mined || []).forEach(i => { const o = ores[i]; if (!o || o.mined) return; o.mined = true; scene.remove(o.m); scene.remove(o.tag); oreCells.delete(`${o.x},1,${o.z}`); const k = hitMeshes.indexOf(o.m); if (k > -1) hitMeshes.splice(k, 1);
+    const h = habilidades[i], slot = document.querySelectorAll('.slot')[i]; slot.classList.add('got'); slot.textContent = h.a.length > 4 ? h.a.slice(0, 4) : h.a; minedCount++; any = true; });
+  $('#invCount').textContent = minedCount;
+  (progress.penned || []).forEach(id => { const a = animals.find(x => x.id === id); if (!a) return; a.state = 'corral'; a.g.position.set(-2.5 + a.i, 0.5, -5); a.y = 0.5; penned++; any = true; });
+  if (progress.pet) { const a = animals.find(x => x.id === progress.pet); if (a) { pet = a; a.state = 'mascota'; a.g.position.set(1, 0.5, 18); } }
+  (progress.visited || []).forEach(v => visited.add(v));
+  for (let k = 0; k < (progress.tl || 0); k++) { const h = hitos[k]; h.done = true; h.sprite.material.opacity = 1; const li = document.createElement('li'); if (h.now) li.className = 'now'; li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d; $('#tlList').appendChild(li); tlShown++; }
+  $('#tlCount').textContent = tlShown;
+  if (typeof progress.char === 'number') buildCharacter(progress.char); else buildTool();
+  renderQuests();
+  return any;
+}
+$('#resetSave').addEventListener('click', () => { try { localStorage.removeItem('arenaSave'); localStorage.removeItem('arenaTut'); } catch (e) { } location.reload(); });
+
+/* ---------------- FINAL ---------------- */
+function checkComplete() {
+  if (progress.final || minedCount < habilidades.length || penned < animals.length || tlShown < hitos.length) return;
+  progress.final = true; saveProgress();
+  setTimeout(() => {
+    sfx('win'); confetti(); setTimeout(confetti, 900);
+    const mins = Math.max(1, Math.round(playTime / 60));
+    showPanel(`<p class="p-kicker">¡FELICIDADES!</p><h2 id="panelTitle">¡Completaste la arena!</h2>
+      <p class="lead">Recorriste todo mi mundo. Gracias por jugar y por conocer mi trabajo de esta forma.</p>
+      <div class="stats-final">
+        <div><b>${minedCount}/${habilidades.length}</b><span>habilidades</span></div>
+        <div><b>${penned}/${animals.length}</b><span>animales</span></div>
+        <div><b>${tlShown}/${hitos.length}</b><span>historia</span></div>
+        <div><b>${mins} min</b><span>jugando</span></div>
+      </div>
+      <p>Jugaste como <strong>${personajes[charIndex].n}</strong>${pet ? ` con tu mascota <strong>${pet.n}</strong>` : ''}. Si quieres formar equipo para la siguiente misión, aquí me encuentras:</p>
+      <div class="contact"><a class="btn big" href="${CV}" target="_blank" rel="noopener">Ver mi CV <small>PDF</small></a>
+      <a class="btn" href="mailto:av503640@gmail.com">Correo <small>av503640@gmail.com</small></a>
+      <a class="btn" href="https://www.linkedin.com/in/allisonrvargas" target="_blank" rel="noopener">LinkedIn <small>/in/allisonrvargas</small></a>
+      <a class="btn" href="https://github.com/allisonrvargas" target="_blank" rel="noopener">GitHub <small>@allisonrvargas</small></a></div>`);
+  }, 1500);
+}
+
+/* ---------------- RESUMEN RÁPIDO ---------------- */
+function openQuick() {
+  closeMenu(); sfx('open');
+  showPanel(`<p class="p-kicker">VER TODO RÁPIDO</p><h2 id="panelTitle">Allison Vargas</h2>
+    <div class="grid2"><div><div class="photo"><img src="img/allison.jpg" alt="Fotografía de Allison Vargas"></div>
+    <ul class="facts"><li><span>Formación</span>Campuslands GT</li><li><span>Estudios</span>Ing. en Ciencias y Sistemas</li><li><span>Idiomas</span>Español · Inglés B1</li></ul></div><div>
+    <p class="lead">Desarrolladora de software en formación. Construyo APIs con Node.js y Express, bases de datos SQL y NoSQL, interfaces web y apps móviles con React Native.</p>
+    <h3>Proyectos</h3>
+    <ul class="quick-list">${proyectos.map(p => `<li><b>${p.t}</b><span>${p.tags.join(' · ')}</span>${p.link ? `<a href="${p.link}" target="_blank" rel="noopener">Código ↗</a>` : `<em>${p.nota}</em>`}</li>`).join('')}</ul>
+    <h3>Habilidades</h3>
+    <div class="tags">${habilidades.map(h => `<i>${h.n}</i>`).join('')}</div>
+    <h3>Contacto</h3>
+    <div class="contact"><a class="btn big" href="${CV}" target="_blank" rel="noopener">Ver mi CV <small>PDF</small></a>
+    <a class="btn" href="mailto:av503640@gmail.com">Correo <small>av503640@gmail.com</small></a>
+    <a class="btn" href="https://www.linkedin.com/in/allisonrvargas" target="_blank" rel="noopener">LinkedIn</a>
+    <a class="btn" href="https://github.com/allisonrvargas" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn" href="clasico.html">Modo clásico</a></div>
+    </div></div>`);
+}
+$('#quickBtn').addEventListener('click', openQuick);
+$('#quickIntro').addEventListener('click', e => { e.preventDefault(); openQuick(); });
+
+/* ---------------- TUTORIAL ---------------- */
+const tutSteps = [
+  { t: 'Camina', d: 'Usa W A S D o las flechas, o toca el suelo para ir ahí.', done: () => Math.hypot(player.position.x - tutFrom[0], player.position.z - tutFrom[1]) > 3 },
+  { t: 'Habla con la guía', d: 'Acércate a la guía junto a la entrada y pulsa E (o tócala).', done: () => !!progress.npc },
+  { t: 'Pica un bloque brillante', d: 'Acércate a un bloque de color y pulsa E. Es una de mis habilidades.', done: () => minedCount > 0 },
+  { t: 'Entra a un edificio', d: 'Camina hasta una puerta y pulsa E. Cada edificio es una sección.', done: () => visited.size > 0 }
+];
+let tutStep = -1, tutFrom = [0, 18], tutDone = (() => { try { return localStorage.getItem('arenaTut') === '1'; } catch (e) { return false; } })();
+function startTutorial() { if (tutDone) return; tutStep = 0; tutFrom = [player.position.x, player.position.z]; showTut(); $('#tut').hidden = false; }
+function showTut() { const s = tutSteps[tutStep]; $('#tutStep').textContent = `PASO ${tutStep + 1} DE ${tutSteps.length}`; $('#tutTitle').textContent = s.t; $('#tutText').textContent = s.d; }
+function endTutorial(msg) { tutStep = -1; tutDone = true; $('#tut').hidden = true; try { localStorage.setItem('arenaTut', '1'); } catch (e) { } if (msg) toast('★', 'TUTORIAL COMPLETO', '¡Ya sabes jugar!', 'Explora libremente. El botón "Resumen" abre todo mi portafolio sin jugar.', '#16a34a'); }
+$('#tutSkip').addEventListener('click', () => endTutorial(false));
+function updateTutorial() {
+  if (tutStep < 0 || panelOpen || selecting) return;
+  if (tutSteps[tutStep].done()) { sfx('pop'); tutStep++; if (tutStep >= tutSteps.length) endTutorial(true); else showTut(); }
+}
+
+/* ---------------- PISADAS Y POLVO ---------------- */
+let lastStep = 0;
+function groundType() { const t = blocks.get(`${Math.round(player.position.x)},${Math.round(feet - 0.5)},${Math.round(player.position.z)}`); return t || 'grass'; }
+function footstep() {
+  if (!actx || volume === 0) return;
+  const g = groundType(), t = actx.currentTime;
+  if (g === 'planks' || g === 'log') { tone(50 + Math.random() * 4, t, 0.05, 'triangle', 0.35); grit(t, 0.04, 900, 0.25); }
+  else if (g === 'sand') grit(t, 0.07, 2400 + Math.random() * 600, 0.35);
+  else if (['stone', 'cobble', 'quartz', 'gold'].includes(g)) { grit(t, 0.03, 3200, 0.45); tone(84, t, 0.02, 'square', 0.05); }
+  else if (g.startsWith('wool')) grit(t, 0.06, 600, 0.15);
+  else grit(t, 0.08, 1300 + Math.random() * 400, 0.3);
+}
+function dust(x, y, z, n, color) {
+  for (let i = 0; i < n; i++) {
+    const d = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshLambertMaterial({ color }));
+    d.position.set(x + (Math.random() - 0.5) * 0.4, y + 0.1, z + (Math.random() - 0.5) * 0.4);
+    d.userData.v = new THREE.Vector3((Math.random() - 0.5) * 1.5, 1 + Math.random() * 1.5, (Math.random() - 0.5) * 1.5); d.userData.life = 0.5; scene.add(d); debris.push(d);
+  }
+}
+const dustColor = { sand: 0xf1d9b4, grass: 0x8fd17a, planks: 0xeebba8, stone: 0xc4bfc8, cobble: 0xc4bfc8, quartz: 0xfbeef5 };
+
 /* ---------------- INICIO ---------------- */
 
 // Retratos de cada carta: se renderiza cada personaje en 3D y se guarda como imagen
@@ -1463,17 +1709,51 @@ function openSelect(music) {
   showcaseFrom = [player.position.x, feet, player.position.z]; player.position.set(0, 0.5, 18); feet = 0.5; vy = 0;
   selecting = true; $('#select').hidden = false; renderCards(); sfx('open');
 }
-$('#goArena').addEventListener('click', () => { $('#select').hidden = true; selecting = false; if (started && showcaseFrom) { player.position.set(showcaseFrom[0], showcaseFrom[1], showcaseFrom[2]); feet = showcaseFrom[1]; } showcaseFrom = null; if (!started) start(wantMusic); else toast('★', 'PERSONAJE', personajes[charIndex].n, '¡Listo para seguir explorando!', personajes[charIndex].c1); });
+$('#goArena').addEventListener('click', () => { progress.char = charIndex; saveProgress(); $('#select').hidden = true; selecting = false; if (started && showcaseFrom) { player.position.set(showcaseFrom[0], showcaseFrom[1], showcaseFrom[2]); feet = showcaseFrom[1]; } showcaseFrom = null; if (!started) start(wantMusic); else toast('★', 'PERSONAJE', personajes[charIndex].n, '¡Listo para seguir explorando!', personajes[charIndex].c1); });
 function start(music) {
   started = true; audio(); if (music && !playing) setMusic(true);
   $('#hud').hidden = false; drawMap(); sfx('win');
-  toast('★', 'BIENVENIDA A LA ARENA', '¡Explora mi mundo!', 'Cada edificio es una sección. Camina hasta la puerta y pulsa E, o tócalo.');
-  setTimeout(() => toast('⛏', 'CONSEJO', 'Bloques brillantes', `Son mis ${habilidades.length} habilidades. Acércate y pícalas para llenar tu inventario.`), 4200);
+  if (restored) toast('↺', 'CONTINUASTE TU PARTIDA', '¡Bienvenida de vuelta!', `Llevas ${minedCount}/${habilidades.length} habilidades y ${penned}/${animals.length} animales.`);
+  else toast('★', 'BIENVENIDA A LA ARENA', '¡Explora mi mundo!', 'Cada edificio es una sección. Habla con la guía junto a la entrada.');
+  setTimeout(startTutorial, 1200); saveProgress();
 }
 $('#playMusic').addEventListener('click', () => openSelect(true));
 $('#playQuiet').addEventListener('click', () => openSelect(false));
 $('#changeChar').addEventListener('click', () => { closeMenu(); showcaseFrom = [player.position.x, feet, player.position.z]; player.position.set(0, 0.5, 18); feet = 0.5; vy = 0; selecting = true; $('#select').hidden = false; renderCards(); });
+/* ---------------- GUÍA ---------------- */
+const npc = new THREE.Group(); scene.add(npc);
+{ rig = npc; P = {}; personajes[0].build(); }
+const npcP = P, npcHead = head; rig = mainRig;
+npc.position.set(3.2, 0.5, 16.2); npc.rotation.y = Math.PI;
+const npcSign = label('Allison · Guía', '#be185d'); npcSign.scale.set(4, 1, 1); npcSign.position.set(3.2, 2.9, 16.2); scene.add(npcSign);
+const npcBubble = label('¡Hola! Pulsa E', '#d97706'); npcBubble.scale.set(3.4, 0.85, 1); npcBubble.position.set(3.2, 4.1, 16.2); npcBubble.visible = false; scene.add(npcBubble);
+function talkNpc() {
+  sfx('open');
+  showPanel(`<p class="p-kicker">LA GUÍA DE LA ARENA</p><h2 id="panelTitle">¡Hola, bienvenida!</h2>
+    <div class="grid2"><div><div class="photo"><img src="img/allison.jpg" alt="Fotografía de Allison Vargas"></div></div><div>
+    <p class="lead">Soy <strong>Allison</strong>, desarrolladora de software en formación en Campuslands. Construí esta arena para que conozcas mi trabajo jugando.</p>
+    <p>Cada edificio es una parte de mí: la <strong>casa</strong> es quién soy, la <strong>torre de proyectos</strong> guarda lo que he construido, la <strong>torre arcade</strong> tiene mis apps funcionando y en el <strong>castillo</strong> está mi historia y mi contacto.</p>
+    <p>Los <strong>bloques brillantes</strong> son mis habilidades: pícalos. Los <strong>animales</strong> llévalos al corral y cada uno te mostrará un proyecto.</p>
+    <h3>¿A dónde te llevo?</h3>
+    <div class="row"><button class="btn" data-go="casa">La casa</button><button class="btn" data-go="proyectos">Proyectos</button><button class="btn" data-go="granja">La granja</button><button class="btn big" id="npcQuick">Ver todo rápido <small>sin jugar</small></button></div>
+    </div></div>`, () => {
+    panelBody.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { closePanel(); travel(lugares.find(l => l.id === b.dataset.go)); }));
+    $('#npcQuick').addEventListener('click', openQuick);
+  });
+  progress.npc = true; saveProgress();
+}
+function updateNpc(dt, t) {
+  const p = player.position, d = Math.hypot(p.x - npc.position.x, p.z - npc.position.z);
+  const want = d < 7 ? Math.atan2(p.x - npc.position.x, p.z - npc.position.z) : Math.PI;
+  let df = want - npc.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); npc.rotation.y += df * Math.min(1, dt * 4);
+  npc.position.y = 0.5 + Math.sin(t * 2) * 0.02;
+  npcP.armR.g.rotation.x = d < 4 ? -2.6 + Math.sin(t * 8) * 0.35 : -0.2; npcP.armR.g.rotation.z = d < 4 ? -0.3 : 0;
+  npcHead.rotation.z = Math.sin(t * 1.5) * 0.05;
+  npcBubble.visible = started && !selecting && d < 6 && !progress.npc; npcBubble.position.y = 4.1 + Math.sin(t * 3) * 0.1;
+}
+
 buildCharacter(0);
+const restored = restoreProgress();
 
 (async () => {
   const pct = $('#loadPct');
@@ -1490,4 +1770,4 @@ buildCharacter(0);
 })();
 
 // acceso para depurar desde la consola del navegador
-window.arena = { animals, lasso, setNight, spawnMonster, monsters, hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
+window.arena = { setCycle: v => { cycleT = v; }, jumpToNight, cycle: () => cycleT, progress: () => progress, talkNpc, openQuick, animals, lasso, setNight, spawnMonster, monsters, hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };

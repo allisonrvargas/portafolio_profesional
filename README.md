@@ -38,6 +38,19 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 
 ¿Prefieres leer? El **modo clásico** (`clasico.html`) tiene todo el contenido en una página normal.
 
+## Novedades del mundo
+
+- **Ciclo de día y noche automático** (amanecer, tarde, atardecer rosa y noche con estrellas y luna).
+- **Faroles** junto a los caminos que se encienden de noche, **luciérnagas**, **flores** y **pasto** que se mueve con el viento.
+- **Río vivo** con brillos, **peces** que saltan y una **cascada**.
+- **Interiores**: la casa tiene cama, librero y escritorio con computadora; la torre de proyectos tiene libreros y la torre arcade, maquinitas. Los techos se ocultan al entrar.
+- **Pisadas con sonido** distinto en pasto, arena, madera y piedra, y polvito al caminar y al caer.
+- **Progreso guardado**: habilidades, animales, historia y personaje se recuerdan entre visitas. Se puede reiniciar desde el menú.
+- **Guía**: un personaje junto a la entrada que explica la arena y te lleva a cada lugar.
+- **Tutorial** de 4 pasos para quien juega por primera vez.
+- **Resumen**: el botón "Ver todo rápido" muestra todo el portafolio sin jugar.
+- **Pantalla final** con estadísticas al completar habilidades, granja e historia.
+
 ## Tecnologías
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)

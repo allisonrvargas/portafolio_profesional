@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Great+Vibes&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/arena.css?v=202611201852">
+<link rel="stylesheet" href="css/arena.css?v=202611201514">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
@@ -34,6 +34,7 @@
       <button class="btn big" id="playMusic">▶ Jugar <small>con música</small></button>
       <button class="btn big alt" id="playQuiet">▶ Jugar <small>sin sonido</small></button>
     </div>
+    <a class="classic-link" href="#" id="quickIntro">¿Sin tiempo? Ver todo rápido →</a><br>
     <a class="classic-link" href="clasico.html">¿Prefieres leer? Ir al modo clásico →</a>
     <div class="keys">
       <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> caminar</span>
@@ -66,6 +67,7 @@
       <img src="img/allison.jpg" alt="" width="44" height="44">
       <div><b>Allison</b><small>Desarrolladora en formación</small></div>
     </div>
+    <button class="btn quick" id="quickBtn">Resumen <small>ver todo rápido</small></button>
     <div class="quests" id="quests">
       <p class="q-title">Misiones</p>
       <ul id="questList"></ul>
@@ -87,6 +89,7 @@
       <div id="travelList"></div>
       <button class="btn wide" id="changeChar">Cambiar personaje</button>
       <a class="btn wide" href="clasico.html">Modo clásico</a>
+      <button class="btn wide" id="resetSave">Reiniciar partida</button>
     </nav>
   </div>
   <button class="btn big jump" id="jumpBtn" aria-label="Saltar">⤒<small>Saltar</small></button>
@@ -114,8 +117,14 @@
 </aside>
 <div class="fade" id="fade" hidden><p>Zzz…</p></div>
 <div class="hurt" id="hurt" aria-hidden="true"></div>
+<div class="tut" id="tut" hidden aria-live="polite">
+  <p class="tut-step" id="tutStep"></p>
+  <b id="tutTitle"></b>
+  <p id="tutText"></p>
+  <button class="tut-skip" id="tutSkip">Saltar tutorial</button>
+</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script type="module" src="js/arena.js?v=202611202054"></script>
+<script type="module" src="js/arena.js?v=202611201514"></script>
 </body>
 </html>
