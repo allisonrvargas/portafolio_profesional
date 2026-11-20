@@ -779,22 +779,22 @@ function checkHitos() {
       const li = document.createElement('li'); if (h.now) li.className = 'now';
       li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d;
       $('#tlList').appendChild(li); $('#tlCount').textContent = tlShown; saveProgress(); checkComplete();
-      if (h.i === 5) { confetti(); toast('♛', 'LLEGASTE A LA CIMA', 'Bloque a bloque', 'Recorriste toda mi historia. Hay una cama para descansar.', '#d97706'); }
+      if (h.i === 5) { confetti(); toast('♛', 'LLEGASTE A LA CIMA', 'Bloque a bloque', 'Recorriste toda mi historia. Baja al patio: ahí está la cama para descansar.', '#d97706'); }
     }
   }
 }
 $('#tlClose').addEventListener('click', () => $('#tlHud').hidden = true);
 
-// Cama en la azotea: al acostarte vuelves al inicio
-const bed = new THREE.Group(); bed.position.set(1, 10.5, -20); scene.add(bed);
+// Cama en el patio del castillo: al acostarte vuelves al inicio
+const BED = [-4, -21]; const bed = new THREE.Group(); bed.position.set(BED[0], 1.5, BED[1]); bed.rotation.y = Math.PI / 2; scene.add(bed);
 part(2, 0.3, 1, 0x7a4e3a, 0, 0.15, 0, bed); part(1.96, 0.18, 0.96, 0xec4899, 0.18, 0.39, 0, bed); part(0.5, 0.2, 0.9, 0xffffff, -0.7, 0.4, 0, bed);
 part(0.1, 0.7, 1, 0x7a4e3a, -1, 0.35, 0, bed); part(0.1, 0.45, 1, 0x7a4e3a, 1, 0.22, 0, bed);
 put(0, 10, -20, 'gold'); put(1, 10, -20, 'gold'); put(2, 10, -20, 'gold');
-const bedSign = label('Cama · Volver al inicio', '#9d174d'); bedSign.scale.set(4.4, 1.1, 1); bedSign.position.set(1, 12.6, -20); scene.add(bedSign);
+const bedSign = label('Cama · Volver al inicio', '#9d174d'); bedSign.scale.set(4.4, 1.1, 1); bedSign.position.set(BED[0], 3.4, BED[1]); scene.add(bedSign);
 let sleeping = false;
 function sleep() {
   if (sleeping) return; sleeping = true; sfx('open');
-  player.position.set(1.2, 10.5, -20); feet = 10.9; vy = 0; player.rotation.y = -Math.PI / 2;
+  player.position.set(BED[0], 1.5, BED[1] - 0.2); feet = 1.9; vy = 0; player.rotation.y = 0;
   rig.rotation.z = Math.PI / 2; rig.position.y = 0.25;
   const f = $('#fade'); f.hidden = false; requestAnimationFrame(() => f.classList.add('on'));
   setTimeout(() => {
@@ -1146,7 +1146,7 @@ function nearest() {
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
   if (guide.state === 'home' || guide.state === 'returning') { const d = Math.hypot(p.x - npc.position.x, p.z - npc.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'npc' }; } }
   for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
-  if (feet > 10 && Math.hypot(p.x - 1, p.z - 20 * -1) < 2.2) best = { kind: 'bed' };
+  if (feet < 3 && Math.hypot(p.x - BED[0], p.z - BED[1]) < 2.4) best = { kind: 'bed' };
   if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
   return best;
 }
@@ -1521,7 +1521,7 @@ function update(dt, t) {
   updateAmbient(dt, t); if (Math.floor(t * 15) % 2 === 0) swayGrass(t);
   updateNpc(dt, t); updateTutorial();
   roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < r.y);
-    r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || m.userData.layer === 10 || feet > 9.4)));
+    r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
     });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
