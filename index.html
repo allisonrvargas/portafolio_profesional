@@ -99,6 +99,12 @@
   </article>
 </div>
 
+<aside class="tl-hud" id="tlHud" hidden aria-live="polite">
+  <button class="btn icon close-sm" id="tlClose" aria-label="Ocultar línea de tiempo">✕</button>
+  <p class="q-title">Bloque a bloque · <span id="tlCount">0</span>/6</p>
+  <ol class="tl-list" id="tlList"></ol>
+</aside>
+<div class="fade" id="fade" hidden><p>Zzz…</p></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script type="module" src="js/arena.js"></script>

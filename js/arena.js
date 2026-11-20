@@ -320,6 +320,20 @@ function castle(cx, cz) {
   solid(x1 - 1.5, z1 - 1.5, x2 + 1.5, z2 + 1.5);
 }
 castle(0, -20);
+// Escalera de la línea de tiempo: sube por dentro del castillo hasta la azotea
+const stairSteps = [
+  [3, 2, -19], [4, 2, -19], [3, 3, -20], [4, 3, -20], [3, 4, -21], [4, 4, -21], [3, 5, -22], [4, 5, -22],
+  [3, 5, -23], [4, 5, -23], [2, 6, -23], [1, 7, -23], [0, 8, -23], [-1, 9, -23], [-2, 9, -23]
+];
+stairSteps.forEach(([x, y, z]) => { put(x, y, z, 'planks'); });
+// los escalones que marcan un hito son de oro
+[[4, 2, -19], [4, 4, -21], [4, 5, -23], [1, 7, -23], [-1, 9, -23]].forEach(([x, y, z]) => put(x, y, z, 'gold'));
+put(-3, 9, -23, 'planks');
+// barandas de vidrio para no caerse fuera del castillo al subir
+const freeCell = (x, y, z) => { const t = blocks.get(`${x},${y},${z}`); return !t || t === 'air'; };
+for (let z = -22; z <= -19; z++) for (let y = 2; y <= 10; y++) if (freeCell(5, y, z)) put(5, y, z, 'glass');
+for (let x = -5; x <= 5; x++) for (let y = 6; y <= 12; y++) if (freeCell(x, y, -24)) put(x, y, -24, 'glass');
+for (let y = 10; y <= 12; y++) for (let z = -23; z <= -19; z++) if (freeCell(-4, y, z)) put(-4, y, z, 'glass');
 
 // Construir mallas instanciadas por tipo de bloque
 const blockMeshes = [];
@@ -524,7 +538,7 @@ const lugares = [
   { id: 'musica', n: 'Música', l: 'Escenario · Música', door: [11, 17.2], alt: [11, 14.4], at: [11, 13, 8.2], c: '#f472b6', q: 'Pon música en el escenario', open: () => panelMusica() },
   { id: 'proyectos', n: 'Proyectos', l: 'Torre de proyectos', door: [-9, -8.6], at: [-9, -12, 13.6], c: '#a78bfa', q: 'Explora la torre de proyectos', open: () => panelProyectos() },
   { id: 'apps', n: 'Aplicaciones', l: 'Torre arcade · Apps', door: [9, -8.6], at: [9, -12, 13.6], c: '#db2777', q: 'Juega en la torre arcade', open: () => panelApps() },
-  { id: 'castillo', n: 'Contacto', l: 'Castillo · Contacto', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
+  { id: 'castillo', n: 'Contacto', l: 'Castillo · Sube las gradas', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
   { id: 'cofre', n: 'Mi CV', l: 'Cofre · Mi CV', door: [5.5, -13.9], at: [5.5, -15.5, 2.6], c: '#0d9488', open: () => panelCofre() }
 ];
 const visited = new Set();
@@ -615,15 +629,68 @@ function travel(L) { closeMenu(); planTo(L.door[0], L.door[1], () => openPlace(L
 
 /* ---------------- INTERACCIÓN ---------------- */
 let near = null;
+/* ---------------- LÍNEA DE TIEMPO EN EL CASTILLO ---------------- */
+const hitos = [
+  { pos: [0, -19], minY: 1.4 },
+  { pos: [3.5, -19], minY: 2.4 },
+  { pos: [3.5, -21], minY: 4.4 },
+  { pos: [3.5, -23], minY: 5.4 },
+  { pos: [1, -23], minY: 7.4 },
+  { pos: [0, -21], minY: 10.4 }
+].map((h, i) => ({ ...h, ...historia[i], i, done: false }));
+hitos.forEach((h, i) => {
+  const s = label(h.f.split(' · ')[0], i === 5 ? '#d97706' : '#db2777'); s.scale.set(3.2, 0.8, 1);
+  s.position.set(h.pos[0], h.minY + 2.4, h.pos[1]); s.material.transparent = true; s.material.opacity = 0.35; scene.add(s); h.sprite = s;
+});
+let tlShown = 0;
+function checkHitos() {
+  const p = player.position;
+  for (const h of hitos) {
+    if (h.done || h.i !== tlShown) continue;
+    if (Math.hypot(p.x - h.pos[0], p.z - h.pos[1]) < 1.6 && feet >= h.minY - 0.2) {
+      h.done = true; tlShown++; h.sprite.material.opacity = 1; sfx(h.i === 5 ? 'win' : 'pop');
+      const box = $('#tlHud'); box.hidden = false;
+      const li = document.createElement('li'); if (h.now) li.className = 'now';
+      li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d;
+      $('#tlList').appendChild(li); $('#tlCount').textContent = tlShown;
+      if (h.i === 5) { confetti(); toast('♛', 'LLEGASTE A LA CIMA', 'Bloque a bloque', 'Recorriste toda mi historia. Hay una cama para descansar.', '#d97706'); }
+    }
+  }
+}
+$('#tlClose').addEventListener('click', () => $('#tlHud').hidden = true);
+
+// Cama en la azotea: al acostarte vuelves al inicio
+const bed = new THREE.Group(); bed.position.set(1, 10.5, -20); scene.add(bed);
+part(2, 0.3, 1, 0x7a4e3a, 0, 0.15, 0, bed); part(1.96, 0.18, 0.96, 0xec4899, 0.18, 0.39, 0, bed); part(0.5, 0.2, 0.9, 0xffffff, -0.7, 0.4, 0, bed);
+part(0.1, 0.7, 1, 0x7a4e3a, -1, 0.35, 0, bed); part(0.1, 0.45, 1, 0x7a4e3a, 1, 0.22, 0, bed);
+put(0, 10, -20, 'gold'); put(1, 10, -20, 'gold'); put(2, 10, -20, 'gold');
+const bedSign = label('Cama · Volver al inicio', '#9d174d'); bedSign.scale.set(4.4, 1.1, 1); bedSign.position.set(1, 12.6, -20); scene.add(bedSign);
+let sleeping = false;
+function sleep() {
+  if (sleeping) return; sleeping = true; sfx('open');
+  player.position.set(1.2, 10.5, -20); feet = 10.9; vy = 0; player.rotation.y = -Math.PI / 2;
+  rig.rotation.z = Math.PI / 2; rig.position.y = 0.25;
+  const f = $('#fade'); f.hidden = false; requestAnimationFrame(() => f.classList.add('on'));
+  setTimeout(() => {
+    rig.rotation.z = 0; rig.position.y = 0;
+    player.position.set(0, 0.5, 18); feet = 0.5; vy = 0; player.rotation.y = Math.PI;
+    camPos.set(0, 22, 31);
+    f.classList.remove('on'); setTimeout(() => { f.hidden = true; sleeping = false; }, 900);
+    toast('☀', 'AMANECIÓ', '¡Volviste al inicio!', 'Dormiste en el castillo y despertaste en la entrada de la arena.');
+  }, 2200);
+}
+
 function nearest() {
   const p = player.position; let best = null, bd = 1e9;
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
+  if (feet > 10 && Math.hypot(p.x - 1, p.z - 20 * -1) < 2.2) best = { kind: 'bed' };
+  if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
   return best;
 }
 function interact() {
   if (!near || panelOpen) return;
-  if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
+  if (near.kind === 'bed') sleep(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }
 function openPlace(L) {
   sfx('open'); L.open();
@@ -923,6 +990,7 @@ function update(dt, t) {
   }
   debris.forEach((d, i) => { d.userData.v.y -= 14 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.6) { d.position.y = 0.6; d.userData.v.multiplyScalar(0.5); } d.userData.life -= dt * 1.2; d.scale.setScalar(Math.max(0.01, d.userData.life)); if (d.userData.life <= 0) { scene.remove(d); debris.splice(i, 1); } });
 
+  if (started && !selecting) checkHitos();
   // bloques de habilidad
   ores.forEach(o => { if (o.mined || mining?.o === o) return; o.m.position.y = 1 + Math.sin(t * 2 + o.i) * 0.08; o.m.rotation.y = Math.sin(t * 0.8 + o.i) * 0.25; o.m.material.emissiveIntensity = 0.18 + Math.max(0, Math.sin(t * 3 + o.i)) * 0.3; });
 
@@ -931,7 +999,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
@@ -942,7 +1010,8 @@ function update(dt, t) {
   const pp = petalGeo.attributes.position.array;
   for (let i = 0; i < petalCount; i++) { pp[i * 3 + 1] -= dt * (0.6 + (i % 5) * 0.12); pp[i * 3] += Math.sin(t + i) * dt * 0.4; if (pp[i * 3 + 1] < 0.5) pp[i * 3 + 1] = 12 + Math.random() * 3; }
   petalGeo.attributes.position.needsUpdate = true;
-  lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15; L.sprite.visible = !selecting; });
+  lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15; L.sprite.visible = !selecting && !(L.id === 'castillo' && feet > 1.2); });
+  bedSign.visible = feet > 8 && !selecting; hitos.forEach(h => h.sprite.visible = !selecting && (h.done || feet > 1.2));
   lid.rotation.x += ((lidOpen ? -1.1 : 0) - lid.rotation.x) * Math.min(1, dt * 6); lid.position.z = lidOpen ? -0.2 : 0; lid.position.y = lidOpen ? 0.95 : 0.72;
   notes.forEach(n => { n.t += dt * 0.35; if (n.t > 1) n.t -= 1; n.s.position.set(11 + Math.sin(n.t * 9 + n.s.id) * 1.2, 3 + n.t * 4, 13); n.s.material.opacity = playing ? Math.sin(n.t * Math.PI) : 0; });
   drawArcade(t);
@@ -1040,4 +1109,4 @@ buildCharacter(0);
 })();
 
 // acceso para depurar desde la consola del navegador
-window.arena = { buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
+window.arena = { hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
