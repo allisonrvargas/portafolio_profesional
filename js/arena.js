@@ -423,7 +423,9 @@ water.position.set(-0.5, -0.25, -0.5); water.receiveShadow = true; scene.add(wat
 // Etiquetas flotantes
 function label(text, color = '#db2777') {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
-  g.font = '64px "Bubblegum Sans", system-ui'; const w = Math.min(500, g.measureText(text).width + 70);
+  let fs = 64; g.font = fs + 'px "Bubblegum Sans", system-ui';
+  while (g.measureText(text).width > 440 && fs > 30) { fs -= 2; g.font = fs + 'px "Bubblegum Sans", system-ui'; } // letra más pequeña si no cabe
+  const w = Math.min(500, g.measureText(text).width + 50);
   const x = (512 - w) / 2;
   g.fillStyle = '#f5b8d3'; g.fillRect(x - 6, 14, w + 12, 100);
   g.fillStyle = '#ffffff'; g.fillRect(x, 20, w, 88);
