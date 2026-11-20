@@ -254,3 +254,6 @@ kbd{font-family:var(--fun);font-size:13px;background:#fff;color:var(--rose);padd
 .vol input::-moz-range-thumb{width:16px;height:18px;border:0;border-radius:0;background:#fff;box-shadow:inset -3px -3px 0 #f5b8d3,0 0 0 2px var(--rose)}
 .vol input:focus-visible{outline:3px dashed var(--pink);outline-offset:4px}
 @media (max-width:820px){.vol{width:110px}}
+.vol{box-sizing:border-box;overflow:hidden}
+.vol input{min-width:0;width:100%;margin:0}
+.vol-ico{flex:none}
