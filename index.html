@@ -45,6 +45,17 @@
   </div>
 </section>
 
+<!-- Selección de personaje -->
+<section class="select" id="select" hidden>
+  <div class="select-card">
+    <p class="kicker">ELIGE TU CARTA</p>
+    <h2>Tu personaje</h2>
+    <div class="char-info"><b id="charName"></b><p id="charDesc"></p></div>
+    <div class="cards-row" id="cards" role="group" aria-label="Personajes"></div>
+    <button class="btn big" id="goArena">¡A la arena! <small>empezar a explorar</small></button>
+  </div>
+</section>
+
 <!-- HUD -->
 <div class="hud" id="hud" hidden>
   <div class="hud-left">
@@ -66,6 +77,7 @@
     <nav class="menu" id="menu" hidden>
       <p class="q-title">Viajar a…</p>
       <div id="travelList"></div>
+      <button class="btn wide" id="changeChar">Cambiar personaje</button>
       <a class="btn wide" href="clasico.html">Modo clásico</a>
     </nav>
   </div>
@@ -74,7 +86,7 @@
     <button class="btn big" id="promptBtn"><kbd>E</kbd> <span id="promptText"></span></button>
   </div>
   <div class="hotbar-wrap">
-    <p class="hotbar-title">Inventario · <span id="invCount">0</span>/<span id="invTotal">0</span> habilidades</p>
+    <p class="hotbar-title"><span class="tool"><i id="toolIcon"></i><span id="toolName">Pico de madera</span></span> · Inventario <span id="invCount">0</span>/<span id="invTotal">0</span></p>
     <div class="hotbar" id="hotbar"></div>
   </div>
 </div>

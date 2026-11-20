@@ -30,6 +30,8 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - El **mapa** de la esquina y el menú **Viajar a…** te llevan a cualquier lugar.
 - Las **misiones** marcan lo que ya visitaste. Si picas las 18 habilidades, ganas la corona.
 - **M** pone o pausa la música.
+- Al empezar eliges tu **personaje en forma de carta**: Allison, Caballera Rosa, Arquera del Bosque, Maga de Código o Byte. Puedes cambiarlo desde el menú.
+- Picas con **herramientas** que mejoran mientras avanzas: madera, piedra, hierro, oro y diamante. Cada una pica más rápido y el bloque se va agrietando con sonido de piedra.
 
 ¿Prefieres leer? El **modo clásico** (`clasico.html`) tiene todo el contenido en una página normal.
 

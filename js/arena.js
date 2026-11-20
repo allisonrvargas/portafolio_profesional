@@ -89,10 +89,22 @@ function noise(t, v = 0.12) {
   const s = actx.createBufferSource(), g = actx.createGain(); s.buffer = noiseBuf;
   g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05); s.connect(g); g.connect(master); s.start(t);
 }
+// crujido de piedra: ruido filtrado (como golpear y romper un bloque)
+function grit(t, dur, freq, vol, endFreq) {
+  if (!noiseBuf) noise(t, 0);
+  const len = Math.floor(actx.sampleRate * dur), buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (Math.random() < 0.35 ? 1 : 0.3);
+  const src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+  src.buffer = buf; f.type = 'bandpass'; f.Q.value = 1.4; f.frequency.setValueAtTime(freq, t); if (endFreq) f.frequency.exponentialRampToValueAtTime(endFreq, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f); f.connect(g); g.connect(master); src.start(t);
+}
 function sfx(k) {
   if (!audio()) return; const t = actx.currentTime;
   if (k === 'blip') tone(84, t, 0.05, 'square', 0.2);
   if (k === 'hit') { noise(t, 0.35); tone(45, t, 0.08, 'square', 0.3); }
+  if (k === 'dig') grit(t, 0.09, 600 + Math.random() * 500, 0.9);
+  if (k === 'break') { grit(t, 0.28, 900, 1.2, 250); [0.05, 0.11, 0.17, 0.24].forEach((d, i) => grit(t + d, 0.06, 500 + i * 180, 0.6)); tone(40, t, 0.12, 'triangle', 0.5); }
   if (k === 'pop') { [76, 83, 88].forEach((n, i) => tone(n, t + i * 0.05, 0.1, 'square', 0.3)); }
   if (k === 'open') { tone(72, t, 0.07); tone(79, t + 0.07, 0.12); }
   if (k === 'jump') { tone(67, t, 0.06, 'square', 0.15); tone(74, t + 0.05, 0.08, 'square', 0.15); }
@@ -395,33 +407,75 @@ for (let i = 0; i < 5; i++) {
   s.material.opacity = 0; s.material.transparent = true; s.position.set(11, 3, 13); scene.add(s); notes.push({ s, t: i / 5 });
 }
 
-/* ---------------- PERSONAJE ---------------- */
+/* ---------------- PERSONAJES (cartas originales) ---------------- */
 const player = new THREE.Group(); scene.add(player);
-const P = {};
-function part(w, h, d, color, x, y, z, parent = player) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color })); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; }
-function limb(w, h, d, color, x, y, z) { const g = new THREE.Group(); g.position.set(x, y, z); player.add(g); const m = part(w, h, d, color, 0, -h / 2, 0, g); return { g, m }; }
-P.legL = limb(0.26, 0.6, 0.28, 0x2b3a67, -0.15, 0.62, 0);
-P.legR = limb(0.26, 0.6, 0.28, 0x2b3a67, 0.15, 0.62, 0);
-P.body = part(0.6, 0.66, 0.34, 0xec4899, 0, 0.95, 0);
-part(0.18, 0.5, 0.02, 0xffffff, 0, 1.0, 0.175);
-P.armL = limb(0.2, 0.62, 0.24, 0xec4899, -0.41, 1.26, 0);
-P.armR = limb(0.2, 0.62, 0.24, 0xec4899, 0.41, 1.26, 0);
-const head = new THREE.Group(); head.position.set(0, 1.56, 0); player.add(head);
-part(0.56, 0.56, 0.52, 0xb98263, 0, 0, 0, head);
-part(0.6, 0.18, 0.56, 0x161018, 0, 0.24, 0, head);
-part(0.6, 0.8, 0.14, 0x161018, 0, -0.12, -0.26, head);
-part(0.1, 0.62, 0.5, 0x161018, -0.29, -0.06, -0.02, head);
-part(0.1, 0.62, 0.5, 0x161018, 0.29, -0.06, -0.02, head);
-part(0.09, 0.09, 0.02, 0x2a1408, -0.12, 0.02, 0.265, head); part(0.09, 0.09, 0.02, 0x2a1408, 0.12, 0.02, 0.265, head);
-part(0.12, 0.04, 0.02, 0xd9667f, 0, -0.14, 0.265, head);
-part(0.66, 0.08, 0.12, 0xf9a8d4, 0, 0.36, 0, head); // audífonos
-part(0.1, 0.22, 0.22, 0xec4899, -0.34, 0.02, 0, head); part(0.1, 0.22, 0.22, 0xec4899, 0.34, 0.02, 0, head);
-const crown = new THREE.Group(); crown.position.set(0, 0.44, 0); head.add(crown); crown.visible = false;
-part(0.46, 0.12, 0.42, 0xfcd34d, 0, 0, 0, crown); [[-0.17, 0.17], [0.17, 0.17], [-0.17, -0.15], [0.17, -0.15], [0, 0.17]].forEach(([x, z]) => part(0.1, 0.14, 0.1, 0xfbbf24, x, 0.12, z, crown));
+const rig = new THREE.Group(); player.add(rig);
+let P = {}, head, crown, toolHolder;
+function part(w, h, d, color, x, y, z, parent = rig) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color })); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; }
+function limb(w, h, d, color, x, y, z) { const g = new THREE.Group(); g.position.set(x, y, z); rig.add(g); const m = part(w, h, d, color, 0, -h / 2, 0, g); return { g, m }; }
+function baseBody(c) {
+  P.legL = limb(0.26, 0.6, 0.28, c.legs, -0.15, 0.62, 0);
+  P.legR = limb(0.26, 0.6, 0.28, c.legs, 0.15, 0.62, 0);
+  P.body = part(0.6, 0.66, 0.34, c.body, 0, 0.95, 0);
+  P.armL = limb(0.2, 0.62, 0.24, c.arms || c.body, -0.41, 1.26, 0);
+  P.armR = limb(0.2, 0.62, 0.24, c.arms || c.body, 0.41, 1.26, 0);
+  head = new THREE.Group(); head.position.set(0, 1.56, 0); rig.add(head);
+  part(0.56, 0.56, 0.52, c.skin, 0, 0, 0, head);
+  part(0.09, 0.09, 0.02, c.eyes || 0x2a1408, -0.12, 0.02, 0.265, head); part(0.09, 0.09, 0.02, c.eyes || 0x2a1408, 0.12, 0.02, 0.265, head);
+  if (c.mouth !== false) part(0.12, 0.04, 0.02, 0xd9667f, 0, -0.14, 0.265, head);
+}
+const personajes = [
+  { id: 'allison', n: 'Allison', rol: 'Constructora', rar: 'Legendaria', cost: 5, c1: '#ec4899', c2: '#fcd34d', d: 'Desarrolladora full stack. Construye mundos bloque a bloque con sus audífonos puestos.',
+    build() {
+      baseBody({ legs: 0x2b3a67, body: 0xec4899, skin: 0xb98263 });
+      part(0.18, 0.5, 0.02, 0xffffff, 0, 1.0, 0.175);
+      part(0.6, 0.18, 0.56, 0x161018, 0, 0.24, 0, head); part(0.6, 0.8, 0.14, 0x161018, 0, -0.12, -0.26, head);
+      part(0.1, 0.62, 0.5, 0x161018, -0.29, -0.06, -0.02, head); part(0.1, 0.62, 0.5, 0x161018, 0.29, -0.06, -0.02, head);
+      part(0.66, 0.08, 0.12, 0xf9a8d4, 0, 0.36, 0, head); part(0.1, 0.22, 0.22, 0xec4899, -0.34, 0.02, 0, head); part(0.1, 0.22, 0.22, 0xec4899, 0.34, 0.02, 0, head);
+    } },
+  { id: 'caballera', n: 'Caballera Rosa', rol: 'Defensora', rar: 'Épica', cost: 4, c1: '#a78bfa', c2: '#f472b6', d: 'Armadura brillante y capa rosa. Protege la torre de proyectos de cualquier bug.',
+    build() {
+      baseBody({ legs: 0x9ca3af, body: 0xd1d5db, arms: 0xc0c4cc, skin: 0xcfd3da, eyes: 0x1f2937, mouth: false });
+      part(0.62, 0.1, 0.36, 0xf472b6, 0, 0.66, 0); part(0.55, 0.7, 0.06, 0xf472b6, 0, 0.98, -0.2);
+      part(0.6, 0.1, 0.56, 0xb8bcc6, 0, 0.27, 0, head); part(0.6, 0.06, 0.04, 0x1f2937, 0, 0.03, 0.27, head);
+      part(0.08, 0.3, 0.4, 0xec4899, 0, 0.45, -0.02, head); part(0.08, 0.2, 0.2, 0xf9a8d4, 0, 0.62, -0.12, head);
+    } },
+  { id: 'arquera', n: 'Arquera del Bosque', rol: 'Exploradora', rar: 'Especial', cost: 3, c1: '#14b8a6', c2: '#86efac', d: 'Ojo de águila: encuentra los bloques de habilidad escondidos entre los cerezos.',
+    build() {
+      baseBody({ legs: 0x5b4636, body: 0x2f855a, arms: 0x2f855a, skin: 0xe6b48f });
+      part(0.64, 0.66, 0.6, 0x276749, 0, 0.08, -0.03, head); part(0.5, 0.36, 0.04, 0xe6b48f, 0, -0.03, 0.27, head);
+      part(0.09, 0.09, 0.02, 0x3b2a1a, -0.12, 0.02, 0.29, head); part(0.09, 0.09, 0.02, 0x3b2a1a, 0.12, 0.02, 0.29, head);
+      part(0.22, 0.6, 0.18, 0x7a4e3a, 0.16, 1.0, -0.26); part(0.04, 0.2, 0.04, 0xfcd34d, 0.12, 1.36, -0.26); part(0.04, 0.2, 0.04, 0xfcd34d, 0.2, 1.38, -0.26);
+    } },
+  { id: 'maga', n: 'Maga de Código', rol: 'Hechicera', rar: 'Épica', cost: 4, c1: '#8b5cf6', c2: '#c4b5fd', d: 'Convierte ideas en funciones con un toque de su varita. Sus hechizos compilan a la primera.',
+    build() {
+      baseBody({ legs: 0x5b21b6, body: 0x7c3aed, arms: 0x7c3aed, skin: 0xd39b78 });
+      part(0.64, 0.34, 0.4, 0x7c3aed, 0, 0.5, 0); part(0.12, 0.12, 0.02, 0xfcd34d, 0.12, 1.1, 0.175);
+      part(0.6, 0.6, 0.12, 0xf5f5f5, 0, -0.08, -0.25, head); part(0.6, 0.12, 0.56, 0xf5f5f5, 0, 0.24, 0, head);
+      part(0.8, 0.08, 0.8, 0x5b21b6, 0, 0.32, 0, head); part(0.46, 0.3, 0.46, 0x6d28d9, 0, 0.5, 0, head); part(0.28, 0.26, 0.28, 0x7c3aed, 0.04, 0.76, -0.04, head); part(0.12, 0.12, 0.12, 0xfcd34d, 0.08, 0.92, -0.06, head);
+    } },
+  { id: 'robot', n: 'Byte', rol: 'Robot programador', rar: 'Común', cost: 2, c1: '#0ea5e9', c2: '#f9a8d4', d: 'Pequeño robot que nunca se cansa de correr pruebas. Su antena capta wifi y buenas ideas.',
+    build() {
+      baseBody({ legs: 0x64748b, body: 0x94a3b8, arms: 0x7c8ea3, skin: 0xb8c4d2, eyes: 0x22d3ee, mouth: false });
+      part(0.42, 0.3, 0.02, 0x0f172a, 0, 0.02, 0.265, head); part(0.09, 0.09, 0.03, 0x22d3ee, -0.1, 0.05, 0.275, head); part(0.09, 0.09, 0.03, 0x22d3ee, 0.1, 0.05, 0.275, head); part(0.16, 0.03, 0.03, 0xf472b6, 0, -0.06, 0.275, head);
+      part(0.04, 0.3, 0.04, 0x475569, 0, 0.42, 0, head); part(0.12, 0.12, 0.12, 0xf472b6, 0, 0.6, 0, head);
+      part(0.3, 0.2, 0.04, 0x0f172a, 0, 1.02, 0.18); part(0.06, 0.06, 0.02, 0x22c55e, -0.07, 1.04, 0.205); part(0.06, 0.06, 0.02, 0xf472b6, 0.07, 1.04, 0.205);
+    } }
+];
+let charIndex = 0;
+function buildCharacter(i) {
+  charIndex = i;
+  while (rig.children.length) rig.remove(rig.children[0]);
+  P = {}; personajes[i].build();
+  crown = new THREE.Group(); crown.position.set(0, personajes[i].id === 'maga' ? 1.02 : 0.44, 0); head.add(crown); crown.visible = minedCount === habilidades.length;
+  part(0.46, 0.12, 0.42, 0xfcd34d, 0, 0, 0, crown); [[-0.17, 0.17], [0.17, 0.17], [-0.17, -0.15], [0.17, -0.15], [0, 0.17]].forEach(([x, z]) => part(0.1, 0.14, 0.1, 0xfbbf24, x, 0.12, z, crown));
+  toolHolder = new THREE.Group(); toolHolder.position.set(0, -0.58, 0.06); P.armR.g.add(toolHolder); buildTool();
+}
 const pShadow = new THREE.Mesh(new THREE.CircleGeometry(0.42, 16), new THREE.MeshBasicMaterial({ color: 0x9d174d, transparent: true, opacity: 0.18 }));
 pShadow.rotation.x = -Math.PI / 2; pShadow.position.y = 0.52; scene.add(pShadow);
 player.position.set(0, 0.5, 18);
 player.rotation.y = Math.PI;
+let minedCount = 0;
 
 /* ---------------- LUGARES ---------------- */
 const lugares = [
@@ -460,7 +514,30 @@ habilidades.forEach((h, i) => {
   const tag = label(h.n, h.c); tag.scale.set(4, 1, 1); tag.position.set(x, 2.5, z); tag.visible = false; scene.add(tag);
   ores.push({ m, tag, i, x, z, mined: false });
 });
-let minedCount = 0;
+
+/* ---------------- HERRAMIENTAS ---------------- */
+const picos = [
+  { n: 'Pico de madera', c: 0xb07a55, css: '#b07a55', t: 1.5, from: 0 },
+  { n: 'Pico de piedra', c: 0x9a98a6, css: '#9a98a6', t: 1.1, from: 4 },
+  { n: 'Pico de hierro', c: 0xeef0f4, css: '#cbd5e1', t: 0.8, from: 8 },
+  { n: 'Pico de oro', c: 0xfcd34d, css: '#fbbf24', t: 0.55, from: 12 },
+  { n: 'Pico de diamante', c: 0x5eead4, css: '#2dd4bf', t: 0.35, from: 16 }
+];
+const tier = () => { let k = 0; picos.forEach((x, i) => { if (minedCount >= x.from) k = i; }); return k; };
+function buildTool() {
+  if (!toolHolder) return;
+  while (toolHolder.children.length) toolHolder.remove(toolHolder.children[0]);
+  const pk = picos[tier()];
+  part(0.07, 0.7, 0.07, 0x7a4e3a, 0, 0, 0.18, toolHolder).rotation.x = Math.PI / 2;
+  const headT = new THREE.Group(); headT.position.set(0, 0, 0.52); toolHolder.add(headT);
+  part(0.62, 0.1, 0.1, pk.c, 0, 0, 0, headT);
+  part(0.1, 0.1, 0.1, pk.c, -0.3, -0.08, 0, headT); part(0.1, 0.1, 0.1, pk.c, 0.3, -0.08, 0, headT);
+  updateToolHud();
+}
+function updateToolHud() {
+  const pk = picos[tier()], el = $('#toolName'); if (!el) return;
+  el.textContent = pk.n; $('#toolIcon').style.background = pk.css;
+}
 
 /* ---------------- MOVIMIENTO ---------------- */
 const keys = {};
@@ -471,6 +548,7 @@ const chestBox = [4.85, -16, 6.15, -15, 1.5];
 function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air') || oreCells.has(`${i},${j},${k}`); }
 function hits(x, y, z) {
   if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
+  if (z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
   const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.round(y + 0.05), j1 = Math.round(y + PH - 0.05);
   for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
   if (x + PR > chestBox[0] && x - PR < chestBox[2] && z + PR > chestBox[1] && z - PR < chestBox[3] && y < chestBox[4] - 0.01) return true;
@@ -515,6 +593,13 @@ function mine(o) {
   const p = player.position; player.rotation.y = Math.atan2(o.x - p.x, o.z - p.z);
   mining = { o, t: 0, hits: 0 };
 }
+
+const crackTex = [1, 2, 3, 4, 5, 6].map(stage => texture((g, r) => {
+  g.clearRect(0, 0, 16, 16); g.fillStyle = 'rgba(30,20,30,.85)';
+  let x = 8, y = 8; for (let i = 0; i < stage * 7; i++) { g.fillRect(x, y, 1, 1); x = Math.max(0, Math.min(15, x + Math.floor(r() * 3) - 1)); y = Math.max(0, Math.min(15, y + Math.floor(r() * 3) - 1)); if (i % 9 === 8) { x = 8; y = 8; } }
+}, 900));
+const crack = new THREE.Mesh(new THREE.BoxGeometry(1.03, 1.03, 1.03), new THREE.MeshBasicMaterial({ map: crackTex[0], transparent: true, depthWrite: false }));
+crack.visible = false; scene.add(crack);
 const debris = [];
 function breakOre(o) {
   o.mined = true; scene.remove(o.m); scene.remove(o.tag);
@@ -525,12 +610,13 @@ function breakOre(o) {
     const d = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshLambertMaterial({ color: i % 2 ? h.c : '#c4bfc8' }));
     d.position.set(o.x, 1, o.z); d.userData.v = new THREE.Vector3((Math.random() - 0.5) * 5, 3 + Math.random() * 3, (Math.random() - 0.5) * 5); d.userData.life = 1; scene.add(d); debris.push(d);
   }
-  minedCount++; sfx('pop');
+  const before = tier(); minedCount++; sfx('break'); setTimeout(() => sfx('pop'), 180);
+  if (tier() > before) { buildTool(); setTimeout(() => { sfx('win'); toast('⛏', '¡NUEVA HERRAMIENTA!', picos[tier()].n, 'Ahora picas más rápido.', picos[tier()].css); }, 900); }
   const slot = document.querySelectorAll('.slot')[o.i]; slot.classList.add('got'); slot.textContent = h.a.length > 4 ? h.a.slice(0, 4) : h.a; slot.setAttribute('aria-label', h.n + ', conseguida');
   $('#invCount').textContent = minedCount;
   toast(h.a.length > 3 ? h.a.slice(0, 3) : h.a, `HABILIDAD ${minedCount}/${habilidades.length}`, h.n, 'Usada en: ' + h.u, h.c);
   renderQuests();
-  if (minedCount === habilidades.length) setTimeout(() => { crown.visible = true; sfx('win'); confetti(); toast('♛', 'LOGRO DESBLOQUEADO', 'Maestra constructora', 'Encontraste todas mis habilidades. ¡Ganaste la corona!', '#d97706'); }, 700);
+  if (minedCount === habilidades.length) setTimeout(() => { if (crown) crown.visible = true; sfx('win'); confetti(); toast('♛', 'LOGRO DESBLOQUEADO', 'Maestra constructora', 'Encontraste todas mis habilidades. ¡Ganaste la corona!', '#d97706'); }, 700);
 }
 
 /* ---------------- HUD ---------------- */
@@ -689,7 +775,7 @@ let started = false;
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k === 'escape') { if (panelOpen) closePanel(); else closeMenu(); return; }
-  if (!started || panelOpen) return;
+  if (!started || panelOpen || selecting) return;
   keys[k] = true;
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
   if ((k === 'e' || k === 'enter') && !e.repeat) interact();
@@ -786,10 +872,12 @@ function update(dt, t) {
 
   // picar
   if (mining) {
-    mining.t += dt; P.armR.g.rotation.x = -1.4 + Math.abs(Math.sin(mining.t * 16)) * 1.2;
-    const o = mining.o; o.m.position.x = o.x + (Math.random() - 0.5) * 0.06; o.m.scale.setScalar(1 - Math.min(0.15, mining.t * 0.2));
-    if (Math.floor(mining.t * 5) > mining.hits) { mining.hits++; sfx('hit'); }
-    if (mining.t > 0.75) { breakOre(o); mining = null; P.armR.g.rotation.x = 0; }
+    mining.t += dt; const dur = picos[tier()].t, prog = Math.min(1, mining.t / dur);
+    P.armR.g.rotation.x = -2.2 + Math.abs(Math.sin(mining.t * 13)) * 1.6;
+    const o = mining.o; o.m.position.x = o.x + (Math.random() - 0.5) * 0.04;
+    crack.visible = true; crack.position.copy(o.m.position); crack.rotation.copy(o.m.rotation); crack.material.map = crackTex[Math.min(5, Math.floor(prog * 6))];
+    if (Math.floor(mining.t * 4.2) > mining.hits) { mining.hits++; sfx('dig'); }
+    if (prog >= 1) { crack.visible = false; breakOre(o); mining = null; P.armR.g.rotation.x = 0; }
   }
   debris.forEach((d, i) => { d.userData.v.y -= 14 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.6) { d.position.y = 0.6; d.userData.v.multiplyScalar(0.5); } d.userData.life -= dt * 1.2; d.scale.setScalar(Math.max(0.01, d.userData.life)); if (d.userData.life <= 0) { scene.remove(d); debris.splice(i, 1); } });
 
@@ -818,13 +906,16 @@ function update(dt, t) {
   drawArcade(t);
 
   // cámara
-  if (started) {
+  if (started && !selecting) {
     const off = new THREE.Vector3(0, 21, 12.5).multiplyScalar(zoom);
     camPos.lerp(new THREE.Vector3(p.x, p.y, p.z).add(off), Math.min(1, dt * 4));
     camLook.lerp(new THREE.Vector3(p.x, 1, p.z - 2.5), Math.min(1, dt * 5));
+  } else if (selecting) {
+    const sx = innerWidth > 700 ? -1.5 : 0, sy = innerWidth > 700 ? 0.9 : -0.4; camPos.lerp(new THREE.Vector3(p.x + sx, p.y + 2.2, p.z + 8.5), Math.min(1, dt * 5)); camLook.lerp(new THREE.Vector3(p.x + sx, p.y + sy, p.z), Math.min(1, dt * 5));
   } else {
     const a = t * 0.12; camPos.set(Math.sin(a) * 44, 30, Math.cos(a) * 44); camLook.set(0, 0, -2);
   }
+  if (selecting) { player.rotation.y += dt * 0.8; }
   camera.position.copy(camPos); camera.lookAt(camLook);
   sun.position.set(camLook.x + 20, 34, camLook.z + 14); sun.target.position.set(camLook.x, 0, camLook.z); sun.target.updateMatrixWorld();
 
@@ -836,15 +927,36 @@ function loop() {
 }
 
 /* ---------------- INICIO ---------------- */
-function start(music) {
-  started = true; audio(); if (music) setMusic(true);
+let selecting = false, wantMusic = false;
+function renderCards() {
+  const box = $('#cards'); box.innerHTML = '';
+  personajes.forEach((c, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pcard' + (i === charIndex ? ' on' : '');
+    b.style.setProperty('--c1', c.c1); b.style.setProperty('--c2', c.c2);
+    b.innerHTML = `<span class="cost">${c.cost}</span><span class="rar"></span><span class="art">${c.n.split(' ').map(w => w[0]).join('').slice(0, 2)}</span><b></b><small></small>`;
+    b.querySelector('.rar').textContent = c.rar; b.querySelector('b').textContent = c.n; b.querySelector('small').textContent = c.rol;
+    b.setAttribute('aria-pressed', i === charIndex);
+    b.addEventListener('click', () => { buildCharacter(i); renderCards(); sfx('open'); });
+    box.appendChild(b);
+  });
+  const c = personajes[charIndex]; $('#charName').textContent = c.n; $('#charDesc').textContent = c.d;
+}
+function openSelect(music) {
+  wantMusic = music; audio(); if (music && !playing) setMusic(true);
   $('#intro').classList.add('out'); setTimeout(() => $('#intro').hidden = true, 600);
+  selecting = true; $('#select').hidden = false; renderCards(); sfx('open');
+}
+$('#goArena').addEventListener('click', () => { $('#select').hidden = true; selecting = false; if (!started) start(wantMusic); else toast('★', 'PERSONAJE', personajes[charIndex].n, '¡Listo para seguir explorando!', personajes[charIndex].c1); });
+function start(music) {
+  started = true; audio(); if (music && !playing) setMusic(true);
   $('#hud').hidden = false; drawMap(); sfx('win');
   toast('★', 'BIENVENIDA A LA ARENA', '¡Explora mi mundo!', 'Cada edificio es una sección. Camina hasta la puerta y pulsa E, o tócalo.');
   setTimeout(() => toast('⛏', 'CONSEJO', 'Bloques brillantes', `Son mis ${habilidades.length} habilidades. Acércate y pícalas para llenar tu inventario.`), 4200);
 }
-$('#playMusic').addEventListener('click', () => start(true));
-$('#playQuiet').addEventListener('click', () => start(false));
+$('#playMusic').addEventListener('click', () => openSelect(true));
+$('#playQuiet').addEventListener('click', () => openSelect(false));
+$('#changeChar').addEventListener('click', () => { closeMenu(); selecting = true; $('#select').hidden = false; renderCards(); });
+buildCharacter(0);
 
 (async () => {
   const pct = $('#loadPct');
@@ -861,4 +973,4 @@ $('#playQuiet').addEventListener('click', () => start(false));
 })();
 
 // acceso para depurar desde la consola del navegador
-window.arena = { player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
+window.arena = { buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
