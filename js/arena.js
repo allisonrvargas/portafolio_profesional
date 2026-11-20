@@ -526,6 +526,13 @@ function buildCharacter(i) {
   part(0.46, 0.12, 0.42, 0xfcd34d, 0, 0, 0, crown); [[-0.17, 0.17], [0.17, 0.17], [-0.17, -0.15], [0.17, -0.15], [0, 0.17]].forEach(([x, z]) => part(0.1, 0.14, 0.1, 0xfbbf24, x, 0.12, z, crown));
   toolHolder = new THREE.Group(); toolHolder.position.set(0, -0.58, 0.06); P.armR.g.add(toolHolder); buildTool();
 }
+const finder = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(12, 10); g.lineTo(52, 10); g.lineTo(32, 46); g.closePath(); g.fill();
+  g.fillStyle = '#ec4899'; g.beginPath(); g.moveTo(18, 14); g.lineTo(46, 14); g.lineTo(32, 38); g.closePath(); g.fill();
+  const t = new THREE.CanvasTexture(c); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
+  sp.scale.set(0.7, 0.7, 1); sp.renderOrder = 20; scene.add(sp); return sp;
+})();
 const pShadow = new THREE.Mesh(new THREE.CircleGeometry(0.42, 16), new THREE.MeshBasicMaterial({ color: 0x9d174d, transparent: true, opacity: 0.18 }));
 pShadow.rotation.x = -Math.PI / 2; pShadow.position.y = 0.52; scene.add(pShadow);
 player.position.set(0, 0.5, 18);
@@ -894,13 +901,23 @@ addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 addEventListener('blur', () => Object.keys(keys).forEach(k => keys[k] = false));
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.5);
-let down = null, zoom = innerWidth < 700 ? 1.4 : 1; const pointers = new Map(); let pinch = 0;
-canvas.addEventListener('pointerdown', e => { pointers.set(e.pointerId, [e.clientX, e.clientY]); down = [e.clientX, e.clientY]; });
+let down = null, camYaw = 0, camPitch = 1, lastDrag = null, dragged = false, zoom = innerWidth < 700 ? 1.4 : 1; const pointers = new Map(); let pinch = 0;
+canvas.addEventListener('pointerdown', e => { dragged = false; canvas.setPointerCapture?.(e.pointerId); pointers.set(e.pointerId, [e.clientX, e.clientY]); down = [e.clientX, e.clientY]; });
 canvas.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return; pointers.set(e.pointerId, [e.clientX, e.clientY]);
-  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) zoom = Math.min(1.7, Math.max(0.55, zoom * pinch / d)); pinch = d; down = null; }
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) zoom = Math.min(1.7, Math.max(0.55, zoom * pinch / d)); pinch = d; down = null; return; }
+  // arrastrar para girar la cámara alrededor del personaje
+  if (down && started && !panelOpen && !selecting) {
+    if (!dragged && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 8) { dragged = true; lastDrag = [e.clientX, e.clientY]; canvas.style.cursor = 'grabbing'; }
+    if (dragged) {
+      camYaw -= (e.clientX - lastDrag[0]) * 0.008;
+      camPitch = Math.min(1.5, Math.max(0.35, camPitch + (e.clientY - lastDrag[1]) * 0.004));
+      lastDrag = [e.clientX, e.clientY];
+    }
+  }
 });
-canvas.addEventListener('pointerup', e => {
+canvas.addEventListener('pointerup', e => { canvas.style.cursor = '';
+  if (dragged) { dragged = false; down = null; pointers.delete(e.pointerId); return; }
   pointers.delete(e.pointerId); if (pointers.size < 2) pinch = 0;
   if (!down || !started || panelOpen) return;
   if (Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 8) return;
@@ -934,7 +951,10 @@ function update(dt, t) {
   }
   const p = player.position; let moving = false;
   const speed = keys.shift ? 8.5 : 5;
-  if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l; }
+  if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
+    const c = Math.cos(camYaw), sN = Math.sin(camYaw); const wx = mx * c + mz * sN, wz = -mx * sN + mz * c; mx = wx; mz = wz; }
+  // Q y R giran la cámara; C la centra
+  if (started && !panelOpen && !selecting) { if (keys.q) camYaw += dt * 2; if (keys.r) camYaw -= dt * 2; if (keys.c) { camYaw = 0; camPitch = 1; } }
   else if (target && !mining) {
     const dx = target[0] - p.x, dz = target[1] - p.z, d = Math.hypot(dx, dz);
     if (d < 0.2) { if (waypoints.length) { target = waypoints.shift(); } else { target = null; marker.visible = false; const cb = onArrive; onArrive = null; if (cb) cb(); } }
@@ -991,6 +1011,7 @@ function update(dt, t) {
   debris.forEach((d, i) => { d.userData.v.y -= 14 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.6) { d.position.y = 0.6; d.userData.v.multiplyScalar(0.5); } d.userData.life -= dt * 1.2; d.scale.setScalar(Math.max(0.01, d.userData.life)); if (d.userData.life <= 0) { scene.remove(d); debris.splice(i, 1); } });
 
   if (started && !selecting) checkHitos();
+  finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
   ores.forEach(o => { if (o.mined || mining?.o === o) return; o.m.position.y = 1 + Math.sin(t * 2 + o.i) * 0.08; o.m.rotation.y = Math.sin(t * 0.8 + o.i) * 0.25; o.m.material.emissiveIntensity = 0.18 + Math.max(0, Math.sin(t * 3 + o.i)) * 0.3; });
 
@@ -1018,9 +1039,9 @@ function update(dt, t) {
 
   // cámara
   if (started && !selecting) {
-    const off = new THREE.Vector3(0, 21, 12.5).multiplyScalar(zoom);
+    const off = new THREE.Vector3(Math.sin(camYaw) * 12.5 * (1.15 - camPitch * 0.15), 21 * camPitch, Math.cos(camYaw) * 12.5 * (1.15 - camPitch * 0.15)).multiplyScalar(zoom);
     camPos.lerp(new THREE.Vector3(p.x, p.y, p.z).add(off), Math.min(1, dt * 4));
-    camLook.lerp(new THREE.Vector3(p.x, 1, p.z - 2.5), Math.min(1, dt * 5));
+    camLook.lerp(new THREE.Vector3(p.x - Math.sin(camYaw) * 2.5 * camPitch, 1, p.z - Math.cos(camYaw) * 2.5 * camPitch), Math.min(1, dt * 5));
   } else if (selecting) {
     const sx = innerWidth > 700 ? -1.5 : 0, sy = innerWidth > 700 ? 0.9 : -0.4; camPos.lerp(new THREE.Vector3(p.x + sx, p.y + 2.2, p.z + 8.5), Math.min(1, dt * 5)); camLook.lerp(new THREE.Vector3(p.x + sx, p.y + sy, p.z), Math.min(1, dt * 5));
   } else {
