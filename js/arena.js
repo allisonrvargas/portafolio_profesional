@@ -1521,9 +1521,9 @@ function update(dt, t) {
   updateAmbient(dt, t); if (Math.floor(t * 15) % 2 === 0) swayGrass(t);
   updateNpc(dt, t); updateTutorial();
   roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < r.y);
-    r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
+    r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || m.userData.layer === 10 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
-    if (r.layered) bed.visible = bedSign.visible = !inside || feet > 9.4; });
+    });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
