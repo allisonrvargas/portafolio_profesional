@@ -24,7 +24,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 
 ## Cómo se juega
 
-- **W A S D** o las flechas para caminar, **Shift** para correr.
+- **W A S D** o las flechas para caminar, **Shift** para correr y **Espacio** para saltar: puedes subirte al escenario, a los bloques y a las colinas. En celular hay un botón de salto.
 - **E** para entrar a un edificio o picar un bloque.
 - También puedes **tocar el suelo** para caminar hasta ahí, o tocar un edificio o un bloque.
 - El **mapa** de la esquina y el menú **Viajar a…** te llevan a cualquier lugar.
