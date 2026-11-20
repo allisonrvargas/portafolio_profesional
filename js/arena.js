@@ -56,7 +56,7 @@ const habilidades = [
   { a: 'SCRUM', n: 'Scrum y ClickUp', c: '#f43f5e', u: 'Sprints de Kid-Fit, MarisolliFlix y Gym Manager.' }
 ];
 const orePos = [[-5, 14], [5, 14], [0, 10], [-6, 4], [6, 3], [-12, 7], [12, 8], [-2, 5], [13, 2],
-  [-6, -6], [6, -6], [-13, -9], [13, -9], [-4, -13], [4, -13], [0, -4], [-10, -20], [10, -20]];
+  [-6, -6], [6, -6], [-13, -9], [13, -9], [-4, -13], [4, -13], [7, 21], [-10, -20], [10, -20]];
 
 const historia = [
   { f: '2020 – 2024 · Colegio Nuestra Señora de los Ángeles', t: 'Puse el primer bloque', d: 'Bachillerato en Ciencias y Letras con orientación en Computación.' },
@@ -334,6 +334,12 @@ stairSteps.forEach(([x, y, z]) => { put(x, y, z, 'planks'); });
 // los escalones que marcan un hito son de oro
 [[4, 2, -19], [4, 4, -21], [4, 5, -23], [1, 7, -23], [-1, 9, -23]].forEach(([x, y, z]) => put(x, y, z, 'gold'));
 put(-3, 9, -23, 'planks');
+// Granja: corral con cerca de troncos y tablas, puerta al sur
+const CORRAL = { x1: -4, x2: 4, z1: -7, z2: -3 };
+for (let x = CORRAL.x1; x <= CORRAL.x2; x++) for (const z of [CORRAL.z1, CORRAL.z2]) if (!(z === CORRAL.z2 && x === 0)) put(x, 1, z, (x % 2 === 0) ? 'log' : 'planks');
+for (let z = CORRAL.z1; z <= CORRAL.z2; z++) for (const x of [CORRAL.x1, CORRAL.x2]) put(x, 1, z, (z % 2 === 0) ? 'log' : 'planks');
+for (let x = CORRAL.x1 + 1; x < CORRAL.x2; x++) for (let z = CORRAL.z1 + 1; z < CORRAL.z2; z++) put(x, 0, z, 'grass');
+put(-3, 1, -6, 'woolRose'); put(3, 1, -6, 'woolRose'); // fardos de heno rosa
 // barandas de vidrio para no caerse fuera del castillo al subir
 const freeCell = (x, y, z) => { const t = blocks.get(`${x},${y},${z}`); return !t || t === 'air'; };
 for (let z = -22; z <= -19; z++) for (let y = 2; y <= 10; y++) if (freeCell(5, y, z)) put(5, y, z, 'glass');
@@ -551,6 +557,7 @@ const lugares = [
   { id: 'proyectos', n: 'Proyectos', l: 'Torre de proyectos', door: [-9, -8.6], at: [-9, -12, 13.6], c: '#a78bfa', q: 'Explora la torre de proyectos', open: () => panelProyectos() },
   { id: 'apps', n: 'Aplicaciones', l: 'Torre arcade · Apps', door: [9, -8.6], at: [9, -12, 13.6], c: '#db2777', q: 'Juega en la torre arcade', open: () => panelApps() },
   { id: 'castillo', n: 'Contacto', l: 'Castillo · Sube las gradas', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
+  { id: 'granja', n: 'Granja', l: 'Granja · Corral', door: [0, -2.4], at: [0, -5, 3.4], c: '#16a34a', open: () => toast('➰', 'LA GRANJA', 'Junta a los animales', 'Busca los 6 animales por la arena, lázalos con E y tráelos al corral. Cada uno te muestra un proyecto.', '#16a34a') },
   { id: 'cofre', n: 'Mi CV', l: 'Cofre · Mi CV', door: [5.5, -13.9], at: [5.5, -15.5, 2.6], c: '#0d9488', open: () => panelCofre() }
 ];
 const visited = new Set();
@@ -845,17 +852,152 @@ function updateMonsters(dt, t) {
   if (night) { moon.position.set(camLook.x - 30, 38, camLook.z - 55); stars.position.set(camLook.x, 0, camLook.z); }
 }
 
+/* ---------------- GRANJA Y ANIMALES ---------------- */
+const animalesDef = [
+  { id: 'vaca', n: 'Vaca Fresita', p: 0, frase: 'La vaca te trae mi proyecto más completo de consola:' },
+  { id: 'cerdo', n: 'Cerdito Bit', p: 2, frase: 'El cerdito te trae el proyecto que hicimos en equipo:' },
+  { id: 'oveja', n: 'Oveja Nube', p: 1, frase: 'La oveja te trae el proyecto del que más aprendí trabajando en células:' },
+  { id: 'gallina', n: 'Gallina Pixel', p: 7, frase: 'La gallina te trae mi tienda hecha solo con HTML y CSS:' },
+  { id: 'conejo', n: 'Conejo Byte', p: 4, frase: 'El conejo te trae la API con más pruebas que he escrito:' },
+  { id: 'pato', n: 'Pato Query', p: 3, frase: 'El pato te trae mi sistema de biblioteca:' }
+];
+// el orden de "p" apunta a la lista de proyectos: 0 Kid-Fit, 1 Gym Manager, 2 MarisolliFlix, 3 Librarian, 4 Postulaciones, 7 CampusShop
+animalesDef[0].p = 1; animalesDef[2].p = 0;
+const spawnAnimal = [[-4, 3], [3, 4], [-3, 8], [11, -6], [-12, -12], [12, 18]];
+function animalModel(id) {
+  const g = new THREE.Group(); const legs = []; let headG = new THREE.Group(); g.add(headG);
+  const leg = (x, z, h, c, w = 0.16) => { const l = new THREE.Group(); l.position.set(x, h, z); g.add(l); part(w, h, w, c, 0, -h / 2, 0, l); legs.push(l); };
+  if (id === 'vaca' || id === 'cerdo' || id === 'oveja') {
+    const C = { vaca: [0xfafafa, 0xf9a8d4, 0x3f3f46], cerdo: [0xf9a8d4, 0xec4899, 0xf472b6], oveja: [0xfbe4f0, 0xfbcfe8, 0x52525b] }[id];
+    leg(-0.22, 0.3, 0.42, C[2]); leg(0.22, 0.3, 0.42, C[2]); leg(-0.22, -0.3, 0.42, C[2]); leg(0.22, -0.3, 0.42, C[2]);
+    if (id === 'oveja') { legs.forEach(l => l.children[0].material.color.set(0xd4d4d8)); part(0.72, 0.58, 1.0, C[0], 0, 0.72, 0); }
+    else part(0.64, 0.5, 0.96, C[0], 0, 0.68, 0);
+    if (id === 'vaca') { part(0.66, 0.2, 0.3, C[1], 0.02, 0.8, 0.12); part(0.3, 0.24, 0.24, C[1], -0.18, 0.62, -0.26); part(0.2, 0.12, 0.2, C[1], 0, 0.42, 0.25); }
+    headG.position.set(0, 0.86, 0.52);
+    part(0.46, 0.42, 0.38, id === 'oveja' ? 0x71717a : C[0], 0, 0, 0.12, headG);
+    part(0.3, 0.18, 0.08, C[1], 0, -0.08, 0.33, headG);
+    part(0.06, 0.06, 0.02, 0x111111, -0.14, 0.08, 0.32, headG); part(0.06, 0.06, 0.02, 0x111111, 0.14, 0.08, 0.32, headG);
+    if (id === 'vaca') { part(0.08, 0.12, 0.08, 0xfde68a, -0.2, 0.26, 0.05, headG); part(0.08, 0.12, 0.08, 0xfde68a, 0.2, 0.26, 0.05, headG); }
+    if (id === 'cerdo') { part(0.12, 0.1, 0.06, C[0], -0.17, 0.24, 0.04, headG); part(0.12, 0.1, 0.06, C[0], 0.17, 0.24, 0.04, headG); part(0.08, 0.08, 0.08, C[1], 0, 0.62, -0.52); }
+    if (id === 'oveja') part(0.5, 0.18, 0.34, C[0], 0, 0.22, 0.08, headG);
+  } else if (id === 'gallina' || id === 'pato') {
+    const body = id === 'gallina' ? 0xfafafa : 0xfde047;
+    leg(-0.1, 0, 0.26, 0xf59e0b, 0.07); leg(0.1, 0, 0.26, 0xf59e0b, 0.07);
+    part(0.42, 0.36, 0.5, body, 0, 0.44, -0.02); part(0.06, 0.24, 0.3, id === 'gallina' ? 0xf5f5f5 : 0xfacc15, -0.24, 0.46, -0.02); part(0.06, 0.24, 0.3, id === 'gallina' ? 0xf5f5f5 : 0xfacc15, 0.24, 0.46, -0.02);
+    headG.position.set(0, 0.74, 0.2);
+    part(0.28, 0.34, 0.24, body, 0, 0, 0, headG);
+    part(0.14, 0.08, id === 'pato' ? 0.18 : 0.1, 0xf97316, 0, -0.02, 0.17, headG);
+    part(0.05, 0.05, 0.02, 0x111111, -0.1, 0.08, 0.125, headG); part(0.05, 0.05, 0.02, 0x111111, 0.1, 0.08, 0.125, headG);
+    if (id === 'gallina') { part(0.06, 0.12, 0.16, 0xe11d48, 0, 0.22, 0, headG); part(0.08, 0.1, 0.04, 0xe11d48, 0, -0.14, 0.13, headG); }
+    else part(0.16, 0.06, 0.2, 0xec4899, 0, 0.2, 0, headG); // moñito
+  } else { // conejo
+    leg(-0.14, 0.14, 0.2, 0xf5e6d3, 0.12); leg(0.14, 0.14, 0.2, 0xf5e6d3, 0.12); leg(-0.16, -0.18, 0.2, 0xf5e6d3, 0.16); leg(0.16, -0.18, 0.2, 0xf5e6d3, 0.16);
+    part(0.42, 0.36, 0.56, 0xf5e6d3, 0, 0.38, -0.04); part(0.16, 0.16, 0.12, 0xffffff, 0, 0.42, -0.36);
+    headG.position.set(0, 0.6, 0.28);
+    part(0.32, 0.3, 0.3, 0xf5e6d3, 0, 0, 0.04, headG);
+    part(0.08, 0.36, 0.06, 0xf5e6d3, -0.08, 0.32, 0, headG); part(0.08, 0.36, 0.06, 0xf5e6d3, 0.08, 0.32, 0, headG);
+    part(0.04, 0.26, 0.02, 0xf9a8d4, -0.08, 0.32, 0.035, headG); part(0.04, 0.26, 0.02, 0xf9a8d4, 0.08, 0.32, 0.035, headG);
+    part(0.05, 0.05, 0.02, 0x111111, -0.09, 0.04, 0.2, headG); part(0.05, 0.05, 0.02, 0x111111, 0.09, 0.04, 0.2, headG); part(0.06, 0.04, 0.02, 0xec4899, 0, -0.04, 0.2, headG);
+  }
+  return { g, legs, headG };
+}
+const animals = animalesDef.map((d, i) => {
+  const { g, legs, headG } = animalModel(d.id); const [x, z] = spawnAnimal[i];
+  g.position.set(x, groundBelow(x, z, 4), z); g.rotation.y = Math.random() * 6.28; scene.add(g);
+  const rope = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0x9a6744 }));
+  rope.visible = false; rope.frustumCulled = false; scene.add(rope);
+  return { ...d, i, g, legs, headG, rope, state: 'libre', goal: null, wait: Math.random() * 3, t: Math.random() * 9, y: g.position.y };
+});
+let penned = 0, pet = null;
+const inCorral = (x, z, m = 0) => x > CORRAL.x1 + 0.5 + m && x < CORRAL.x2 - 0.5 - m && z > CORRAL.z1 + 0.5 + m && z < CORRAL.z2 - 0.5 - m;
+function animalOk(x, z, from) {
+  if (x < -15 || x > 15 || z < -25 || z > 22) return false;
+  if (z > -1.9 && z < 0.9 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4)) return false;
+  return Math.abs(groundBelow(x, z, from + 1.2) - from) <= 0.6;
+}
+function lasso(a) {
+  if (a.state === 'corral' && penned === animals.length) { choosePet(a); return; }
+  if (a.state !== 'libre') return;
+  a.state = 'lazo'; a.rope.visible = true; sfx('open');
+  toast('➰', '¡LO LAZASTE!', a.n, 'Te seguirá a donde vayas. Llévalo al corral de la granja.', '#9a6744');
+}
+const farmQueue = [];
+function penAnimal(a) {
+  a.state = 'corral'; a.rope.visible = false; penned++; sfx('pop'); renderQuests();
+  afterPen();
+  if (panelOpen) { farmQueue.push([a, penned]); return; }
+  showFarmCard(a, penned);
+}
+function showFarmCard(a, count) {
+  const pr = proyectos[a.p];
+  showPanel(`<p class="p-kicker">GRANJA · ${count}/${animals.length} EN EL CORRAL</p><h2 id="panelTitle">${a.n}</h2>
+    <div class="detail"><div>${pixelArt(pr.t, 24, 16)}</div><div>
+    <p class="lead">${a.frase}</p><h3>${pr.t}</h3><p>${pr.d}</p>
+    <div class="tags">${pr.tags.map(t => `<i>${t}</i>`).join('')}</div>
+    <div class="row">${pr.link ? `<a class="btn big" href="${pr.link}" target="_blank" rel="noopener">Ver código <small>en GitHub</small></a>` : ''}<button class="btn" id="farmOk">Seguir jugando</button></div>
+    </div></div>`, () => $('#farmOk').addEventListener('click', closePanel));
+}
+function afterPen() {
+  if (penned === animals.length) setTimeout(() => { sfx('win'); confetti(); toast('★', 'GRANJA COMPLETA', '¡Juntaste a todos!', 'Ganaste una mascota: entra al corral y pulsa E junto al animal que quieras.', '#16a34a'); }, 600);
+}
+function choosePet(a) {
+  if (pet) { pet.state = 'corral'; const [x, z] = [(Math.random() * 6 - 3), -5]; pet.g.position.set(x, pet.y, z); }
+  pet = a; a.state = 'mascota'; sfx('win');
+  toast('♥', 'NUEVA MASCOTA', a.n, 'Ahora te acompaña por toda la arena.', '#ec4899');
+}
+function updateAnimals(dt, t) {
+  const p = player.position; const leashed = animals.filter(a => a.state === 'lazo');
+  animals.forEach(a => {
+    a.t += dt; let moving = false; let tx = null, tz = null, speed = 1.2;
+    if (a.state === 'lazo' || a.state === 'mascota') {
+      const idx = leashed.indexOf(a), lead = a.state === 'mascota' ? null : idx > 0 ? leashed[idx - 1].g.position : null;
+      const fx = lead ? lead.x : p.x, fz = lead ? lead.z : p.z, d = Math.hypot(fx - a.g.position.x, fz - a.g.position.z);
+      if (d > (a.state === 'mascota' ? 1.4 : 1.6)) { tx = fx; tz = fz; speed = Math.min(9, d * 2.4); }
+      if (d > 8) { a.g.position.set(fx - 1, groundBelow(fx - 1, fz, feet + 1), fz); a.y = a.g.position.y; }
+      if (a.state === 'lazo' && inCorral(a.g.position.x, a.g.position.z, 0.2)) { penAnimal(a); return; }
+    } else {
+      a.wait -= dt;
+      if (a.wait <= 0 && !a.goal) {
+        for (let k = 0; k < 8 && !a.goal; k++) {
+          const nx = a.g.position.x + (Math.random() - 0.5) * 6, nz = a.g.position.z + (Math.random() - 0.5) * 6;
+          if (a.state === 'corral' ? inCorral(nx, nz, 0.3) : (animalOk(nx, nz, a.y) && !inCorral(nx, nz, -0.6))) a.goal = [nx, nz];
+        }
+        a.wait = 2 + Math.random() * 4;
+      }
+      if (a.goal) { tx = a.goal[0]; tz = a.goal[1]; speed = 1.1; if (Math.hypot(tx - a.g.position.x, tz - a.g.position.z) < 0.2) { a.goal = null; tx = null; } }
+    }
+    if (tx !== null) {
+      const dx = tx - a.g.position.x, dz = tz - a.g.position.z, d = Math.hypot(dx, dz) || 1, st = Math.min(d, speed * dt);
+      const nx = a.g.position.x + dx / d * st, nz = a.g.position.z + dz / d * st;
+      const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => animalOk(x, z, a.y) || a.state !== 'libre';
+      if (free(nx, nz)) { a.g.position.x = nx; a.g.position.z = nz; moving = true; } else a.goal = null;
+      const want = Math.atan2(dx, dz); let df = want - a.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); a.g.rotation.y += df * Math.min(1, dt * 8);
+    }
+    const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + 1.2); a.y += (gy - a.y) * Math.min(1, dt * 12);
+    const hop = a.id === 'conejo' && moving ? Math.abs(Math.sin(a.t * 9)) * 0.25 : 0;
+    a.g.position.y = a.y + hop;
+    const sw = moving ? Math.sin(a.t * 10) * 0.6 : 0; a.legs.forEach((l, k) => l.rotation.x = sw * (k % 2 ? 1 : -1) * (k > 1 ? -1 : 1));
+    a.headG.rotation.x = !moving && a.state !== 'lazo' ? Math.max(0, Math.sin(a.t * 0.8)) * 0.5 : 0; // come pasto
+    if (a.rope.visible) {
+      const pos = a.rope.geometry.attributes.position; const leadP = leashed.indexOf(a) > 0 ? leashed[leashed.indexOf(a) - 1].g.position : null;
+      if (leadP) pos.setXYZ(0, leadP.x, leadP.y + 0.6, leadP.z); else pos.setXYZ(0, p.x + Math.cos(player.rotation.y) * 0.4, feet + 1.0, p.z - Math.sin(player.rotation.y) * 0.4);
+      pos.setXYZ(1, a.g.position.x, a.g.position.y + 0.8, a.g.position.z); pos.needsUpdate = true;
+    }
+  });
+}
+
 function nearest() {
   const p = player.position; let best = null, bd = 1e9;
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
+  for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
   if (feet > 10 && Math.hypot(p.x - 1, p.z - 20 * -1) < 2.2) best = { kind: 'bed' };
   if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
   return best;
 }
 function interact() {
   if (!near || panelOpen) return;
-  if (near.kind === 'bed') sleep(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
+  if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }
 function openPlace(L) {
   sfx('open'); L.open();
@@ -905,6 +1047,7 @@ $('#invTotal').textContent = habilidades.length;
 function renderQuests() {
   const ul = $('#questList'); ul.innerHTML = '';
   lugares.filter(L => L.q).forEach(L => { const li = document.createElement('li'); li.textContent = L.q; if (visited.has(L.id)) li.className = 'done'; li.addEventListener('click', () => travel(L)); ul.appendChild(li); });
+  const lf = document.createElement('li'); lf.textContent = `Lleva los animales al corral (${typeof penned === 'number' ? penned : 0}/6)`; if (typeof penned === 'number' && penned === 6) lf.className = 'done'; ul.appendChild(lf);
   const li = document.createElement('li'); li.textContent = `Pica las habilidades (${minedCount}/${habilidades.length})`; if (minedCount === habilidades.length) li.className = 'done'; ul.appendChild(li);
 }
 renderQuests();
@@ -939,6 +1082,8 @@ function drawMap() {
   mg.fillStyle = '#f3c6b4'; bridges.forEach(([a, b]) => { const [x1, y1] = toMap(a - 0.5, -1.5), [x2, y2] = toMap(b + 0.5, 0.5); mg.fillRect(x1, y1, x2 - x1, y2 - y1); });
   mg.fillStyle = '#f9a8d4'; trees.forEach(([x, z]) => { const [a, b] = toMap(x, z); mg.fillRect(a - 3, b - 3, 6, 6); });
   lugares.forEach(L => { const [a, b] = toMap(L.at[0], L.at[1]); mg.fillStyle = L.c; const s = L.id === 'cofre' ? 6 : L.id === 'castillo' ? 16 : 11; mg.fillRect(a - s / 2, b - s / 2, s, s); });
+  { const [x1, y1] = toMap(CORRAL.x1 - 0.5, CORRAL.z1 - 0.5), [x2, y2] = toMap(CORRAL.x2 + 0.5, CORRAL.z2 + 0.5); mg.strokeStyle = '#9a6744'; mg.lineWidth = 2; mg.strokeRect(x1, y1, x2 - x1, y2 - y1); }
+  animals.forEach(a => { const [x, y] = toMap(a.g.position.x, a.g.position.z); mg.fillStyle = '#fef3c7'; mg.fillRect(x - 2.5, y - 2.5, 5, 5); mg.fillStyle = '#9a6744'; mg.fillRect(x - 1, y - 1, 2, 2); });
   ores.forEach(o => { if (o.mined) return; const [a, b] = toMap(o.x, o.z); mg.fillStyle = '#fff'; mg.fillRect(a - 2.5, b - 2.5, 5, 5); mg.fillStyle = habilidades[o.i].c; mg.fillRect(a - 1.5, b - 1.5, 3, 3); });
   const [px, py] = toMap(player.position.x, player.position.z); const ang = player.rotation.y;
   mg.save(); mg.translate(px, py); mg.rotate(-ang); mg.fillStyle = '#4a1238'; mg.beginPath(); mg.moveTo(0, 6); mg.lineTo(-4.5, -4); mg.lineTo(4.5, -4); mg.fill(); mg.restore();
@@ -957,7 +1102,8 @@ function showPanel(html, after) {
   panelBody.innerHTML = html; panelBg.hidden = false; panelOpen = true; target = null; waypoints = [];
   $('#panelClose').focus(); if (after) after();
 }
-function closePanel() { panelBg.hidden = true; panelOpen = false; panelBody.innerHTML = ''; canvas.focus?.(); }
+function closePanel() { panelBg.hidden = true; panelOpen = false; panelBody.innerHTML = '';
+  if (typeof farmQueue !== 'undefined' && farmQueue.length) { const [a, c] = farmQueue.shift(); setTimeout(() => showFarmCard(a, c), 250); } canvas.focus?.(); }
 $('#panelClose').addEventListener('click', closePanel);
 panelBg.addEventListener('click', e => { if (e.target === panelBg) closePanel(); });
 
@@ -1195,6 +1341,7 @@ function update(dt, t) {
 
   if (started && !selecting) checkHitos();
   updateMonsters(dt, t);
+  updateAnimals(dt, t);
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
   ores.forEach(o => { if (o.mined || mining?.o === o) return; o.m.position.y = 1 + Math.sin(t * 2 + o.i) * 0.08; o.m.rotation.y = Math.sin(t * 0.8 + o.i) * 0.25; o.m.material.emissiveIntensity = 0.18 + Math.max(0, Math.sin(t * 3 + o.i)) * 0.3; });
@@ -1204,7 +1351,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
@@ -1252,8 +1399,8 @@ function adaptQuality() {
   if (fps < 38 && perfLevel < 3) {
     perfLevel++;
     if (perfLevel === 1) { pixelRatio = Math.max(0.85, pixelRatio - 0.4); renderer.setPixelRatio(pixelRatio); }
-    if (perfLevel === 2) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; petals.visible = false; }
-    if (perfLevel === 3) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) o.material.needsUpdate = true; }); pixelRatio = 0.75; renderer.setPixelRatio(pixelRatio); }
+    if (perfLevel === 2) { petals.visible = false; clouds.visible = false; }
+    if (perfLevel === 3) { sun.castShadow = false; pixelRatio = Math.max(0.75, pixelRatio - 0.15); renderer.setPixelRatio(pixelRatio); }
   }
 }
 function loop() {
@@ -1326,4 +1473,4 @@ buildCharacter(0);
 })();
 
 // acceso para depurar desde la consola del navegador
-window.arena = { setNight, spawnMonster, monsters, hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
+window.arena = { animals, lasso, setNight, spawnMonster, monsters, hits: (x, y, z) => hits(x, y, z), cell: (i, j, k) => blocks.get(`${i},${j},${k}`), sleep, tl: () => tlShown, buildCharacter, setMined: n => { minedCount = n; buildTool(); }, player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };

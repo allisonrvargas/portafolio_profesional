@@ -19,6 +19,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 | Torre arcade | Aplicaciones: mis páginas publicadas, funcionando dentro del portafolio |
 | Escenario | Radio Allison: música chiptune original |
 | Castillo | Contacto. Adentro hay gradas: al subirlas aparece mi línea de tiempo "Bloque a bloque", y en la azotea hay una cama que te regresa al inicio |
+| Granja | Corral donde llevas con un lazo a 6 animales originales; cada uno te muestra un proyecto y al juntarlos todos ganas una mascota |
 | Cofre | Mi CV para abrir o descargar |
 | Bloques brillantes | 18 habilidades para picar y llenar el inventario |
 
