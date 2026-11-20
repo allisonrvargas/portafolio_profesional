@@ -95,6 +95,8 @@ function sfx(k) {
   if (k === 'hit') { noise(t, 0.35); tone(45, t, 0.08, 'square', 0.3); }
   if (k === 'pop') { [76, 83, 88].forEach((n, i) => tone(n, t + i * 0.05, 0.1, 'square', 0.3)); }
   if (k === 'open') { tone(72, t, 0.07); tone(79, t + 0.07, 0.12); }
+  if (k === 'jump') { tone(67, t, 0.06, 'square', 0.15); tone(74, t + 0.05, 0.08, 'square', 0.15); }
+  if (k === 'land') noise(t, 0.12);
   if (k === 'win') { [60, 64, 67, 72, 76, 79, 84, 88].forEach((n, i) => tone(n, t + i * 0.08, 0.16, 'square', 0.3)); }
 }
 const pistas = [
@@ -308,6 +310,7 @@ function castle(cx, cz) {
 castle(0, -20);
 
 // Construir mallas instanciadas por tipo de bloque
+const blockMeshes = [];
 function buildBlocks() {
   const byType = {};
   const key = (x, y, z) => blocks.get(`${x},${y},${z}`);
@@ -324,7 +327,7 @@ function buildBlocks() {
     const mesh = new THREE.InstancedMesh(unit, M[t], list.length);
     list.forEach(([x, y, z], i) => { m4.makeTranslation(x, y, z); mesh.setMatrixAt(i, m4); });
     mesh.castShadow = t !== 'glass'; mesh.receiveShadow = true;
-    scene.add(mesh);
+    scene.add(mesh); blockMeshes.push(mesh);
   }
 }
 buildBlocks();
@@ -423,7 +426,7 @@ player.rotation.y = Math.PI;
 /* ---------------- LUGARES ---------------- */
 const lugares = [
   { id: 'casa', n: 'Sobre mí', l: 'La casa · Sobre mí', door: [-11, 17.6], at: [-11, 13, 10.5], c: '#ec4899', q: 'Conoce a la jugadora (la casa)', open: () => panelCasa() },
-  { id: 'musica', n: 'Música', l: 'Escenario · Música', door: [11, 17.2], at: [11, 13, 8.2], c: '#f472b6', q: 'Pon música en el escenario', open: () => panelMusica() },
+  { id: 'musica', n: 'Música', l: 'Escenario · Música', door: [11, 17.2], alt: [11, 14.4], at: [11, 13, 8.2], c: '#f472b6', q: 'Pon música en el escenario', open: () => panelMusica() },
   { id: 'proyectos', n: 'Proyectos', l: 'Torre de proyectos', door: [-9, -8.6], at: [-9, -12, 13.6], c: '#a78bfa', q: 'Explora la torre de proyectos', open: () => panelProyectos() },
   { id: 'apps', n: 'Aplicaciones', l: 'Torre arcade · Apps', door: [9, -8.6], at: [9, -12, 13.6], c: '#db2777', q: 'Juega en la torre arcade', open: () => panelApps() },
   { id: 'castillo', n: 'Contacto', l: 'Castillo · Contacto', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
@@ -448,26 +451,37 @@ const ores = [];
 function oreTexture(color, seed) {
   return texture((g, r) => { speckle(g, r, ['#c4bfc8', '#b8b2bd', '#d0cbd4', '#aaa3b0']); g.fillStyle = color; for (let i = 0; i < 7; i++) { const x = 1 + Math.floor(r() * 12), y = 1 + Math.floor(r() * 12); g.fillRect(x, y, 3, 2); g.fillRect(x + 1, y + 2, 1, 1); } g.fillStyle = '#ffffff'; for (let i = 0; i < 5; i++) g.fillRect(Math.floor(r() * 16), Math.floor(r() * 16), 1, 1); }, seed);
 }
+const oreCells = new Set();
 habilidades.forEach((h, i) => {
   const [x, z] = orePos[i];
+  oreCells.add(`${x},1,${z}`);
   const m = new THREE.Mesh(unit, new THREE.MeshLambertMaterial({ map: oreTexture(h.c, 300 + i), emissive: new THREE.Color(h.c), emissiveIntensity: 0.18 }));
   m.position.set(x, 1, z); m.castShadow = true; m.userData = { kind: 'ore', i }; scene.add(m); hitMeshes.push(m);
   const tag = label(h.n, h.c); tag.scale.set(4, 1, 1); tag.position.set(x, 2.5, z); tag.visible = false; scene.add(tag);
-  ores.push({ m, tag, i, x, z, mined: false, col: [x - 0.5, z - 0.5, x + 0.5, z + 0.5] });
-  colliders.push(ores[i].col);
+  ores.push({ m, tag, i, x, z, mined: false });
 });
 let minedCount = 0;
 
 /* ---------------- MOVIMIENTO ---------------- */
 const keys = {};
 let target = null, waypoints = [], onArrive = null, stuckT = 0, lastDist = Infinity, mining = null;
-const R = 0.32;
-function blocked(x, z) {
-  if (x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) return true;
-  if (z > -1.5 - R && z < 0.5 + R && !bridges.some(([a, b]) => x > a - 0.5 + R && x < b + 0.5 - R)) return true;
-  for (const c of colliders) if (c && x > c[0] - R && x < c[2] + R && z > c[1] - R && z < c[3] + R) return true;
+let feet = 0.5, vy = 0, onGround = true, jumpReq = false, autoWalk = false;
+const PR = 0.3, PH = 1.7, JUMP = 8.6, GRAV = 26;
+const chestBox = [4.85, -16, 6.15, -15, 1.5];
+function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air') || oreCells.has(`${i},${j},${k}`); }
+function hits(x, y, z) {
+  if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
+  const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.round(y + 0.05), j1 = Math.round(y + PH - 0.05);
+  for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
+  if (x + PR > chestBox[0] && x - PR < chestBox[2] && z + PR > chestBox[1] && z - PR < chestBox[3] && y < chestBox[4] - 0.01) return true;
   return false;
 }
+function groundBelow(x, z, from) {
+  const i = Math.round(x), k = Math.round(z);
+  for (let j = Math.round(from - 0.45); j >= -2; j--) if (solidCell(i, j, k)) return j + 0.5;
+  return -1.5;
+}
+function blocked(x, z) { const g = groundBelow(x, z, 8); return hits(x, g, z); }
 function planTo(tx, tz, cb) {
   const p = player.position; waypoints = [];
   const side = z => z > -0.5;
@@ -484,7 +498,7 @@ function travel(L) { closeMenu(); planTo(L.door[0], L.door[1], () => openPlace(L
 let near = null;
 function nearest() {
   const p = player.position; let best = null, bd = 1e9;
-  for (const L of lugares) { const d = Math.hypot(p.x - L.door[0], p.z - L.door[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
+  for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
   return best;
 }
@@ -504,7 +518,7 @@ function mine(o) {
 const debris = [];
 function breakOre(o) {
   o.mined = true; scene.remove(o.m); scene.remove(o.tag);
-  const idx = colliders.indexOf(o.col); if (idx > -1) colliders[idx] = null;
+  oreCells.delete(`${o.x},1,${o.z}`);
   hitMeshes.splice(hitMeshes.indexOf(o.m), 1);
   const h = habilidades[o.i];
   for (let i = 0; i < 14; i++) {
@@ -541,6 +555,7 @@ function closeMenu() { menu.hidden = true; menuBtn.setAttribute('aria-expanded',
 menuBtn.addEventListener('click', () => { menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', String(!menu.hidden)); sfx('blip'); });
 $('#soundBtn').addEventListener('click', () => setMusic(!soundOn));
 $('#promptBtn').addEventListener('click', interact);
+$('#jumpBtn').addEventListener('pointerdown', e => { e.preventDefault(); jumpReq = true; });
 
 // Minimapa
 const mm = $('#minimap'), mg = mm.getContext('2d');
@@ -678,6 +693,7 @@ addEventListener('keydown', e => {
   keys[k] = true;
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
   if ((k === 'e' || k === 'enter') && !e.repeat) interact();
+  if (k === ' ' && !e.repeat) jumpReq = true;
   if (k === 'm' && !e.repeat) setMusic(!soundOn);
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
@@ -702,7 +718,8 @@ canvas.addEventListener('pointerup', e => {
     else { const L = lugares.find(l => l.id === u.id); planTo(L.door[0], L.door[1], () => openPlace(L)); }
     sfx('blip'); return;
   }
-  const pt = new THREE.Vector3(); if (ray.ray.intersectPlane(groundPlane, pt) && !blocked(pt.x, pt.z)) { planTo(pt.x, pt.z, null); marker.position.set(pt.x, 0.52, pt.z); marker.visible = true; }
+  const bh = ray.intersectObjects(blockMeshes, false).find(h => h.face && h.face.normal.y > 0.5);
+  const pt = bh ? bh.point : new THREE.Vector3(); if (bh || ray.ray.intersectPlane(groundPlane, pt)) { if (!blocked(pt.x, pt.z)) { planTo(pt.x, pt.z, null); marker.position.set(pt.x, pt.y + 0.03, pt.z); marker.visible = true; } }
 });
 canvas.addEventListener('wheel', e => { e.preventDefault(); zoom = Math.min(1.7, Math.max(0.55, zoom * (e.deltaY > 0 ? 1.08 : 0.92))); }, { passive: false });
 const marker = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.4, 4), new THREE.MeshBasicMaterial({ color: 0xec4899 })); marker.rotation.x = -Math.PI / 2; marker.visible = false; scene.add(marker);
@@ -712,7 +729,7 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 /* ---------------- BUCLE ---------------- */
 const clock = new THREE.Clock();
 const camPos = new THREE.Vector3(0, 30, 50), camLook = new THREE.Vector3(0, 0, 0);
-let walkT = 0, mapT = 0;
+let walkT = 0, mapT = 0, wasOnStage = false;
 function update(dt, t) {
   // movimiento
   let mx = 0, mz = 0;
@@ -731,19 +748,41 @@ function update(dt, t) {
       if (d < lastDist - 0.01) { lastDist = d; stuckT = 0; } else if ((stuckT += dt) > 0.7) { target = null; waypoints = []; onArrive = null; marker.visible = false; }
     }
   }
+  autoWalk = !!target && !(keys.w || keys.a || keys.s || keys.d || keys.arrowup || keys.arrowdown || keys.arrowleft || keys.arrowright);
   if (mx || mz) {
+    let hitWall = false;
     const nx = p.x + mx * speed * dt, nz = p.z + mz * speed * dt;
-    if (!blocked(nx, p.z)) p.x = nx; if (!blocked(p.x, nz)) p.z = nz;
+    if (!hits(nx, feet, p.z)) p.x = nx; else hitWall = true;
+    if (!hits(p.x, feet, nz)) p.z = nz; else hitWall = true;
+    // al caminar solo hacia un destino, salta escalones de un bloque
+    if (hitWall && autoWalk && onGround && !hits(p.x + mx * 0.45, feet + 1.05, p.z + mz * 0.45)) { vy = JUMP; onGround = false; }
     const want = Math.atan2(mx, mz); let diff = want - player.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); player.rotation.y += diff * Math.min(1, dt * 14);
     moving = true;
   }
+  // salto y gravedad
+  if (jumpReq) { if (onGround && !panelOpen) { vy = JUMP; onGround = false; sfx('jump'); } jumpReq = false; }
+  vy -= GRAV * dt;
+  let ny = feet + vy * dt;
+  if (vy <= 0) {
+    if (hits(p.x, ny, p.z)) { ny = Math.floor(ny - 0.5) + 1.5; if (!onGround && vy < -6) sfx('land'); vy = 0; onGround = true; }
+    else onGround = false;
+  } else if (hits(p.x, ny, p.z)) { vy = 0; ny = feet; }
+  feet = ny;
+  if (feet < -8) { p.set(0, 0.5, 18); feet = 0.5; vy = 0; toast('↺', 'DE VUELTA', 'Regresaste al inicio'); }
+  const onStage = p.x > 7.5 && p.x < 14.5 && p.z > 10.5 && p.z < 15.5 && feet > 1.4;
+  if (onStage && !wasOnStage) toast('♪', '¡SUBISTE AL ESCENARIO!', playing ? 'A bailar' : 'Pon música para bailar', playing ? '' : 'Pulsa E junto al tocadiscos o M para la música.', '#ec4899');
+  wasOnStage = onStage;
   walkT += dt * (moving ? (keys.shift ? 15 : 11) : 0);
   const sw = moving ? Math.sin(walkT) * 0.7 : 0;
   P.legL.g.rotation.x = sw; P.legR.g.rotation.x = -sw;
   if (!mining) { P.armL.g.rotation.x = -sw; P.armR.g.rotation.x = sw; }
-  player.position.y = 0.5 + (moving ? Math.abs(Math.sin(walkT)) * 0.06 : Math.sin(t * 2) * 0.015);
-  pShadow.position.x = p.x; pShadow.position.z = p.z;
-  head.rotation.z = playing && !moving ? Math.sin(t * 6) * 0.06 : 0;
+  const dancing = playing && !moving && onGround && wasOnStage;
+  player.position.y = feet + (!onGround ? 0 : moving ? Math.abs(Math.sin(walkT)) * 0.06 : dancing ? Math.abs(Math.sin(t * 7)) * 0.12 : Math.sin(t * 2) * 0.015);
+  if (dancing && !mining) { P.armL.g.rotation.x = -2.6 + Math.sin(t * 7) * 0.5; P.armR.g.rotation.x = -2.6 - Math.sin(t * 7) * 0.5; }
+  if (!onGround) { P.legL.g.rotation.x = -0.5; P.legR.g.rotation.x = 0.4; P.armL.g.rotation.x = -2.4; P.armR.g.rotation.x = -2.4; }
+  const gY = groundBelow(p.x, p.z, feet + 0.1);
+  pShadow.position.set(p.x, gY + 0.02, p.z); pShadow.scale.setScalar(Math.max(0.4, 1 - (feet - gY) * 0.25));
+  head.rotation.z = playing && !moving ? Math.sin(t * 6) * (dancing ? 0.15 : 0.06) : 0;
 
   // picar
   if (mining) {
@@ -822,4 +861,4 @@ $('#playQuiet').addEventListener('click', () => start(false));
 })();
 
 // acceso para depurar desde la consola del navegador
-window.arena = { player, lugares, ores, openPlace, travel, mine };
+window.arena = { player, lugares, ores, openPlace, travel, mine, state: () => ({ feet, onGround, vy }), setFeet: v => { feet = v; } };
