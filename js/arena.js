@@ -267,7 +267,7 @@ for (let x = X0; x <= X1; x++) for (let z = Z0; z <= Z1; z++) {
 bridges.forEach(([a, b]) => { [-2, 1].forEach(z => { put(a - 1, 1, z, 'log'); put(b + 1, 1, z, 'log'); }); [-1, 0].forEach(z => { put(a - 1, 1, z, 'planks'); put(b + 1, 1, z, 'planks'); }); });
 
 // Cerezos
-const trees = [[-14, 4], [-5, 8], [5, 7], [14, 5], [-14, -5], [14, -4], [-14, 21], [14, 21], [-13, -21], [13, -21], [-13, -15], [13, -15]];
+const trees = [[-13, 7], [-5, 8], [5, 7], [13, 7], [-13, -6], [13, -6], [-14, 21], [14, 21], [-13, -21], [13, -21], [-13, -15], [13, -15]];
 function tree(x, z, h = 4) {
   for (let y = 1; y <= h; y++) put(x, y, z, 'log');
   for (let y = h - 1; y <= h + 1; y++) for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) {
@@ -408,6 +408,17 @@ put(8, 1, -13, 'dark'); put(8, 2, -13, 'screen'); put(10, 1, -13, 'dark'); put(1
 // Acantilado con cascada al este del río
 fill(16, 0, -3, 17, 5, 2, 'stone'); fill(16, 6, -2, 17, 6, 1, 'grass');
 for (let z = -1; z <= 0; z++) for (let y = 0; y <= 6; y++) blocks.set(`16,${y},${z}`, 'air');
+// cueva bajo la cascada: de aquí sale el río
+for (let z = -1; z <= 0; z++) { for (let y = 0; y <= 2; y++) { put(17, y, z, 'air'); put(18, y, z, 'dark'); } put(17, 3, z, 'stone'); }
+[[-2, 0], [-2, 1], [-2, 2], [1, 0], [1, 1], [1, 2]].forEach(([z, y]) => put(16, y, z, 'cobble'));   // marco de la cueva
+put(16, 3, -2, 'cobble'); put(16, 3, 1, 'cobble');
+// al oeste: un agujero en el suelo donde se mete el río
+for (let x = -18; x <= -15; x++) for (let z = -2; z <= 1; z++) for (let y = -5; y <= 4; y++) {
+  const wall = x === -18 || z === -2 || z === 1;
+  if (x === -15 && !wall) continue;                                              // aquí llega el río
+  put(x, y, z, y > 0 ? 'air' : wall ? (y === 0 ? 'cobble' : y === -1 ? 'stone' : 'dark') : y === -5 ? 'dark' : 'air');
+}
+fill(-15, -4, -1, -15, -1, 0, 'dark');                                           // borde por donde cae el agua
 // Faroles junto a los caminos
 /* ---------------- CUEVA (estilo Minecraft) ---------------- */
 const inCaveArea = (x, z) => x > -16.5 && x < -4.5 && z > 17.5 && z < 23.5;
@@ -446,8 +457,8 @@ buildBlocks();
 // Agua animada
 const waterTex = texture((g, r) => speckle(g, r, ['#9fd8ff', '#b4e2ff', '#8ccdf8', '#c4eaff']), 21);
 waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping; waterTex.repeat.set(36, 2);
-const water = new THREE.Mesh(new THREE.BoxGeometry(36, 0.7, 2), new THREE.MeshLambertMaterial({ map: waterTex, transparent: true, opacity: 0.88 }));
-water.position.set(-0.5, -0.25, -0.5); water.receiveShadow = true; scene.add(water);
+const water = new THREE.Mesh(new THREE.BoxGeometry(32.6, 0.7, 2), new THREE.MeshLambertMaterial({ map: waterTex, transparent: true, opacity: 0.88 }));
+water.position.set(1.2, -0.25, -0.5); water.receiveShadow = true; scene.add(water);
 
 // Etiquetas flotantes
 function label(text, color = '#db2777') {
@@ -668,16 +679,26 @@ spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
 const sparkles = new THREE.Points(spGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8 })); scene.add(sparkles);
 // cascada
 const fallTex = texture((g, r) => speckle(g, r, ['#bfe6ff', '#9fd8ff', '#e0f4ff', '#8ccdf8', '#ffffff']), 41); fallTex.wrapS = fallTex.wrapT = THREE.RepeatWrapping; fallTex.repeat.set(2, 6);
-const fall = new THREE.Mesh(new THREE.PlaneGeometry(2, 6.6), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide }));
+const fall = new THREE.Mesh(new THREE.PlaneGeometry(2, 6.6), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false }));
 fall.rotation.y = -Math.PI / 2; fall.position.set(16.3, 2.8, -0.5); scene.add(fall);
+// sombra de la cueva detrás de la cascada (de aquí sale el río)
+const caveMouth = new THREE.Mesh(new THREE.PlaneGeometry(2, 2.6), new THREE.MeshBasicMaterial({ color: 0x1a1226, transparent: true, opacity: 0.88 }));
+caveMouth.rotation.y = -Math.PI / 2; caveMouth.position.set(16.75, 1.0, -0.5); scene.add(caveMouth);
 const foam = []; for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 })); f.userData.t = Math.random(); scene.add(f); foam.push(f); }
+// chorro que cae al agujero del oeste
+const drainFall = new THREE.Mesh(new THREE.PlaneGeometry(2, 4.4), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
+drainFall.rotation.y = Math.PI / 2; drainFall.position.set(-15.55, -2.1, -0.5); scene.add(drainFall);
+// espuma que se mete al agujero del oeste
+const drain = []; for (let i = 0; i < 10; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.18), new THREE.MeshLambertMaterial({ color: 0xe0f4ff, transparent: true, opacity: 0.8 })); f.userData.t = Math.random(); f.userData.z = -1.3 + Math.random() * 1.6; scene.add(f); drain.push(f); }
 // peces que saltan
 const fish = [0xfb7185, 0xfdba74, 0xa78bfa].map(c => { const g = new THREE.Group(); part(0.4, 0.2, 0.14, c, 0, 0, 0, g); part(0.14, 0.18, 0.06, c, -0.26, 0, 0, g); part(0.05, 0.05, 0.02, 0x111111, 0.14, 0.04, 0.075, g); g.visible = false; scene.add(g); return { g, t: Math.random() * 4, x: 0, dir: 1 }; });
 function updateAmbient(dt, t) {
   fallTex.offset.y = t * 1.6;
   foam.forEach(f => { f.userData.t += dt * 0.9; if (f.userData.t > 1) f.userData.t = 0; const k = f.userData.t; f.position.set(15.6 - k * 1.6, 0.2 + Math.sin(k * Math.PI) * 0.6, -1 + ((f.id * 37) % 10) / 10 * 1.4); f.material.opacity = 0.85 * (1 - k); });
   sparkles.material.opacity = 0.35 + Math.abs(Math.sin(t * 3)) * 0.5;
-  const sp = spGeo.attributes.position.array; for (let i = 0; i < spN; i++) { sp[i * 3] += dt * 0.6; if (sp[i * 3] > 15) sp[i * 3] = -15; } spGeo.attributes.position.needsUpdate = true;
+  drain.forEach(f => { f.userData.t += dt * 0.5; if (f.userData.t > 1) { f.userData.t = 0; f.userData.z = -1.3 + Math.random() * 1.6; } const k = f.userData.t;
+    f.position.set(-12 - k * 4, k < 0.85 ? 0.13 : 0.13 - (k - 0.85) * 20, f.userData.z + (-0.5 - f.userData.z) * k * k); f.rotation.y = t * 3; f.material.opacity = 0.8 * (1 - k * k); });
+  const sp = spGeo.attributes.position.array; for (let i = 0; i < spN; i++) { sp[i * 3] -= dt * 0.8; if (sp[i * 3] < -16.5) sp[i * 3] = 15.5; } spGeo.attributes.position.needsUpdate = true;
   fish.forEach(f => {
     f.t -= dt;
     if (f.t <= 0 && !f.g.visible) { f.x = Math.random() * 24 - 12; if (bridges.some(([a, b]) => f.x > a - 1 && f.x < b + 1)) f.x = 3; f.dir = Math.random() < 0.5 ? -1 : 1; f.g.visible = true; f.t = 1.1; f.z = -1 + Math.random(); }
