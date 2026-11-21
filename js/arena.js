@@ -834,7 +834,7 @@ function buildKing() {
 }
 const princesses = [-6, 6].map(x => { const pr = buildPrincess(); pr.g.position.set(x, 9.5, -17); pr.g.scale.setScalar(1.3); pr.cool = Math.random(); scene.add(pr.g); return pr; });
 const king = buildKing(); king.body.rotation.x = -0.25; king.g.position.set(0, 10.5, -19.9); king.g.scale.setScalar(1.75); scene.add(king.g);
-const kingSign = label('El rey del castillo', '#6d28d9'); kingSign.scale.set(3.6, 0.9, 1); kingSign.position.set(0, 14.2, -19.9); scene.add(kingSign);
+
 const arrows = [];
 function shootArrow(pr, m) {
   const from = new THREE.Vector3(pr.g.position.x, pr.g.position.y + 1.1, pr.g.position.z);
@@ -1608,7 +1608,7 @@ function update(dt, t) {
     r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
     if (r === roofZones[3]) princesses.forEach(pr => pr.g.visible = !inside);
-    if (r.layered) { king.g.visible = !inside || feet > 9.4; kingSign.visible = !inside; }
+    if (r.layered) { king.g.visible = !inside || feet > 9.4; }
     });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
@@ -1631,8 +1631,13 @@ function update(dt, t) {
   const pp = petalGeo.attributes.position.array;
   for (let i = 0; i < petalCount; i++) { pp[i * 3 + 1] -= dt * (0.6 + (i % 5) * 0.12); pp[i * 3] += Math.sin(t + i) * dt * 0.4; if (pp[i * 3 + 1] < 0.5) pp[i * 3 + 1] = 12 + Math.random() * 3; }
   petalGeo.attributes.position.needsUpdate = true;
-  lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15; L.sprite.visible = !selecting && !(L.id === 'castillo' && feet > 1.2); });
-  bedSign.visible = feet > 8 && !selecting; hitos.forEach(h => h.sprite.visible = !selecting && (h.done || feet > 1.2));
+  // menos letreros: cada uno aparece solo cuando sirve
+  const lp = player.position;
+  lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15;
+    const near = Math.hypot(lp.x - L.at[0], lp.z - L.at[1]) < (L.id === 'castillo' ? 9 : 4.5); // de cerca ya sale el botón "Entrar"
+    L.sprite.visible = !selecting && !near && !(L.id === 'castillo' && feet > 1.2); });
+  bedSign.visible = !selecting && feet < 3 && Math.hypot(lp.x - BED[0], lp.z - BED[1]) < 5;
+  hitos.forEach(h => h.sprite.visible = !selecting && feet > 1.2 && Math.hypot(lp.x - h.sprite.position.x, lp.z - h.sprite.position.z, (feet + 2) - h.sprite.position.y) < 3.6);
   lid.rotation.x += ((lidOpen ? -1.1 : 0) - lid.rotation.x) * Math.min(1, dt * 6); lid.position.z = lidOpen ? -0.2 : 0; lid.position.y = lidOpen ? 0.95 : 0.72;
   notes.forEach(n => { n.t += dt * 0.35; if (n.t > 1) n.t -= 1; n.s.position.set(11 + Math.sin(n.t * 9 + n.s.id) * 1.2, 3 + n.t * 4, 13); n.s.material.opacity = playing ? Math.sin(n.t * Math.PI) : 0; });
   drawArcade(t);
