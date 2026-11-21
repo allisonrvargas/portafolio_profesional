@@ -370,7 +370,8 @@ const roofZones = [
   // la torre central se corta por capas: solo se ve hasta la altura de tus pies
   { x1: -2, x2: 2, z1: -22, z2: -20, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, layered: true, groups: {} },
   // cueva: al bajar se oculta el suelo de arriba para ver adentro
-  { x1: -17, x2: -11, z1: -4, z2: 4, y: -1, feetBelow: -0.6, inX: [-18, -10.5], inZ: [-4.6, 8.6], cave: true, groups: {} }
+  { x1: -17, x2: -11, z1: -4, z2: 4, y: -1, feetBelow: -0.6, inX: [-18, -10.5], inZ: [-4.6, 8.6], cave: true, groups: {} },
+  { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} }
 ];
 function buildBlocks() {
   const byType = {};
@@ -380,7 +381,7 @@ function buildBlocks() {
     if (t === 'air') continue;
     const [x, y, z] = k.split(',').map(Number);
     // ocultar bloques totalmente rodeados
-    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2) || (y <= 0 && y >= -7 && x >= -18 && x <= -10 && z >= -5 && z <= 9); // la cueva se ve por dentro
+    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2) || ((y <= 0 && y >= -7 && x >= -18 && x <= -10 && z >= -5 && z <= 9) || (y <= 0 && y >= -7 && x >= -17 && x <= -3 && z >= 16 && z <= 24) || (y <= -2 && y >= -7 && x >= -12 && x <= -9 && z >= 3 && z <= 18)); // la cueva se ve por dentro
     if (!cutLayer && opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
     const zone = roofZones.find(r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
     if (zone) { (zone.groups[zone.layered ? t + '|' + y : t] ||= []).push([x, y, z]); continue; }
@@ -413,7 +414,7 @@ for (let z = -1; z <= 0; z++) { for (let y = 0; y <= 2; y++) { put(17, y, z, 'ai
 put(16, 3, -2, 'cobble'); put(16, 3, 1, 'cobble');
 /* ---------------- CUEVA (estilo Minecraft) ---------------- */
 const CAVE_LAKE = [[-17, -2], [-16, -2], [-15, -2], [-17, -1], [-16, -1], [-15, -1], [-17, 0], [-16, 0], [-15, 0], [-17, 1], [-16, 1]];
-const inCaveArea = (x, z) => x > -18 && x < -10.5 && z > -4.6 && z < 8.6;
+const inCaveArea = (x, z) => (x > -18 && x < -10.5 && z > -4.6 && z < 8.6) || (x > -11.6 && x < -9.4 && z > 2.5 && z < 18) || (x > -16.5 && x < -4.5 && z > 17.5 && z < 23.5);
 T.oreCoal = oreTexture('#27272a', 31); T.oreGem = oreTexture('#22d3ee', 32); T.oreAme = oreTexture('#a855f7', 33);
 T.lava = texture((g, r) => speckle(g, r, ['#f97316', '#fb923c', '#ea580c', '#fbbf24', '#f59e0b', '#fdba74']), 34);
 T.lava.wrapS = T.lava.wrapT = THREE.RepeatWrapping;
@@ -440,7 +441,23 @@ M.oreAme = lambert(T.oreAme, { emissive: 0x7e22ce, emissiveIntensity: 0.5 }); M.
   for (let i = 1; i <= 5; i++) { const z = 9 - i; for (const x of [-14, -13]) { for (let y = -i + 1; y <= 0; y++) put(x, y, z, 'air'); put(x, -i, z, 'cobble'); } }
   [[-12, 0], [-14, -3], [-11, -1], [-16, 3]].forEach(([x, z]) => put(x, -2, z, 'stone'));   // estalactitas
   put(-11, -5, 3, 'cobble');                                                               // estalagmita
-  put(-11, -6, 1, 'lava'); put(-11, -6, 2, 'lava'); put(-12, -6, 2, 'lava');             // charco de lava
+  put(-16, -6, 3, 'lava'); put(-15, -6, 3, 'lava'); put(-15, -6, 2, 'lava');             // charco de lava
+  // túnel tipo mina que une las dos cuevas (pasa debajo de la casa)
+  for (let x = -12; x <= -9; x++) for (let z = 3; z <= 18; z++) for (let y = -6; y <= -2; y++) if (x === -12 || x === -9 || y === -6 || y === -2) { if (blocks.get(`${x},${y},${z}`) !== 'air') put(x, y, z, cr() < 0.25 ? 'cobble' : 'stone'); }
+  for (let x = -11; x <= -10; x++) for (let z = 3; z <= 17; z++) { for (let y = -5; y <= -3; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
+  // la primera cueva, en el jardín detrás de la casa
+  for (let x = -16; x <= -4; x++) for (let z = 17; z <= 23; z++) for (let y = -7; y <= -2; y++) {
+    if (x >= -11 && x <= -10 && z === 17 && y >= -5 && y <= -3) continue;
+    const k = cr(); put(x, y, z, k < 0.06 ? 'oreCoal' : k < 0.09 ? 'oreGem' : k < 0.11 ? 'gold' : k < 0.13 ? 'oreAme' : k < 0.3 ? 'cobble' : 'stone');
+  }
+  for (let x = -11; x <= -10; x++) put(x, -6, 17, 'stone');
+  for (let i = 1; i <= 5; i++) { const x = -5 - i; for (const z of [21, 22]) { for (let y = -i + 1; y <= 0; y++) put(x, y, z, 'air'); put(x, -i, z, 'cobble'); } }
+  for (let x = -15; x <= -11; x++) for (let z = 18; z <= 22; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
+  [[-12, 19], [-14, 22], [-15, 19]].forEach(([x, z]) => put(x, -2, z, 'stone'));
+  put(-15, -5, 22, 'cobble');
+  for (let x = -10; x <= -7; x++) for (let z = 18; z <= 20; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
+  for (let x = -9; x <= -7; x++) for (let z = 18; z <= 19; z++) { put(x, -6, z, 'agua'); put(x, -7, z, 'sand'); }   // laguito
+  put(-14, -6, 18, 'lava'); put(-14, -6, 19, 'lava');
 }
 const lampSpots = [[-7, 3], [7, 3], [-7, -5], [7, -5], [-7, 10], [7, 10], [-5, 20], [5, 20], [-11, -7], [11, -7], [-2, -11], [2, -11], [-13, 18], [13, 18]];
 const lamps = [];
@@ -740,8 +757,18 @@ function torch(x, y, z) {
   const L = new THREE.PointLight(0xffa64d, 7, 7, 1.6); L.position.y = 0.4; g.add(L); caveLights.push({ L, base: 7, fl });
 }
 torch(-10.6, -3.8, -0.5); torch(-14, -3.8, -3.6); torch(-12.4, -2.8, 6);
-{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-11.4, -4.9, 1.8); scene.add(L); caveLights.push({ L, base: 9 }); }
-[[-11.4, -2.9], [-16.6, 2.6], [-11.4, 3.4]].forEach(([x, z], i) => {
+{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-15.4, -4.9, 2.6); scene.add(L); caveLights.push({ L, base: 9 }); }
+torch(-15.4, -3.8, 21.5); torch(-14.5, -3.8, 17.6); torch(-8.5, -1.8, 20.6);
+{ const L = new THREE.PointLight(0xff6a1a, 7, 5, 1.6); L.position.set(-14, -4.9, 18.6); scene.add(L); caveLights.push({ L, base: 7 }); }
+{ const L = new THREE.PointLight(0x22d3ee, 4, 5, 1.6); L.position.set(-8, -4.4, 18.6); scene.add(L); caveLights.push({ L, base: 4 }); }
+// túnel: soportes de madera, rieles y faroles (sin luz propia para no gastar)
+for (let z = 5; z <= 16; z += 3) {
+  part(0.2, 2.9, 0.2, 0x7c5a3a, -11.38, -4.05, z, scene); part(0.2, 2.9, 0.2, 0x7c5a3a, -9.62, -4.05, z, scene); part(1.96, 0.22, 0.24, 0x8b6a45, -10.5, -2.66, z, scene);
+  const fl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.16), new THREE.MeshBasicMaterial({ color: 0xffb347 })); fl.position.set(-10.5, -2.9, z + 0.2); scene.add(fl);
+}
+for (let z = 3.6; z <= 17.4; z += 0.6) part(1.3, 0.05, 0.16, 0x6b4a33, -10.5, -5.47, z, scene);   // durmientes
+[-10.9, -10.1].forEach(x => part(0.07, 0.07, 14.2, 0x9ca3af, x, -5.42, 10.5, scene));          // rieles
+[[-11.4, -2.9], [-16.6, 2.3], [-12.4, 3.4], [-11.3, 22.4], [-14.6, 22.5]].forEach(([x, z], i) => {
   for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5 - k * 0.12, 0.16), new THREE.MeshLambertMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9 }));
     c.position.set(x + (k - 1) * 0.18, -5.5 + (0.5 - k * 0.12) / 2, z + (k % 2) * 0.12); c.rotation.z = (k - 1) * 0.3; scene.add(c); }
 });
@@ -784,7 +811,7 @@ function buildBat() {
   return { g, body, wl, wr };
 }
 const bats = [];
-[[-13, 1], [-15, -2.6], [-12.4, -1.6], [-16, 2.4], [-14.2, 2.6]].forEach(([x, z], i) => { const b = buildBat(); b.hang = true; b.g.position.set(x, -1.72, z); b.g.rotation.z = Math.PI; b.ph = i; scene.add(b.g); bats.push(b); });
+[[-13, 1], [-15, -2.6], [-12.4, -1.6], [-16, 2.4], [-14.2, 2.6], [-13, 20], [-11.6, 21.6], [-14.5, 20.6]].forEach(([x, z], i) => { const b = buildBat(); b.hang = true; b.g.position.set(x, -1.72, z); b.g.rotation.z = Math.PI; b.ph = i; scene.add(b.g); bats.push(b); });
 [0, 1].forEach(i => { const b = buildBat(); b.hang = false; b.ph = i * Math.PI; scene.add(b.g); bats.push(b); });
 function updateBats(dt, t) {
   bats.forEach(b => {

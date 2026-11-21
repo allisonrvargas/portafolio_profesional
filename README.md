@@ -21,7 +21,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 | Castillo | Contacto. Adentro hay gradas: al subirlas aparece mi línea de tiempo "Bloque a bloque", dos princesas cuidan las torres, el rey está en lo más alto y en el patio hay una cama que te regresa al inicio |
 | Granja | Corral donde llevas con un lazo a 6 animales originales; cada uno te muestra un proyecto y al juntarlos todos ganas una mascota |
 | Cofre | Mi CV para abrir o descargar |
-| Cueva secreta | Bajo el agujero donde cae el río. Se baja por unas gradas junto a la casa; adentro, el agua cae en cascada al lago del ajolote, hay murciélagos en el techo, antorchas, minerales, lava y un cofre secreto con lo que me inspira |
+| Cuevas | Dos cuevas unidas por un túnel de mina que pasa debajo de la casa. La del río tiene el lago del ajolote (donde cae el río), murciélagos y el cofre secreto; la del jardín tiene su propio laguito, lava y minerales. Se entra por gradas junto a la casa o en el jardín |
 | Bloques brillantes | 18 habilidades para picar y llenar el inventario |
 
 ## Cómo se juega
