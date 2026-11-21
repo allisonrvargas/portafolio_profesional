@@ -376,7 +376,7 @@ const roofZones = [
 function buildBlocks() {
   const byType = {};
   const key = (x, y, z) => blocks.get(`${x},${y},${z}`);
-  const opaque = t => t && t !== 'air' && t !== 'glass' && t !== 'leaves';
+  const opaque = t => t && t !== 'air' && t !== 'glass' && t !== 'leaves' && t !== 'agua';
   for (const [k, t] of blocks) {
     if (t === 'air') continue;
     const [x, y, z] = k.split(',').map(Number);
@@ -415,6 +415,7 @@ T.oreCoal = oreTexture('#27272a', 31); T.oreGem = oreTexture('#22d3ee', 32); T.o
 T.lava = texture((g, r) => speckle(g, r, ['#f97316', '#fb923c', '#ea580c', '#fbbf24', '#f59e0b', '#fdba74']), 34);
 T.lava.wrapS = T.lava.wrapT = THREE.RepeatWrapping;
 M.oreCoal = lambert(T.oreCoal); M.oreGem = lambert(T.oreGem, { emissive: 0x0e7490, emissiveIntensity: 0.4 });
+M.agua = new THREE.MeshLambertMaterial({ map: texture((g, r) => speckle(g, r, ['#38bdf8', '#22d3ee', '#0ea5e9', '#67e8f9']), 35), transparent: true, opacity: 0.72, emissive: 0x0e7490, emissiveIntensity: 0.35, depthWrite: false });
 M.oreAme = lambert(T.oreAme, { emissive: 0x7e22ce, emissiveIntensity: 0.5 }); M.lava = new THREE.MeshBasicMaterial({ map: T.lava });
 { const cr = rng(91);
   for (let x = -16; x <= -4; x++) for (let z = 17; z <= 23; z++) for (let y = -7; y <= -2; y++) {
@@ -425,8 +426,12 @@ M.oreAme = lambert(T.oreAme, { emissive: 0x7e22ce, emissiveIntensity: 0.5 }); M.
   // caverna
   for (let x = -15; x <= -11; x++) for (let z = 18; z <= 22; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
   [[-12, 18], [-14, 22], [-15, 19]].forEach(([x, z]) => put(x, -2, z, 'stone'));   // estalactitas
-  put(-11, -5, 18, 'cobble');                                                         // estalagmita
-  put(-13, -6, 18, 'lava'); put(-12, -6, 19, 'lava'); put(-13, -6, 19, 'lava');      // charco de lava
+  put(-15, -5, 22, 'cobble');                                                         // estalagmita
+  // rincón del lago (al este de la caverna)
+  for (let x = -10; x <= -7; x++) for (let z = 18; z <= 20; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
+  for (let x = -10; x <= -8; x++) for (let z = 18; z <= 19; z++) { put(x, -6, z, 'agua'); put(x, -7, z, 'sand'); }   // mini lago
+  put(-11, -5, 18, 'air');                                                                                          // paso libre al lago
+  put(-13, -6, 18, 'lava'); put(-14, -6, 18, 'lava'); put(-13, -6, 19, 'lava');      // charco de lava
 }
 const lampSpots = [[-7, 3], [7, 3], [-7, -5], [7, -5], [-7, 10], [7, 10], [-5, 20], [5, 20], [-11, -7], [11, -7], [-2, -11], [2, -11], [-13, 18], [13, 18]];
 const lamps = [];
@@ -716,11 +721,38 @@ function torch(x, y, z) {
   const L = new THREE.PointLight(0xffa64d, 7, 7, 1.6); L.position.y = 0.4; g.add(L); caveLights.push({ L, base: 7, fl });
 }
 torch(-15.4, -3.8, 21.5); torch(-11.2, -3.8, 17.6); torch(-8.5, -1.8, 20.6);
-{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-12.6, -4.9, 18.6); scene.add(L); caveLights.push({ L, base: 9 }); }
+{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-13.4, -4.9, 18.6); scene.add(L); caveLights.push({ L, base: 9 }); }
 [[-15.2, 18.3], [-11.3, 22.4], [-14.6, 22.5]].forEach(([x, z], i) => {
   for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5 - k * 0.12, 0.16), new THREE.MeshLambertMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9 }));
     c.position.set(x + (k - 1) * 0.18, -5.5 + (0.5 - k * 0.12) / 2, z + (k % 2) * 0.12); c.rotation.z = (k - 1) * 0.3; scene.add(c); }
 });
+// Ajolote (diseño original)
+function buildAxolotl() {
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  const pink = 0xf9a8d4, gill = 0xdb2777;
+  part(0.34, 0.2, 0.6, pink, 0, 0, 0, body);                      // cuerpo
+  part(0.4, 0.26, 0.3, pink, 0, 0.03, 0.42, body);                // cabeza
+  part(0.06, 0.06, 0.02, 0x111827, -0.12, 0.08, 0.575, body); part(0.06, 0.06, 0.02, 0x111827, 0.12, 0.08, 0.575, body); // ojos
+  part(0.14, 0.03, 0.02, 0xbe185d, 0, -0.03, 0.575, body);        // boquita
+  [-1, 1].forEach(sd => { [0.14, 0.04, -0.06].forEach((y, k) => part(0.12, 0.06, 0.06, gill, sd * (0.24 + k * 0.02), y + 0.05, 0.38 - k * 0.04, body)); }); // branquias
+  const tail = new THREE.Group(); tail.position.z = -0.3; body.add(tail);
+  part(0.04, 0.2, 0.42, pink, 0, 0.02, -0.2, tail); part(0.02, 0.1, 0.3, gill, 0, 0.14, -0.2, tail);
+  [[-0.2, 0.2], [0.2, 0.2], [-0.2, -0.2], [0.2, -0.2]].forEach(([x, z]) => part(0.1, 0.06, 0.08, pink, x, -0.1, z, body)); // patitas
+  return { g, body, tail };
+}
+const axo = buildAxolotl(); axo.g.position.set(-9, -5.6, 18.5); scene.add(axo.g); axo.t = 0; axo.dir = 1; axo.happy = 0;
+{ const L = new THREE.PointLight(0x22d3ee, 5, 6, 1.6); L.position.set(-9, -4.6, 18.5); scene.add(L); caveLights.push({ L, base: 5 }); }
+torch(-7.4, -3.8, 18.5);
+let axoMet = false, wasInWater = false;
+function greetAxolotl() {
+  axo.happy = 1.6; sfx('pop');
+  for (let i = 0; i < 6; i++) { const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthTest: false })); h.scale.set(0.6, 0.6, 1); h.position.set(axo.g.position.x + (Math.random() - 0.5) * 0.8, -5.2, axo.g.position.z + (Math.random() - 0.5) * 0.6); scene.add(h); h.userData.v = 0.8 + Math.random() * 0.6; axoHearts.push(h); }
+  toast('♥', 'AJOLOTE', axoMet ? '¡Te saluda otra vez!' : '¡Hiciste un amigo!', 'Vive en el lago de la cueva. Le gusta nadar de un lado a otro.', '#db2777'); axoMet = true;
+}
+const axoHearts = [];
+const heartTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.fillStyle = '#ec4899';
+  ['0110110', '1111111', '1111111', '0111110', '0011100', '0001000'].forEach((row, y) => [...row].forEach((v, x) => v === '1' && g.fillRect(x + 4, y + 5, 1, 1)));
+  const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; return t; })();
 let caveK = 0, caveFound = false;
 
 /* ---------------- BLOQUES DE HABILIDAD ---------------- */
@@ -768,7 +800,7 @@ let target = null, waypoints = [], onArrive = null, stuckT = 0, lastDist = Infin
 let feet = 0.5, vy = 0, onGround = true, coyote = 0, jumpReq = 0, autoWalk = false;
 const PR = 0.3, PH = 1.7, JUMP = 8.6, GRAV = 26;
 const chestBox = [4.85, -16, 6.15, -15, 1.5];
-function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air') || oreCells.has(`${i},${j},${k}`); }
+function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air' && t !== 'agua') || oreCells.has(`${i},${j},${k}`); }
 function hits(x, y, z) {
   if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
   if (z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
@@ -919,6 +951,19 @@ function updateCave(dt, t) {
   hemi.intensity = baseHemi * (1 - 0.6 * caveK); sun.intensity = baseSun * (1 - 0.8 * caveK);
   caveLights.forEach((c, i) => { c.L.intensity = c.base * (0.85 + Math.sin(t * 9 + i * 2) * 0.1 + Math.sin(t * 23 + i) * 0.05); });
   T.lava.offset.y = (t * 0.05) % 1;
+  // el ajolote nada de un lado a otro del lago
+  axo.t += dt * (axo.happy > 0 ? 0 : 0.35) * axo.dir;
+  if (axo.t > 1) { axo.t = 1; axo.dir = -1; } if (axo.t < 0) { axo.t = 0; axo.dir = 1; }
+  const ax = -10 + axo.t * 2, az = 18.5 + Math.sin(t * 0.8) * 0.3;
+  axo.g.position.x = ax; axo.g.position.z = az; axo.g.position.y = -5.6 + Math.sin(t * 2) * 0.05;
+  if (axo.happy > 0) { axo.happy -= dt; axo.g.rotation.y += dt * 8; axo.g.position.y += Math.abs(Math.sin(t * 10)) * 0.3; }
+  else { const want = axo.dir > 0 ? Math.PI / 2 : -Math.PI / 2; axo.g.rotation.y += Math.atan2(Math.sin(want - axo.g.rotation.y), Math.cos(want - axo.g.rotation.y)) * Math.min(1, dt * 4); }
+  axo.tail.rotation.y = Math.sin(t * 6) * 0.5;
+  for (let i = axoHearts.length - 1; i >= 0; i--) { const h = axoHearts[i]; h.position.y += dt * h.userData.v; h.material.opacity = Math.max(0, 1 - (h.position.y + 5.2) / 1.6); if (h.material.opacity <= 0) { scene.remove(h); axoHearts.splice(i, 1); } }
+  // chapoteo al entrar al agua
+  const inWater = blocks.get(`${Math.round(p.x)},${Math.round(feet + 0.2)},${Math.round(p.z)}`) === 'agua';
+  if (inWater && !wasInWater) { sfx('pop'); dust(p.x, feet + 0.6, p.z, 14, 0x67e8f9); }
+  wasInWater = inWater;
   if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
   if (onGround && groundType() === 'lava') {
     sfx('hurt'); p.set(-4.6, 0.5, 21.5); feet = 0.5; vy = 0;
@@ -1279,6 +1324,12 @@ function updateAnimals(dt, t) {
 
 function nearest() {
   const p = player.position; let best = null, bd = 1e9;
+  if (feet < -1) { // bajo tierra solo cuentan las cosas de la cueva
+    const cv = lugares.find(L => L.id === 'cueva'), dc = Math.hypot(p.x - cv.door[0], p.z - cv.door[1]), da = Math.hypot(p.x - axo.g.position.x, p.z - axo.g.position.z);
+    if (feet < -3 && da < 2.2 && da <= dc) return { kind: 'axo' };
+    if (feet < -3 && dc < 2.4) return { kind: 'loc', L: cv };
+    return null;
+  }
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
   if (guide.state === 'home' || guide.state === 'returning') { const d = Math.hypot(p.x - npc.position.x, p.z - npc.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'npc' }; } }
@@ -1290,7 +1341,7 @@ function nearest() {
 }
 function interact() {
   if (!near || panelOpen) return;
-  if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
+  if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(); else if (near.kind === 'axo') greetAxolotl(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }
 function openPlace(L) {
   sfx('open'); L.open();
@@ -1685,7 +1736,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? 'Saludar al ajolote' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
