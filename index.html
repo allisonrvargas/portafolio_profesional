@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Great+Vibes&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/arena.css?v=202611202105">
+<link rel="stylesheet" href="css/arena.css?v=202611202114">
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
@@ -61,12 +61,17 @@
 </section>
 
 <!-- HUD -->
+<div class="lvl-up" id="lvlUp" hidden><small>¡SUBISTE DE NIVEL!</small><b>2</b><span>Aprendiz</span></div>
 <div class="hud" id="hud" hidden>
   <div class="hud-left">
     <div class="player-chip">
-      <img src="img/allison.jpg" alt="" width="44" height="44">
-      <div><b>Allison</b><small>Desarrolladora en formación</small></div>
+      <div class="lvl-pic"><img src="img/allison.jpg" alt="" width="44" height="44"><span class="lvl-crown" title="Nivel"><span id="lvlNum">1</span></span></div>
+      <div class="lvl-info"><b>Allison</b><small>Desarrolladora en formación</small>
+        <div class="xp-row"><span id="lvlName">Nivel 1 · Novata</span><span id="xpText">0/80 XP</span></div>
+        <div class="xp-bar" role="progressbar" aria-label="Experiencia"><i id="xpFill"></i></div>
+      </div>
     </div>
+    <div class="xp-pops" id="xpPops" aria-live="polite"></div>
     <button class="btn quick" id="quickBtn">Resumen <small>ver todo rápido</small></button>
     <div class="quests" id="quests">
       <p class="q-title">Misiones</p>
@@ -125,6 +130,6 @@
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script type="module" src="js/arena.js?v=202611202105"></script>
+<script type="module" src="js/arena.js?v=202611202114"></script>
 </body>
 </html>

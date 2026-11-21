@@ -53,6 +53,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - **Pantalla final** con estadísticas al completar habilidades, granja e historia.
 - **Castillo de torres**: dos princesas arqueras en las torres del frente y el rey en lo más alto. De noche, las princesas disparan flechas a los monstruos que se acercan.
 - **Vista interior del castillo**: al entrar se ocultan el muro del frente y la torre central se corta a la altura de tus pies para ver las gradas.
+- **Niveles y experiencia**: cada cosa que haces da XP (lugares, habilidades, animales, línea de tiempo, cueva, ajolote). Hay 10 niveles, de Novata a Leyenda de la arena, con corona de nivel, barra de experiencia y aviso al subir.
 - **Cueva tipo Minecraft**: se baja caminando por las gradas; al entrar se oculta el suelo de arriba, la luz baja y la cámara mira desde arriba. Si pisas la lava, regresas a la entrada.
 - **Cama en el patio del castillo**: al acostarte vuelves al inicio y, si era de noche, amanece.
 

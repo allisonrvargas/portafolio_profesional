@@ -745,6 +745,7 @@ const axo = buildAxolotl(); axo.g.position.set(-9, -5.6, 18.5); scene.add(axo.g)
 torch(-7.4, -3.8, 18.5);
 let axoMet = false, wasInWater = false;
 function greetAxolotl() {
+  award('axo', 40, 'Amigo ajolote');
   axo.happy = 1.6; sfx('pop');
   for (let i = 0; i < 6; i++) { const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthTest: false })); h.scale.set(0.6, 0.6, 1); h.position.set(axo.g.position.x + (Math.random() - 0.5) * 0.8, -5.2, axo.g.position.z + (Math.random() - 0.5) * 0.6); scene.add(h); h.userData.v = 0.8 + Math.random() * 0.6; axoHearts.push(h); }
   toast('♥', 'AJOLOTE', axoMet ? '¡Te saluda otra vez!' : '¡Hiciste un amigo!', 'Vive en el lago de la cueva. Le gusta nadar de un lado a otro.', '#db2777'); axoMet = true;
@@ -849,7 +850,7 @@ function checkHitos() {
   for (const h of hitos) {
     if (h.done || h.i !== tlShown) continue;
     if (Math.hypot(p.x - h.pos[0], p.z - h.pos[1]) < 1.6 && feet >= h.minY - 0.2) {
-      h.done = true; tlShown++; h.sprite.material.opacity = 1; sfx(h.i === 5 ? 'win' : 'pop');
+      h.done = true; tlShown++; h.sprite.material.opacity = 1; award(`hito:${h.i}`, 30, 'Línea de tiempo'); sfx(h.i === 5 ? 'win' : 'pop');
       const box = $('#tlHud'); box.hidden = false;
       const li = document.createElement('li'); if (h.now) li.className = 'now';
       li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d;
@@ -964,7 +965,7 @@ function updateCave(dt, t) {
   const inWater = blocks.get(`${Math.round(p.x)},${Math.round(feet + 0.2)},${Math.round(p.z)}`) === 'agua';
   if (inWater && !wasInWater) { sfx('pop'); dust(p.x, feet + 0.6, p.z, 14, 0x67e8f9); }
   wasInWater = inWater;
-  if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
+  if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); award('cave', 80, 'Cueva secreta'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
   if (onGround && groundType() === 'lava') {
     sfx('hurt'); p.set(-4.6, 0.5, 21.5); feet = 0.5; vy = 0;
     toast('♨', '¡AY, LAVA!', 'Volviste a la entrada', 'La lava quema: rodéala para llegar al cofre.', '#ea580c');
@@ -972,6 +973,7 @@ function updateCave(dt, t) {
 }
 let sleeping = false;
 function sleep() {
+  award('sleep', 30, 'Dormiste en el castillo');
   if (sleeping) return; sleeping = true; sfx('open');
   player.position.set(BED[0], 1.5, BED[1] - 0.2); feet = 1.9; vy = 0; player.rotation.y = 0;
   rig.rotation.z = Math.PI / 2; rig.position.y = 0.25;
@@ -1258,7 +1260,7 @@ function lasso(a) {
 }
 const farmQueue = [];
 function penAnimal(a) {
-  a.state = 'corral'; a.rope.visible = false; penned++; sfx('pop'); renderQuests();
+  a.state = 'corral'; a.rope.visible = false; penned++; sfx('pop'); award(`pen:${a.id}`, 50, 'Animal al corral'); renderQuests();
   afterPen(); saveProgress(); checkComplete();
   if (panelOpen) { farmQueue.push([a, penned]); return; }
   showFarmCard(a, penned);
@@ -1277,7 +1279,7 @@ function afterPen() {
 }
 function choosePet(a) {
   if (pet) { pet.state = 'corral'; const [x, z] = [(Math.random() * 6 - 3), -5]; pet.g.position.set(x, pet.y, z); }
-  pet = a; a.state = 'mascota'; sfx('win'); saveProgress();
+  pet = a; a.state = 'mascota'; sfx('win'); award('pet', 60, 'Mascota nueva'); saveProgress();
   toast('♥', 'NUEVA MASCOTA', a.n, 'Ahora te acompaña por toda la arena.', '#ec4899');
 }
 function updateAnimals(dt, t) {
@@ -1346,6 +1348,7 @@ function interact() {
 function openPlace(L) {
   sfx('open'); L.open();
   if (L.q && !visited.has(L.id)) { visited.add(L.id); renderQuests(); saveProgress(); }
+  if (L.q) award(`visit:${L.id}`, 100, 'Nuevo lugar: ' + L.n);
 }
 function mine(o) {
   if (mining || o.mined) return;
@@ -1369,6 +1372,7 @@ function breakOre(o) {
     const d = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshLambertMaterial({ color: i % 2 ? h.c : '#c4bfc8' }));
     d.position.set(o.x, 1, o.z); d.userData.v = new THREE.Vector3((Math.random() - 0.5) * 5, 3 + Math.random() * 3, (Math.random() - 0.5) * 5); d.userData.life = 1; scene.add(d); debris.push(d);
   }
+  award(`ore:${o.i}`, 40, 'Habilidad: ' + habilidades[o.i].n);
   const before = tier(); minedCount++; sfx('break'); setTimeout(() => sfx('pop'), 180);
   if (tier() > before) { buildTool(); setTimeout(() => { sfx('win'); toast('⛏', '¡NUEVA HERRAMIENTA!', picos[tier()].n, 'Ahora picas más rápido.', picos[tier()].css); }, 900); }
   const slot = document.querySelectorAll('.slot')[o.i]; slot.classList.add('got'); slot.textContent = h.a.length > 4 ? h.a.slice(0, 4) : h.a; slot.setAttribute('aria-label', h.n + ', conseguida');
@@ -1393,6 +1397,7 @@ function renderQuests() {
   lugares.filter(L => L.q).forEach(L => { const li = document.createElement('li'); li.textContent = L.q; if (visited.has(L.id)) li.className = 'done'; li.addEventListener('click', () => travel(L)); ul.appendChild(li); });
   const lf = document.createElement('li'); lf.textContent = `Lleva los animales al corral (${typeof penned === 'number' ? penned : 0}/6)`; if (typeof penned === 'number' && penned === 6) lf.className = 'done'; ul.appendChild(lf);
   const li = document.createElement('li'); li.textContent = `Pica las habilidades (${minedCount}/${habilidades.length})`; if (minedCount === habilidades.length) li.className = 'done'; ul.appendChild(li);
+  if (xpReady) { const lv = levelOf(xp) + 1, ll = document.createElement('li'); ll.textContent = `Llega al nivel 10 (${lv}/10)`; if (lv === 10) ll.className = 'done'; ul.appendChild(ll); }
 }
 renderQuests();
 const travelList = $('#travelList');
@@ -1555,6 +1560,7 @@ function panelCastillo() {
     <p style="margin-top:22px">También puedes abrir el <strong>cofre</strong> que está junto al castillo.</p>`);
 }
 function panelCofre() {
+  award('cofre', 50, 'Abriste mi CV');
   lidOpen = true;
   showPanel(`<p class="p-kicker">¡ABRISTE EL COFRE!</p><h2 id="panelTitle">Mi CV</h2>
     <p class="lead">Adentro estaba mi currículum, con mi formación, experiencia, proyectos y habilidades.</p>
@@ -1562,6 +1568,7 @@ function panelCofre() {
 }
 let lidOpen = false;
 function panelCueva() {
+  award('caveChest', 80, 'Cofre secreto');
   caveLid.rotation.x = -1.1; caveLid.position.z = -0.25; caveLid.position.y = 0.85;
   showPanel(`<p class="p-kicker">¡ENCONTRASTE EL COFRE SECRETO!</p><h2 id="panelTitle">Mi rincón gamer</h2>
     <p class="lead">Esta arena nació de lo que más me gusta: los videojuegos y la música.</p>
@@ -1802,7 +1809,38 @@ function loop() {
 /* ---------------- PROGRESO GUARDADO ---------------- */
 let progress = (() => { try { return JSON.parse(localStorage.getItem('arenaSave') || '{}'); } catch (e) { return {}; } })();
 let playTime = progress.time || 0;
+/* ---------------- NIVELES Y EXPERIENCIA ---------------- */
+const niveles = [
+  { xp: 0, n: 'Novata' }, { xp: 80, n: 'Aprendiz' }, { xp: 200, n: 'Exploradora' }, { xp: 360, n: 'Constructora' }, { xp: 560, n: 'Minera' },
+  { xp: 800, n: 'Granjera' }, { xp: 1080, n: 'Arquera' }, { xp: 1400, n: 'Hechicera' }, { xp: 1720, n: 'Campeona' }, { xp: 2000, n: 'Leyenda de la arena' }
+];
+const xpKeys = new Set(progress.xpKeys || []); let xp = 0; var xpReady = true;
+const xpValue = k => k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, sleep: 30 })[k] || 0;
+const levelOf = v => { let l = 0; while (l < niveles.length - 1 && v >= niveles[l + 1].xp) l++; return l; };
+function renderLevel() {
+  const l = levelOf(xp), cur = niveles[l], next = niveles[l + 1];
+  $('#lvlNum').textContent = l + 1;
+  $('#lvlName').textContent = `Nivel ${l + 1} · ${cur.n}`;
+  $('#xpText').textContent = next ? `${xp - cur.xp}/${next.xp - cur.xp} XP` : 'Nivel máximo';
+  $('#xpFill').style.width = (next ? (xp - cur.xp) / (next.xp - cur.xp) * 100 : 100) + '%';
+}
+function award(key, amount, why, silent) {
+  if (xpKeys.has(key)) return; xpKeys.add(key);
+  const before = levelOf(xp); xp += amount; renderLevel();
+  if (silent) return;
+  const pop = document.createElement('div'); pop.className = 'xp-pop'; pop.textContent = `+${amount} XP · ${why}`; $('#xpPops').appendChild(pop); setTimeout(() => pop.remove(), 1900);
+  const chip = $('.player-chip'); chip.classList.remove('xp-glow'); void chip.offsetWidth; chip.classList.add('xp-glow');
+  const after = levelOf(xp);
+  if (after > before) setTimeout(() => {
+    sfx('win'); if (typeof confetti === 'function' && after === niveles.length - 1) confetti();
+    const b = $('#lvlUp'); b.querySelector('b').textContent = after + 1; b.querySelector('span').textContent = niveles[after].n;
+    b.hidden = false; b.classList.remove('show'); void b.offsetWidth; b.classList.add('show'); setTimeout(() => b.hidden = true, 2600);
+    renderQuests();
+  }, 500);
+  saveProgress();
+}
 function saveProgress() {
+  progress.xpKeys = [...xpKeys];
   progress.mined = ores.filter(o => o.mined).map(o => o.i);
   progress.penned = animals.filter(a => a.state === 'corral' || a.state === 'mascota').map(a => a.id);
   progress.pet = pet ? pet.id : null; progress.char = charIndex; progress.visited = [...visited]; progress.tl = tlShown; progress.time = Math.round(playTime);
@@ -1819,7 +1857,13 @@ function restoreProgress() {
   for (let k = 0; k < (progress.tl || 0); k++) { const h = hitos[k]; h.done = true; h.sprite.material.opacity = 1; const li = document.createElement('li'); if (h.now) li.className = 'now'; li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d; $('#tlList').appendChild(li); tlShown++; }
   $('#tlCount').textContent = tlShown;
   if (typeof progress.char === 'number') buildCharacter(progress.char); else buildTool();
-  renderQuests();
+  [...xpKeys].forEach(k => { xpKeys.delete(k); award(k, xpValue(k), '', true); });
+  ores.forEach(o => o.mined && award(`ore:${o.i}`, 40, '', true));
+  animals.forEach(a => (a.state === 'corral' || a.state === 'mascota') && award(`pen:${a.id}`, 50, '', true));
+  if (pet) award('pet', 60, '', true);
+  visited.forEach(v => award(`visit:${v}`, 100, '', true));
+  hitos.forEach((h, k) => h.done && award(`hito:${k}`, 30, '', true));
+  renderLevel(); renderQuests();
   return any;
 }
 $('#resetSave').addEventListener('click', () => { try { localStorage.removeItem('arenaSave'); localStorage.removeItem('arenaTut'); } catch (e) { } location.reload(); });
