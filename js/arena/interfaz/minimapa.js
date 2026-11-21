@@ -30,6 +30,7 @@ function drawMap() {
   { const [x1, y1] = toMap(CORRAL.x1 - 0.5, CORRAL.z1 - 0.5), [x2, y2] = toMap(CORRAL.x2 + 0.5, CORRAL.z2 + 0.5); mg.strokeStyle = '#9a6744'; mg.lineWidth = 2; mg.strokeRect(x1, y1, x2 - x1, y2 - y1); }
   animals.forEach(a => { if (a.state === 'corral') return; const [x, y] = toMap(a.g.position.x, a.g.position.z); drawHead(a.id, x, y, a.state !== 'libre'); });
   ores.forEach(o => { if (o.mined) return; const [a, b] = toMap(o.x, o.z); mg.fillStyle = '#fff'; mg.fillRect(a - 2.5, b - 2.5, 5, 5); mg.fillStyle = habilidades[o.i].c; mg.fillRect(a - 1.5, b - 1.5, 3, 3); });
+  if (!driving) { const [kx, ky] = toMap(kart.position.x, kart.position.z); mg.fillStyle = '#facc15'; mg.fillRect(kx - 3, ky - 3, 6, 6); mg.strokeStyle = '#4a1238'; mg.strokeRect(kx - 3, ky - 3, 6, 6); }
   const [px, py] = toMap(player.position.x, player.position.z); const ang = player.rotation.y;
   mg.save(); mg.translate(px, py); mg.rotate(-ang); mg.fillStyle = '#4a1238'; mg.beginPath(); mg.moveTo(0, 6); mg.lineTo(-4.5, -4); mg.lineTo(4.5, -4); mg.fill(); mg.restore();
   mg.strokeStyle = '#ec4899'; mg.lineWidth = 2; mg.strokeRect(1, 1, mm.width - 2, mm.height - 2);

@@ -24,6 +24,7 @@ const archivos = [
   'criaturas/cueva.js',
   'juego/habilidades.js',
   'juego/movimiento.js',
+  'juego/carrito.js',
   'castillo/linea-tiempo.js',
   'castillo/camas.js',
   'castillo/guardianes.js',

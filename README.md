@@ -53,6 +53,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - **Pantalla final** con estadísticas al completar habilidades, granja e historia.
 - **Castillo de torres**: dos princesas arqueras en las torres del frente y el rey en lo más alto. De noche, las princesas disparan flechas a los monstruos que se acercan.
 - **Vista interior del castillo**: al entrar se ocultan el muro del frente y la torre central se corta a la altura de tus pies para ver las gradas.
+- **Carrito**: está en la plaza de la entrada. Súbete con E y recorre la arena más rápido. No entra a edificios, al agua ni a lugares angostos: te avisa para que lo dejes enfrente y sigas caminando.
 - **5 vidas**: los corazones aparecen bajo tu nivel. Caer en la lava, caer desde más de 4 bloques (si no es al agua) o que te toque un monstruo de la noche te quita uno y vuelves a la entrada. Si pierdes los 5, sale "Fin del juego" y todo empieza de nuevo.
 - **Niveles y experiencia**: cada cosa que haces da XP (lugares, habilidades, animales, línea de tiempo, cueva, ajolote). Hay 10 niveles, de Novata a Leyenda de la arena, con corona de nivel, barra de experiencia y aviso al subir.
 - **Cueva tipo Minecraft** bajo el agujero del río: se baja caminando por las gradas, el río cae en cascada al lago del ajolote y hay murciélagos colgados del techo; al entrar se oculta el suelo de arriba, la luz baja y la cámara mira desde arriba. Si pisas la lava, regresas a la entrada.

@@ -3,6 +3,8 @@
 
 function nearest() {
   const p = player.position; let best = null, bd = 1e9;
+  if (driving) return { kind: 'kartExit' };
+  if (Math.abs(feet - kart.position.y) < 0.6 && Math.hypot(p.x - kart.position.x, p.z - kart.position.z) < 1.9) return { kind: 'kart' };
   if (feet < -1) { // bajo tierra solo cuentan las cosas de la cueva
     const cv = lugares.find(L => L.id === 'cueva'), dc = Math.hypot(p.x - cv.door[0], p.z - cv.door[1]), da = Math.hypot(p.x - axo.g.position.x, p.z - axo.g.position.z);
     const db = Math.hypot(p.x - axo2.g.position.x, p.z - axo2.g.position.z), dbed = Math.hypot(p.x - CAVE_BED[0], p.z - CAVE_BED[1]);
@@ -23,6 +25,8 @@ function nearest() {
 }
 function interact() {
   if (!near || panelOpen) return;
+  if (near.kind === 'kart') return enterKart();
+  if (near.kind === 'kartExit') return leaveKart();
   if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(near.where); else if (near.kind === 'axo') greetAxolotl(near.a); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }
 function openPlace(L) {

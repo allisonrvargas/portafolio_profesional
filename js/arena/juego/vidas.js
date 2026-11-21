@@ -19,6 +19,7 @@ function renderVidas(perdida) {
 // razon: 'lava' o el tipo de monstruo ('esqueleto', 'arana', 'petardin')
 function perderVida(razon) {
   if (muriendo || invulnerable > 0 || sleeping || !started) return;
+  leaveKart(true);
   muriendo = true; vidas--; progress.vidas = vidas; saveProgress();
   renderVidas(vidas);
   target = null; waypoints = []; mining = null; crack.visible = false; vy = 0;

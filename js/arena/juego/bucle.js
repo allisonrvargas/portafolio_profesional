@@ -17,7 +17,7 @@ function update(dt, t) {
   }
   if (muriendo) { mx = 0; mz = 0; target = null; } // sin moverse mientras pierdes una vida
   const p = player.position; let moving = false;
-  const speed = (keys.shift ? 8.5 : 5) * (swimming ? 0.35 : 1);
+  const speed = driving ? 9 : (keys.shift ? 8.5 : 5) * (swimming ? 0.35 : 1);
   if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
     const c = Math.cos(camYaw), sN = Math.sin(camYaw); const wx = mx * c + mz * sN, wz = -mx * sN + mz * c; mx = wx; mz = wz; }
   else if (target && !mining) {
@@ -34,10 +34,10 @@ function update(dt, t) {
   if (mx || mz) {
     let hitWall = false;
     const nx = p.x + mx * speed * dt, nz = p.z + mz * speed * dt;
-    if (!hits(nx, feet, p.z)) p.x = nx; else hitWall = true;
-    if (!hits(p.x, feet, nz)) p.z = nz; else hitWall = true;
+    if (canMove(nx, p.z)) p.x = nx; else hitWall = true;
+    if (canMove(p.x, nz)) p.z = nz; else hitWall = true;
     // al caminar solo hacia un destino, salta escalones de un bloque
-    if (hitWall && (autoWalk || (inCaveArea(p.x, p.z) && feet < 0.4)) && onGround && !hits(p.x + mx * 0.45, feet + 1.05, p.z + mz * 0.45)) { vy = JUMP; onGround = false; }
+    if (hitWall && !driving && (autoWalk || (inCaveArea(p.x, p.z) && feet < 0.4)) && onGround && !hits(p.x + mx * 0.45, feet + 1.05, p.z + mz * 0.45)) { vy = JUMP; onGround = false; }
     const want = Math.atan2(mx, mz); let diff = want - player.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); player.rotation.y += diff * Math.min(1, dt * 14);
     moving = true;
   }
@@ -55,11 +55,11 @@ function update(dt, t) {
   wasSwimming = swimming;
   // al caer al río desde la orilla, te acomoda dentro del cauce para que no quedes colgada del borde
   if (inRiverChannel(p.x, feet, p.z)) p.z = Math.max(-1.15, Math.min(0.15, p.z));
-  updateVidas(dt, t);
+  updateVidas(dt, t); updateKart(dt, t, moving);
   // salto y gravedad
   coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
   if (jumpReq > 0) {
-    if (coyote > 0 && !panelOpen && vy <= 0.5) { vy = JUMP; onGround = false; coyote = 0; jumpReq = 0; sfx('jump'); }
+    if (coyote > 0 && !panelOpen && !driving && vy <= 0.5) { vy = JUMP; onGround = false; coyote = 0; jumpReq = 0; sfx('jump'); }
     else jumpReq = Math.max(0, jumpReq - dt);
   }
   vy -= GRAV * dt;
@@ -125,7 +125,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'kart' ? 'Subir al carrito' : near.kind === 'kartExit' ? 'Bajar del carrito' : near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
