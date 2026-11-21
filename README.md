@@ -53,7 +53,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - **Pantalla final** con estadísticas al completar habilidades, granja e historia.
 - **Castillo de torres**: dos princesas arqueras en las torres del frente y el rey en lo más alto. De noche, las princesas disparan flechas a los monstruos que se acercan.
 - **Vista interior del castillo**: al entrar se ocultan el muro del frente y la torre central se corta a la altura de tus pies para ver las gradas.
-- **Galería del túnel**: en el pasillo de mina bajo la casa hay pinturas famosas de dominio público (Van Gogh, Munch, Monet). Pulsa E junto a una para ver la obra con su autor, año y una explicación.
+- **Galería del túnel**: en el pasillo de mina bajo la casa hay pinturas famosas de dominio público (Van Gogh, Munch, Monet). Pulsa E junto a una y la cámara se pone a la altura de los ojos del personaje, frente al cuadro, con el autor, el año y una explicación. Con las flechas pasas a la siguiente obra.
 - **Carrito**: está en la plaza de la entrada. Súbete con E y recorre la arena más rápido. No entra a edificios, al agua ni a lugares angostos: te avisa para que lo dejes enfrente y sigas caminando.
 - **5 vidas**: los corazones aparecen bajo tu nivel. Caer en la lava, caer desde más de 4 bloques (si no es al agua) o que te toque un monstruo de la noche te quita uno y vuelves a la entrada. Si pierdes los 5, sale "Fin del juego" y todo empieza de nuevo.
 - **Niveles y experiencia**: cada cosa que haces da XP (lugares, habilidades, animales, línea de tiempo, cueva, ajolote). Hay 10 niveles, de Novata a Leyenda de la arena, con corona de nivel, barra de experiencia y aviso al subir.

@@ -5,6 +5,13 @@
 let started = false;
 addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
+  if (viendo && !panelOpen) { // mirando una obra
+    if (['e', 'enter', 'escape'].includes(k) && !e.repeat) salirObra();
+    else if ((k === 'arrowleft' || k === 'a') && !e.repeat) cambiarObra(-1);
+    else if ((k === 'arrowright' || k === 'd') && !e.repeat) cambiarObra(1);
+    if (k.startsWith('arrow')) e.preventDefault();
+    return;
+  }
   if (k === 'escape') { if (panelOpen) closePanel(); else closeMenu(); return; }
   if (!started || panelOpen || selecting) return;
   keys[k] = true;

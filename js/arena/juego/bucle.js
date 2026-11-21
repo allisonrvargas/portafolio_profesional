@@ -15,7 +15,7 @@ function update(dt, t) {
     if (keys.w || keys.arrowup) mz -= 1; if (keys.s || keys.arrowdown) mz += 1;
     if (keys.a || keys.arrowleft) mx -= 1; if (keys.d || keys.arrowright) mx += 1;
   }
-  if (muriendo) { mx = 0; mz = 0; target = null; } // sin moverse mientras pierdes una vida
+  if (muriendo || viendo) { mx = 0; mz = 0; target = null; } // sin moverse mientras pierdes una vida
   const p = player.position; let moving = false;
   const speed = driving ? 9 : (keys.shift ? 8.5 : 5) * (swimming ? 0.35 : 1);
   if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
@@ -128,7 +128,7 @@ function update(dt, t) {
 
   // interacción cercana
   if (started && !panelOpen) {
-    near = mining ? null : nearest();
+    near = mining || viendo ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
     if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'kart' ? 'Subir al carrito' : near.kind === 'obra' ? 'Ver la obra: ' + near.g.o.t : near.kind === 'kartExit' ? 'Bajar del carrito' : near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
@@ -154,7 +154,9 @@ function update(dt, t) {
   drawArcade(t);
 
   // cámara
-  if (started && !selecting) {
+  if (camaraObra(dt)) { player.visible = false; } // mirando una obra: vista de los ojos del personaje
+  else if (started && !selecting) {
+    if (!muriendo && invulnerable <= 0) player.visible = true;
     const hz = 12.5 * (1.15 - camPitch * 0.15) * (1 - 0.6 * caveK); // en la cueva la cámara mira más desde arriba
     const off = new THREE.Vector3(Math.sin(camYaw) * hz, 21 * camPitch, Math.cos(camYaw) * hz).multiplyScalar(zoom);
     camPos.lerp(new THREE.Vector3(p.x, p.y, p.z).add(off), Math.min(1, dt * 4));

@@ -89,7 +89,8 @@ function updateNpc(dt, t) {
   npcSign.position.set(npc.position.x, npc.position.y + 2.4, npc.position.z);
   const msg = guide.waiting ? '¡Sígueme! Te espero' : guide.state === 'leading' ? '¡Por aquí!' : guide.state === 'arrived' ? '¡Aquí es! Pulsa E' : !progress.npc ? '¡Hola! Pulsa E' : '';
   if (msg !== guide.msg) { guide.msg = msg; if (msg) { const s2 = label(msg, '#d97706'); npcBubble.material.map = s2.material.map; npcBubble.material.needsUpdate = true; } }
-  npcBubble.visible = started && !selecting && !!msg && (d < 9 || guide.state !== 'home');
+  npcBubble.visible = started && !selecting && feet > -1 && !!msg && (d < 9 || guide.state !== 'home');
+  npcSign.visible = feet > -1 || npc.position.y < -1; // bajo tierra no se cuela el letrero
   npcBubble.position.set(npc.position.x, npc.position.y + 3.6 + Math.sin(t * 3) * 0.1, npc.position.z);
   if (!guide.hit) guide.hit = hitMeshes.find(m => m.userData.id === 'npc');
   if (guide.hit) guide.hit.position.set(npc.position.x, 1.1, npc.position.z);
