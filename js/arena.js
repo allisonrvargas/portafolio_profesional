@@ -371,7 +371,9 @@ const roofZones = [
   { x1: -2, x2: 2, z1: -22, z2: -20, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, layered: true, groups: {} },
   // cueva: al bajar se oculta el suelo de arriba para ver adentro
   { x1: -17, x2: -11, z1: -4, z2: 4, y: -1, feetBelow: -0.6, inX: [-18, -10.5], inZ: [-4.6, 8.6], cave: true, groups: {} },
-  { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} }
+  { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} },
+  // túnel bajo la casa: al entrar se corta todo lo que está encima (también la casa) para ver el pasadizo por dentro
+  { x1: -12, x2: -9, z1: 5, z2: 17, y: -2, feetBelow: -0.6, inX: [-11.6, -9.4], inZ: [4.5, 17.5], tunnel: true, priority: true, groups: {} }
 ];
 function buildBlocks() {
   const byType = {};
@@ -383,8 +385,9 @@ function buildBlocks() {
     // ocultar bloques totalmente rodeados
     const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2) || ((y <= 0 && y >= -7 && x >= -18 && x <= -10 && z >= -5 && z <= 9) || (y <= 0 && y >= -7 && x >= -17 && x <= -3 && z >= 16 && z <= 24) || (y <= -2 && y >= -7 && x >= -12 && x <= -9 && z >= 3 && z <= 18)); // la cueva se ve por dentro
     if (!cutLayer && opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
-    const zone = roofZones.find(r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
-    if (zone) { (zone.groups[zone.layered ? t + '|' + y : t] ||= []).push([x, y, z]); continue; }
+    const inZone = r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2;
+    const zone = roofZones.find(r => r.priority && inZone(r)) || roofZones.find(inZone);
+    if (zone) { (zone.groups[zone.layered || zone.tunnel ? t + '|' + y : t] ||= []).push([x, y, z]); continue; }
     (byType[t] ||= []).push([x, y, z]);
   }
   roofZones.forEach(r => { r.meshes = []; for (const [key, list] of Object.entries(r.groups)) { const [t, ly] = key.split('|'); const mesh = new THREE.InstancedMesh(unit, M[t], list.length); mesh.userData.layer = ly === undefined ? null : +ly; const mm = new THREE.Matrix4(); list.forEach(([x, y, z], i) => { mm.makeTranslation(x, y, z); mesh.setMatrixAt(i, mm); }); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh); blockMeshes.push(mesh); r.meshes.push(mesh); } });
@@ -1089,7 +1092,7 @@ const xrayScene = new THREE.Scene();
 const xrayFill = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthTest: false, depthWrite: false });
 const xrayEdge = new THREE.MeshBasicMaterial({ color: 0xbe185d, transparent: true, opacity: 0.95, depthTest: false, depthWrite: false });
 let xrayT = 0, occluded = false;
-function hiddenByZone(i, j, k) { return roofZones.some(r => r.meshes && r.meshes[0] && !r.meshes[0].visible && i >= r.x1 && i <= r.x2 && k >= r.z1 && k <= r.z2 && j >= r.y); }
+function hiddenByZone(i, j, k) { return roofZones.some(r => r.inside && i >= r.x1 && i <= r.x2 && k >= r.z1 && k <= r.z2 && j >= r.y); }
 function checkOccluded() {
   const from = new THREE.Vector3(player.position.x, feet + 0.9, player.position.z), dir = camera.position.clone().sub(from);
   const len = dir.length(); dir.normalize();
@@ -1889,7 +1892,9 @@ function update(dt, t) {
   updateAmbient(dt, t); if (Math.floor(t * 15) % 2 === 0) swayGrass(t);
   updateNpc(dt, t); updateTutorial();
   roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < (r.feetBelow ?? r.y));
-    r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
+    r.inside = inside;
+    if (r.tunnel) r.meshes.forEach(m => m.visible = !inside && !(roofZones[0].inside && m.userData.layer >= roofZones[0].y)); // el techo de la casa también se oculta si estás dentro de ella
+    else r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
     if (r === roofZones[3]) princesses.forEach(pr => pr.g.visible = !inside);
     if (r.layered) { king.g.visible = !inside || feet > 9.4; }
