@@ -9,7 +9,7 @@ const PR = 0.3, JUMP = 8.6, GRAV = 26; let PH = 1.7; // al nadar el personaje va
 const chestBox = [4.85, -16, 6.15, -15, 1.5];
 function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air' && t !== 'agua') || oreCells.has(`${i},${j},${k}`); }
 // cauce del río por debajo del nivel del suelo: las barandas y el piso del puente quedan arriba de ti
-const inRiverChannel = (x, y, z) => y < 0.45 && z > -1.65 && z < 0.65 && x > -15.7 && x < 15.8;
+const inRiverChannel = (x, y, z) => y < 0.45 && y > -2.6 && z > -1.65 && z < 0.65 && x > -15.7 && x < 15.8;
 function hits(x, y, z) {
   if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
   const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.ceil(y - 0.5 + 0.001), j1 = inRiverChannel(x, y, z) ? Math.max(j0, -1) : Math.ceil(y + PH + 0.5 - 0.001) - 1; // dentro del cauce del río solo cuenta lo que está bajo el agua
