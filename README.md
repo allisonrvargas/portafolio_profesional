@@ -18,9 +18,10 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 | Torre de proyectos | Mis 15 proyectos, con filtros por área y detalle de cada uno |
 | Torre arcade | Aplicaciones: mis páginas publicadas, funcionando dentro del portafolio |
 | Escenario | Radio Allison: música chiptune original |
-| Castillo | Contacto. Adentro hay gradas: al subirlas aparece mi línea de tiempo "Bloque a bloque", y en la azotea hay una cama que te regresa al inicio |
+| Castillo | Contacto. Adentro hay gradas: al subirlas aparece mi línea de tiempo "Bloque a bloque", dos princesas cuidan las torres, el rey está en lo más alto y en el patio hay una cama que te regresa al inicio |
 | Granja | Corral donde llevas con un lazo a 6 animales originales; cada uno te muestra un proyecto y al juntarlos todos ganas una mascota |
 | Cofre | Mi CV para abrir o descargar |
+| Cueva secreta | Junto a la casa: gradas de piedra bajan a una caverna con antorchas, minerales y lava. Al fondo, un cofre secreto con lo que me inspira |
 | Bloques brillantes | 18 habilidades para picar y llenar el inventario |
 
 ## Cómo se juega
@@ -52,6 +53,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 - **Pantalla final** con estadísticas al completar habilidades, granja e historia.
 - **Castillo de torres**: dos princesas arqueras en las torres del frente y el rey en lo más alto. De noche, las princesas disparan flechas a los monstruos que se acercan.
 - **Vista interior del castillo**: al entrar se ocultan el muro del frente y la torre central se corta a la altura de tus pies para ver las gradas.
+- **Cueva tipo Minecraft**: se baja caminando por las gradas; al entrar se oculta el suelo de arriba, la luz baja y la cámara mira desde arriba. Si pisas la lava, regresas a la entrada.
 - **Cama en el patio del castillo**: al acostarte vuelves al inicio y, si era de noche, amanece.
 
 ## Tecnologías

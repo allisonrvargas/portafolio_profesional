@@ -369,7 +369,9 @@ const roofZones = [
   // castillo: al entrar se ocultan el muro y las torres del frente
   { x1: -7, x2: 7, z1: -18, z2: -15, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, groups: {} },
   // la torre central se corta por capas: solo se ve hasta la altura de tus pies
-  { x1: -2, x2: 2, z1: -22, z2: -20, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, layered: true, groups: {} }
+  { x1: -2, x2: 2, z1: -22, z2: -20, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, layered: true, groups: {} },
+  // cueva: al bajar se oculta el suelo de arriba para ver adentro
+  { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} }
 ];
 function buildBlocks() {
   const byType = {};
@@ -379,7 +381,7 @@ function buildBlocks() {
     if (t === 'air') continue;
     const [x, y, z] = k.split(',').map(Number);
     // ocultar bloques totalmente rodeados
-    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
+    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2) || (y <= 0 && y >= -7 && x >= -17 && x <= -3 && z >= 16 && z <= 24); // la cueva se ve por dentro
     if (!cutLayer && opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
     const zone = roofZones.find(r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
     if (zone) { (zone.groups[zone.layered ? t + '|' + y : t] ||= []).push([x, y, z]); continue; }
@@ -407,6 +409,25 @@ put(8, 1, -13, 'dark'); put(8, 2, -13, 'screen'); put(10, 1, -13, 'dark'); put(1
 fill(16, 0, -3, 17, 5, 2, 'stone'); fill(16, 6, -2, 17, 6, 1, 'grass');
 for (let z = -1; z <= 0; z++) for (let y = 0; y <= 6; y++) blocks.set(`16,${y},${z}`, 'air');
 // Faroles junto a los caminos
+/* ---------------- CUEVA (estilo Minecraft) ---------------- */
+const inCaveArea = (x, z) => x > -16.5 && x < -4.5 && z > 17.5 && z < 23.5;
+T.oreCoal = oreTexture('#27272a', 31); T.oreGem = oreTexture('#22d3ee', 32); T.oreAme = oreTexture('#a855f7', 33);
+T.lava = texture((g, r) => speckle(g, r, ['#f97316', '#fb923c', '#ea580c', '#fbbf24', '#f59e0b', '#fdba74']), 34);
+T.lava.wrapS = T.lava.wrapT = THREE.RepeatWrapping;
+M.oreCoal = lambert(T.oreCoal); M.oreGem = lambert(T.oreGem, { emissive: 0x0e7490, emissiveIntensity: 0.4 });
+M.oreAme = lambert(T.oreAme, { emissive: 0x7e22ce, emissiveIntensity: 0.5 }); M.lava = new THREE.MeshBasicMaterial({ map: T.lava });
+{ const cr = rng(91);
+  for (let x = -16; x <= -4; x++) for (let z = 17; z <= 23; z++) for (let y = -7; y <= -2; y++) {
+    const k = cr(); put(x, y, z, k < 0.06 ? 'oreCoal' : k < 0.09 ? 'oreGem' : k < 0.11 ? 'gold' : k < 0.13 ? 'oreAme' : k < 0.3 ? 'cobble' : 'stone');
+  }
+  // gradas que bajan hacia la izquierda
+  for (let i = 1; i <= 5; i++) { const x = -5 - i; for (const z of [21, 22]) { for (let y = -i + 1; y <= 0; y++) put(x, y, z, 'air'); put(x, -i, z, 'cobble'); } }
+  // caverna
+  for (let x = -15; x <= -11; x++) for (let z = 18; z <= 22; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
+  [[-12, 18], [-14, 22], [-15, 19]].forEach(([x, z]) => put(x, -2, z, 'stone'));   // estalactitas
+  put(-11, -5, 18, 'cobble');                                                         // estalagmita
+  put(-13, -6, 18, 'lava'); put(-12, -6, 19, 'lava'); put(-13, -6, 19, 'lava');      // charco de lava
+}
 const lampSpots = [[-7, 3], [7, 3], [-7, -5], [7, -5], [-7, 10], [7, 10], [-5, 20], [5, 20], [-11, -7], [11, -7], [-2, -11], [2, -11], [-13, 18], [13, 18]];
 const lamps = [];
 lampSpots.forEach(([x, z]) => {
@@ -619,7 +640,7 @@ const floraSpots = [];
 { const r = rng(77); for (let tries = 0; tries < 2500 && floraSpots.length < 260; tries++) {
   const x = Math.floor(r() * 31) - 15, z = Math.floor(r() * 47) - 25;
   if (blocks.get(`${x},0,${z}`) !== 'grass') continue; const up = blocks.get(`${x},1,${z}`); if (up && up !== 'air') continue;
-  if (orePos.some(([ox, oz]) => ox === x && oz === z)) continue;
+  if (orePos.some(([ox, oz]) => ox === x && oz === z) || inCaveArea(x, z)) continue;
   floraSpots.push([x + (r() - 0.5) * 0.6, z + (r() - 0.5) * 0.6, r()]); } }
 const flowers = floraSpots.filter((_, i) => i % 2 === 0), grassTufts = floraSpots.filter((_, i) => i % 2 === 1);
 const stemMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.05, 0.32, 0.05), new THREE.MeshLambertMaterial({ color: 0x4d7c0f }), flowers.length);
@@ -668,6 +689,7 @@ const lugares = [
   { id: 'apps', n: 'Aplicaciones', l: 'Torre arcade · Apps', door: [9, -8.6], at: [9, -12, 13.6], c: '#db2777', q: 'Juega en la torre arcade', open: () => panelApps() },
   { id: 'castillo', n: 'Contacto', l: 'Castillo · Sube las gradas', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
   { id: 'granja', n: 'Granja', l: 'Granja · Corral', door: [0, -2.4], at: [0, -5, 3.4], c: '#16a34a', open: () => panelGranja() },
+  { id: 'cueva', n: 'Cueva secreta', l: 'Cueva · Baja con cuidado', door: [-13.9, 20.4], go: [-4.6, 21.5], at: [-7, 21.5, 2.4], c: '#78716c', open: () => panelCueva() },
   { id: 'cofre', n: 'Mi CV', l: 'Cofre · Mi CV', door: [5.5, -13.9], at: [5.5, -15.5, 2.6], c: '#0d9488', open: () => panelCofre() }
 ];
 const visited = new Set();
@@ -683,6 +705,23 @@ lugares.forEach(L => {
 const chest = new THREE.Group(); chest.position.set(5.5, 0.5, -15.5); scene.add(chest);
 part(1.1, 0.6, 0.8, 0x9a6744, 0, 0.3, 0, chest); const lid = part(1.14, 0.3, 0.84, 0xb07a55, 0, 0.72, 0, chest); part(0.2, 0.26, 0.06, 0xfcd34d, 0, 0.55, 0.42, chest);
 solid(4.8, -16.1, 6.2, -14.9);
+// Cofre secreto de la cueva
+const caveChest = new THREE.Group(); caveChest.position.set(-14.7, -5.5, 20.4); caveChest.rotation.y = Math.PI / 2; scene.add(caveChest);
+part(1.1, 0.6, 0.8, 0x6b4a33, 0, 0.3, 0, caveChest); const caveLid = part(1.14, 0.3, 0.84, 0x80583c, 0, 0.72, 0, caveChest); part(0.2, 0.26, 0.06, 0x22d3ee, 0, 0.55, 0.42, caveChest);
+const caveLights = [];
+function torch(x, y, z) {
+  const g = new THREE.Group(); g.position.set(x, y, z); scene.add(g);
+  part(0.1, 0.45, 0.1, 0x8b5a2b, 0, 0, 0, g);
+  const fl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.16), new THREE.MeshBasicMaterial({ color: 0xffb347 })); fl.position.y = 0.3; g.add(fl);
+  const L = new THREE.PointLight(0xffa64d, 7, 7, 1.6); L.position.y = 0.4; g.add(L); caveLights.push({ L, base: 7, fl });
+}
+torch(-15.4, -3.8, 21.5); torch(-11.2, -3.8, 17.6); torch(-8.5, -1.8, 20.6);
+{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-12.6, -4.9, 18.6); scene.add(L); caveLights.push({ L, base: 9 }); }
+[[-15.2, 18.3], [-11.3, 22.4], [-14.6, 22.5]].forEach(([x, z], i) => {
+  for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5 - k * 0.12, 0.16), new THREE.MeshLambertMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9 }));
+    c.position.set(x + (k - 1) * 0.18, -5.5 + (0.5 - k * 0.12) / 2, z + (k % 2) * 0.12); c.rotation.z = (k - 1) * 0.3; scene.add(c); }
+});
+let caveK = 0, caveFound = false;
 
 /* ---------------- BLOQUES DE HABILIDAD ---------------- */
 const ores = [];
@@ -735,12 +774,13 @@ function hits(x, y, z) {
   if (z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
   const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.ceil(y - 0.5 + 0.001), j1 = Math.ceil(y + PH + 0.5 - 0.001) - 1;
   for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
+  if (x + PR > -15.2 && x - PR < -14.2 && z + PR > 19.85 && z - PR < 20.95 && y < -4.6) return true; // cofre secreto
   if (x + PR > chestBox[0] && x - PR < chestBox[2] && z + PR > chestBox[1] && z - PR < chestBox[3] && y < chestBox[4] - 0.01) return true;
   return false;
 }
 function groundBelow(x, z, from) {
   const i = Math.round(x), k = Math.round(z);
-  for (let j = Math.round(from - 0.45); j >= -2; j--) if (solidCell(i, j, k)) return j + 0.5;
+  for (let j = Math.round(from - 0.45); j >= -9; j--) if (solidCell(i, j, k)) return j + 0.5;
   return -1.5;
 }
 function blocked(x, z) { const g = groundBelow(x, z, 8); return hits(x, g, z); }
@@ -754,7 +794,7 @@ function planTo(tx, tz, cb) {
   }
   waypoints.push([tx, tz]); target = waypoints.shift(); onArrive = cb; stuckT = 0; lastDist = Infinity;
 }
-function travel(L) { closeMenu(); planTo(L.door[0], L.door[1], () => openPlace(L)); }
+function travel(L) { closeMenu(); if (L.go) planTo(L.go[0], L.go[1], () => toast('⛏', 'LA CUEVA', 'Baja por las gradas', 'Camina hacia la izquierda: los escalones te llevan hasta la caverna.', '#78716c')); else planTo(L.door[0], L.door[1], () => openPlace(L)); }
 
 /* ---------------- INTERACCIÓN ---------------- */
 let near = null;
@@ -873,6 +913,18 @@ function updateGuards(dt, t) {
   king.body.position.y = Math.sin(t * 1.6) * 0.03;
   king.arm.rotation.z = dk < 9 ? 2.4 + Math.sin(t * 8) * 0.35 : 0.15;
 }
+function updateCave(dt, t) {
+  const p = player.position, inside = inCaveArea(p.x, p.z) && feet < -1;
+  caveK += ((inside ? 1 : 0) - caveK) * Math.min(1, dt * 3);
+  hemi.intensity = baseHemi * (1 - 0.6 * caveK); sun.intensity = baseSun * (1 - 0.8 * caveK);
+  caveLights.forEach((c, i) => { c.L.intensity = c.base * (0.85 + Math.sin(t * 9 + i * 2) * 0.1 + Math.sin(t * 23 + i) * 0.05); });
+  T.lava.offset.y = (t * 0.05) % 1;
+  if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
+  if (onGround && groundType() === 'lava') {
+    sfx('hurt'); p.set(-4.6, 0.5, 21.5); feet = 0.5; vy = 0;
+    toast('♨', '¡AY, LAVA!', 'Volviste a la entrada', 'La lava quema: rodéala para llegar al cofre.', '#ea580c');
+  }
+}
 let sleeping = false;
 function sleep() {
   if (sleeping) return; sleeping = true; sfx('open');
@@ -936,6 +988,7 @@ const skyKeys = [
 ];
 const cA = new THREE.Color(), cB = new THREE.Color();
 const mix = (a, b, k) => '#' + cA.set(a).lerp(cB.set(b), k).getHexString();
+let baseHemi = 1.05, baseSun = 1.7;
 function applySky(phase) {
   let i = 0; while (i < skyKeys.length - 2 && phase > skyKeys[i + 1].p) i++;
   const A = skyKeys[i], B = skyKeys[i + 1], k = Math.min(1, Math.max(0, (phase - A.p) / (B.p - A.p || 1)));
@@ -945,8 +998,8 @@ function applySky(phase) {
   scene.background = skyTex; scene.fog.color.set(mid);
   nightness = A.n + (B.n - A.n) * k;
   scene.fog.near = 60 - nightness * 35; scene.fog.far = 120 - nightness * 45;
-  hemi.intensity = A.hemi + (B.hemi - A.hemi) * k; hemi.color.set(mix('#fff4fa', '#9aa4ff', nightness)); hemi.groundColor.set(mix('#d8a7c0', '#3b2050', nightness));
-  sun.intensity = A.sun + (B.sun - A.sun) * k; sun.color.set(mix(A.sunC, B.sunC, k));
+  baseHemi = A.hemi + (B.hemi - A.hemi) * k; hemi.intensity = baseHemi * (1 - 0.6 * caveK); hemi.color.set(mix('#fff4fa', '#9aa4ff', nightness)); hemi.groundColor.set(mix('#d8a7c0', '#3b2050', nightness));
+  baseSun = A.sun + (B.sun - A.sun) * k; sun.intensity = baseSun * (1 - 0.8 * caveK); sun.color.set(mix(A.sunC, B.sunC, k));
   stars.visible = nightness > 0.05; stars.material.opacity = nightness; moon.visible = nightness > 0.3;
   lantern.intensity = nightness * 9;
   M.lamp.emissiveIntensity = 0.2 + nightness * 1.4; lampGlows.forEach(s => { s.visible = nightness > 0.2; s.material.opacity = nightness * 0.8; });
@@ -1042,7 +1095,7 @@ function updateMonsters(dt, t) {
     if (!panelOpen && d > 0.9 && m.fuse === 0) {
       const sp = info.speed * dt, nx = m.g.position.x + dx / d * sp, nz = m.g.position.z + dz / d * sp;
       const gy = groundBelow(nx, nz, m.y + 1.2);
-      const ok = (x, z) => Math.abs(groundBelow(x, z, m.y + 1.2) - m.y) <= 1.01 && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4));
+      const ok = (x, z) => !inCaveArea(x, z) && Math.abs(groundBelow(x, z, m.y + 1.2) - m.y) <= 1.01 && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4));
       if (ok(nx, nz)) { m.g.position.x = nx; m.g.position.z = nz; moving = true; }
       else if (ok(nx, m.g.position.z)) { m.g.position.x = nx; moving = true; }
       else if (ok(m.g.position.x, nz)) { m.g.position.z = nz; moving = true; }
@@ -1232,6 +1285,7 @@ function nearest() {
   for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
   if (feet < 3 && Math.hypot(p.x - BED[0], p.z - BED[1]) < 2.4) best = { kind: 'bed' };
   if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
+  if (best?.kind === 'loc' && best.L.id === 'cueva' && feet > -3) best = null;
   return best;
 }
 function interact() {
@@ -1456,6 +1510,17 @@ function panelCofre() {
     <div class="contact"><a class="btn big" href="${CV}" target="_blank" rel="noopener">Abrir CV <small>PDF</small></a><a class="btn" href="${CV}" download>Descargar <small>PDF</small></a></div>`);
 }
 let lidOpen = false;
+function panelCueva() {
+  caveLid.rotation.x = -1.1; caveLid.position.z = -0.25; caveLid.position.y = 0.85;
+  showPanel(`<p class="p-kicker">¡ENCONTRASTE EL COFRE SECRETO!</p><h2 id="panelTitle">Mi rincón gamer</h2>
+    <p class="lead">Esta arena nació de lo que más me gusta: los videojuegos y la música.</p>
+    <ul class="cave-list">
+      <li><b>Minecraft:</b> construir mundos bloque por bloque, como este portafolio y esta cueva.</li>
+      <li><b>Clash Royale:</b> estrategia, torres y cartas. De ahí salieron el castillo, las princesas y las cartas de personajes.</li>
+      <li><b>Música:</b> también es parte de mí; por eso hay un escenario en la arena.</li>
+    </ul>
+    <p>Gracias por explorar hasta aquí abajo. ¡Pocos llegan!</p>`);
+}
 
 /* ---------------- ENTRADA ---------------- */
 let started = false;
@@ -1550,7 +1615,7 @@ function update(dt, t) {
     if (!hits(nx, feet, p.z)) p.x = nx; else hitWall = true;
     if (!hits(p.x, feet, nz)) p.z = nz; else hitWall = true;
     // al caminar solo hacia un destino, salta escalones de un bloque
-    if (hitWall && autoWalk && onGround && !hits(p.x + mx * 0.45, feet + 1.05, p.z + mz * 0.45)) { vy = JUMP; onGround = false; }
+    if (hitWall && (autoWalk || (inCaveArea(p.x, p.z) && feet < 0.4)) && onGround && !hits(p.x + mx * 0.45, feet + 1.05, p.z + mz * 0.45)) { vy = JUMP; onGround = false; }
     const want = Math.atan2(mx, mz); let diff = want - player.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); player.rotation.y += diff * Math.min(1, dt * 14);
     moving = true;
   }
@@ -1567,7 +1632,7 @@ function update(dt, t) {
     else onGround = false;
   } else if (hits(p.x, ny, p.z)) { vy = 0; ny = feet; }
   feet = ny;
-  if (feet < -8) { p.set(0, 0.5, 18); feet = 0.5; vy = 0; toast('↺', 'DE VUELTA', 'Regresaste al inicio'); }
+  if (feet < -12) { p.set(0, 0.5, 18); feet = 0.5; vy = 0; toast('↺', 'DE VUELTA', 'Regresaste al inicio'); }
   const onStage = p.x > 7.5 && p.x < 14.5 && p.z > 10.5 && p.z < 15.5 && feet > 1.4;
   if (onStage && !wasOnStage) toast('♪', '¡SUBISTE AL ESCENARIO!', playing ? 'A bailar' : 'Pon música para bailar', playing ? '' : 'Pulsa E junto al tocadiscos o M para la música.', '#ec4899');
   wasOnStage = onStage;
@@ -1597,14 +1662,14 @@ function update(dt, t) {
   debris.forEach((d, i) => { d.userData.v.y -= 14 * dt; d.position.addScaledVector(d.userData.v, dt); if (d.position.y < 0.6) { d.position.y = 0.6; d.userData.v.multiplyScalar(0.5); } d.userData.life -= dt * 1.2; d.scale.setScalar(Math.max(0.01, d.userData.life)); if (d.userData.life <= 0) { scene.remove(d); debris.splice(i, 1); } });
 
   if (started && !selecting) checkHitos();
-  updateMonsters(dt, t); updateGuards(dt, t);
+  updateMonsters(dt, t); updateGuards(dt, t); updateCave(dt, t);
   updateAnimals(dt, t);
   if (started && !selecting && !panelOpen) { cycleT += dt; playTime += dt; }
   { const ph = (cycleT % CYCLE) / CYCLE; if ((skyT += dt) > 0.2 || !started) { skyT = 0; applySky(ph); }
     const shouldNight = ph > 0.63 && ph < 0.965; if (started && shouldNight !== night) setNight(shouldNight); }
   updateAmbient(dt, t); if (Math.floor(t * 15) % 2 === 0) swayGrass(t);
   updateNpc(dt, t); updateTutorial();
-  roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < r.y);
+  roofZones.forEach(r => { const inside = p.x > r.inX[0] && p.x < r.inX[1] && p.z > r.inZ[0] && p.z < r.inZ[1] && (r.always || feet < (r.feetBelow ?? r.y));
     r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
     if (r === roofZones[3]) princesses.forEach(pr => pr.g.visible = !inside);
@@ -1620,7 +1685,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
@@ -1635,7 +1700,7 @@ function update(dt, t) {
   const lp = player.position;
   lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15;
     const near = Math.hypot(lp.x - L.at[0], lp.z - L.at[1]) < (L.id === 'castillo' ? 9 : 4.5); // de cerca ya sale el botón "Entrar"
-    L.sprite.visible = !selecting && !near && !(L.id === 'castillo' && feet > 1.2); });
+    L.sprite.visible = !selecting && !near && !(L.id === 'castillo' && feet > 1.2) && !(L.id === 'cueva' && feet < -0.6); });
   bedSign.visible = !selecting && feet < 3 && Math.hypot(lp.x - BED[0], lp.z - BED[1]) < 5;
   hitos.forEach(h => h.sprite.visible = !selecting && feet > 1.2 && Math.hypot(lp.x - h.sprite.position.x, lp.z - h.sprite.position.z, (feet + 2) - h.sprite.position.y) < 3.6);
   lid.rotation.x += ((lidOpen ? -1.1 : 0) - lid.rotation.x) * Math.min(1, dt * 6); lid.position.z = lidOpen ? -0.2 : 0; lid.position.y = lidOpen ? 0.95 : 0.72;
@@ -1644,9 +1709,10 @@ function update(dt, t) {
 
   // cámara
   if (started && !selecting) {
-    const off = new THREE.Vector3(Math.sin(camYaw) * 12.5 * (1.15 - camPitch * 0.15), 21 * camPitch, Math.cos(camYaw) * 12.5 * (1.15 - camPitch * 0.15)).multiplyScalar(zoom);
+    const hz = 12.5 * (1.15 - camPitch * 0.15) * (1 - 0.6 * caveK); // en la cueva la cámara mira más desde arriba
+    const off = new THREE.Vector3(Math.sin(camYaw) * hz, 21 * camPitch, Math.cos(camYaw) * hz).multiplyScalar(zoom);
     camPos.lerp(new THREE.Vector3(p.x, p.y, p.z).add(off), Math.min(1, dt * 4));
-    camLook.lerp(new THREE.Vector3(p.x - Math.sin(camYaw) * 2.5 * camPitch, 1, p.z - Math.cos(camYaw) * 2.5 * camPitch), Math.min(1, dt * 5));
+    camLook.lerp(new THREE.Vector3(p.x - Math.sin(camYaw) * 2.5 * camPitch * (1 - caveK), 1 + (p.y - 0.5) * caveK, p.z - Math.cos(camYaw) * 2.5 * camPitch * (1 - caveK)), Math.min(1, dt * 5));
   } else if (selecting) {
     const sx = innerWidth > 700 ? -1.5 : 0, sy = innerWidth > 700 ? 0.9 : -0.4; camPos.lerp(new THREE.Vector3(p.x + sx, p.y + 2.2, p.z + 8.5), Math.min(1, dt * 5)); camLook.lerp(new THREE.Vector3(p.x + sx, p.y + sy, p.z), Math.min(1, dt * 5));
   } else {
