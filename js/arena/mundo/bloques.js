@@ -16,7 +16,9 @@ const roofZones = [
   { x1: -17, x2: -11, z1: -4, z2: 4, y: -1, feetBelow: -0.6, inX: [-18, -10.5], inZ: [-4.6, 8.6], cave: true, groups: {} },
   { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} },
   // túnel bajo la casa: al entrar se corta todo lo que está encima (también la casa) para ver el pasadizo por dentro
-  { x1: -12, x2: -9, z1: 5, z2: 17, y: -2, feetBelow: -0.6, inX: [-12.6, -8.4], inZ: [2.5, 19.5], tunnel: true, priority: true, groups: {} }
+  { x1: -12, x2: -9, z1: 5, z2: 17, y: -2, feetBelow: -0.6, inX: [-12.6, -8.4], inZ: [2.5, 19.5], tunnel: true, priority: true, groups: {} },
+  // puentes: al nadar por debajo se ocultan el piso y las barandas que están sobre el agua
+  ...bridges.map(([a, b]) => ({ x1: a - 1, x2: b + 1, z1: -1, z2: 0, y: 0, feetBelow: -0.4, inX: [a - 2.2, b + 2.2], inZ: [-1.7, 0.7], priority: true, groups: {} }))
 ];
 function buildBlocks() {
   const byType = {};

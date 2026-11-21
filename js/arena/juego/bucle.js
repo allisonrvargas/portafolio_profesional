@@ -51,6 +51,8 @@ function update(dt, t) {
   }
   rig.rotation.x = swimming ? -1.35 : 0; if (swimming) rig.position.y = 0.35; else if (wasSwimming) rig.position.y = 0;
   wasSwimming = swimming;
+  // al caer al río desde la orilla, te acomoda dentro del cauce para que no quedes colgada del borde
+  if (inRiverChannel(p.x, feet, p.z)) p.z = Math.max(-1.15, Math.min(0.15, p.z));
   // salto y gravedad
   coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
   if (jumpReq > 0) {
