@@ -4,8 +4,11 @@
 // Agua animada
 const waterTex = texture((g, r) => speckle(g, r, ['#9fd8ff', '#b4e2ff', '#8ccdf8', '#c4eaff']), 21);
 waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping; waterTex.repeat.set(36, 2);
-const water = new THREE.Mesh(new THREE.BoxGeometry(32.6, 1.15, 2), new THREE.MeshLambertMaterial({ map: waterTex, transparent: true, opacity: 0.72, depthWrite: false }));
-water.position.set(1.2, -1.02, -0.5); water.receiveShadow = true; scene.add(water);
+const water = new THREE.Mesh(new THREE.BoxGeometry(28, 1.15, 2), new THREE.MeshLambertMaterial({ map: waterTex, transparent: true, opacity: 0.72, depthWrite: false }));
+water.position.set(3.5, -1.02, -0.5); water.receiveShadow = true; scene.add(water);
+// tramo del río que pasa encima de la cueva: se oculta cuando estás abajo para no tapar la caverna
+const waterOverCave = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.15, 2), water.material);
+waterOverCave.position.set(-12.8, -1.02, -0.5); scene.add(waterOverCave);
 
 // Etiquetas flotantes
 function label(text, color = '#db2777') {

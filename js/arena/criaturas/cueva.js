@@ -88,7 +88,7 @@ let caveK = 0, caveFound = false;
 function updateCave(dt, t) {
   const p = player.position, inside = inCaveArea(p.x, p.z) && feet < -1;
   caveK += ((inside ? 1 : 0) - caveK) * Math.min(1, dt * 3);
-  updateBats(dt, t); water.material.opacity = 0.72 - 0.4 * caveK; // el río se ve transparente desde la cueva
+  updateBats(dt, t); water.material.opacity = 0.72 - 0.4 * caveK; waterOverCave.visible = caveK < 0.5; // el río se ve transparente desde la cueva
   hemi.intensity = baseHemi * (1 - 0.6 * caveK); sun.intensity = baseSun * (1 - 0.8 * caveK);
   caveLights.forEach((c, i) => { c.L.intensity = c.base * (0.85 + Math.sin(t * 9 + i * 2) * 0.1 + Math.sin(t * 23 + i) * 0.05); });
   T.lava.offset.y = (t * 0.05) % 1;

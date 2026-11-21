@@ -40,7 +40,7 @@ function update(dt, t) {
     moving = true;
   }
   // en el río: nadas acostado y la corriente te arrastra hacia el hoyo (pasando debajo de los puentes)
-  swimming = p.z > -1.65 && p.z < 0.65 && feet < -0.6 && feet > -2.2 && p.x > -15.7 && p.x < 15.8;
+  swimming = p.z > -1.65 && p.z < 0.65 && feet < -0.6 && feet > -2.2 && p.x > -17.4 && p.x < 15.8;
   PH = swimming ? 0.8 : 1.7;
   if (swimming) {
     const cx = p.x - 3.4 * dt; if (!hits(cx, feet, p.z)) p.x = cx;                      // corriente hacia el oeste
