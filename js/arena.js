@@ -1282,6 +1282,13 @@ function choosePet(a) {
   pet = a; a.state = 'mascota'; sfx('win'); award('pet', 60, 'Mascota nueva'); saveProgress();
   toast('♥', 'NUEVA MASCOTA', a.n, 'Ahora te acompaña por toda la arena.', '#ec4899');
 }
+// ¿puede pisar aquí un animal que te sigue? Sube o baja como tú (máx. 1 bloque hacia arriba) y su cuerpo no queda dentro de un bloque
+function followOk(x, z, y) {
+  const gy = groundBelow(x, z, y + 1.3);
+  if (gy - y > 1.05) return false;
+  const i = Math.round(x), k = Math.round(z), j = Math.round(gy + 0.5);
+  return !solidCell(i, j, k) && !solidCell(i, j + 1, k) && !(z > -1.5 && z < 0.5 && !bridges.some(([a, b]) => x > a - 0.5 && x < b + 0.5));
+}
 // lugar libre junto a la jugadora (mismo nivel de suelo, sin muros)
 function spotNear(px, pz) {
   for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1], [-1, 1], [1, 1], [-1, -1], [1, -1], [-0.6, 0], [0.6, 0], [0, 0]]) {
@@ -1297,6 +1304,8 @@ function updateAnimals(dt, t) {
       const idx = leashed.indexOf(a), lead = a.state === 'mascota' ? null : idx > 0 ? leashed[idx - 1].g.position : null;
       const fx = lead ? lead.x : p.x, fz = lead ? lead.z : p.z, d = Math.hypot(fx - a.g.position.x, fz - a.g.position.z);
       if (d > (a.state === 'mascota' ? 1.4 : 1.6)) { tx = fx; tz = fz; speed = Math.min(9, d * 2.4); }
+      if (!lead && feet - a.y > 0.5 && d < 5) { // tú estás más arriba: busca un lugar libre a tu nivel y sube contigo
+        const [sx, sz] = spotNear(p.x, p.z); if (Math.hypot(sx - a.g.position.x, sz - a.g.position.z) > 0.15) { tx = sx; tz = sz; speed = 3; } }
       if (d > 6) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; }
       if (a.state === 'lazo' && inCorral(a.g.position.x, a.g.position.z, 0.2)) { penAnimal(a); return; }
     } else {
@@ -1314,16 +1323,19 @@ function updateAnimals(dt, t) {
     if (tx !== null) {
       const dx = tx - a.g.position.x, dz = tz - a.g.position.z, d = Math.hypot(dx, dz) || 1, st = Math.min(d, speed * dt);
       const nx = a.g.position.x + dx / d * st, nz = a.g.position.z + dz / d * st;
-      const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => Math.abs(groundBelow(x, z, a.y + 0.6) - a.y) <= 0.6; // con lazo o mascota: no se suben a muros ni faroles
+      const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => followOk(x, z, a.y); // con lazo o mascota: sube 1 bloque contigo, sin atravesar nada
       if (free(nx, nz)) { a.g.position.x = nx; a.g.position.z = nz; moving = true; a.stuck = 0; } else a.goal = null;
       if (!moving && (a.state === 'lazo' || a.state === 'mascota') && (a.stuck = (a.stuck || 0) + dt) > 0.7) { // trabado (baranda, río, muro): aparece a tu lado
         const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; a.stuck = 0; dust(sx, sy + 0.3, sz, 6, 0xffffff); }
       const want = Math.atan2(dx, dz); let df = want - a.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); a.g.rotation.y += df * Math.min(1, dt * 8);
     }
-    const climb = a.state === 'libre' ? 1.2 : 0.6;
-    const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + climb); a.y += (gy - a.y) * Math.min(1, dt * 12);
-    if ((a.state === 'lazo' || a.state === 'mascota') && a.y > feet + 0.6) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; } // si quedó en lo alto, baja junto a ti
-    const hop = a.id === 'conejo' && moving ? Math.abs(Math.sin(a.t * 9)) * 0.25 : 0;
+    const climb = a.state === 'libre' ? 1.2 : 1.3;
+    const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + climb);
+    if (gy > a.y + 0.3) a.jumpT = 0.35;                                     // brinca para subir
+    a.y += (gy - a.y) * Math.min(1, dt * (gy > a.y ? 9 : 12));
+    a.jumpT = Math.max(0, (a.jumpT || 0) - dt);
+    if ((a.state === 'lazo' || a.state === 'mascota') && a.y > feet + 2.2) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; } // si quedó en lo alto, baja junto a ti
+    const hop = (a.id === 'conejo' && moving ? Math.abs(Math.sin(a.t * 9)) * 0.25 : 0) + Math.sin((a.jumpT || 0) / 0.35 * Math.PI) * 0.45;
     a.g.position.y = a.y + hop;
     const sw = moving ? Math.sin(a.t * 10) * 0.6 : 0; a.legs.forEach((l, k) => l.rotation.x = sw * (k % 2 ? 1 : -1) * (k > 1 ? -1 : 1));
     a.headG.rotation.x = !moving && a.state !== 'lazo' ? Math.max(0, Math.sin(a.t * 0.8)) * 0.5 : 0; // come pasto
