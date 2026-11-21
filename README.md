@@ -72,22 +72,46 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 
 ## Estructura
 
+El código está dividido por temas para que sea fácil encontrar cada parte.
+
 ```
 portafolio_profesional/
-├── index.html          # La Arena 3D
-├── clasico.html        # Modo clásico
+├── index.html                  # La Arena 3D
+├── clasico.html                # Modo clásico
 ├── css/
-│   ├── arena.css       # Estilos de la arena (HUD, paneles, menú)
-│   └── styles.css      # Estilos del modo clásico
+│   ├── arena/                  # Estilos de la arena, por partes
+│   │   ├── base.css            # Colores, letras, botones y pantalla de carga
+│   │   ├── inicio.css          # Pantalla de inicio
+│   │   ├── hud.css             # Barra superior, misiones, minimapa e inventario
+│   │   ├── paneles.css         # Paneles de cada lugar y avisos
+│   │   ├── responsive.css      # Ajustes para celular y tablet
+│   │   ├── seleccion.css       # Cartas de personaje
+│   │   ├── linea-tiempo.css    # Línea de tiempo del castillo
+│   │   ├── noche-volumen.css   # Modo noche y volumen
+│   │   ├── resumen.css         # Resumen, tutorial, final y granja
+│   │   └── niveles.css         # Niveles y experiencia
+│   └── clasico.css             # Estilos del modo clásico
 ├── js/
-│   ├── arena.js        # Mundo 3D, personaje, misiones, habilidades y secciones
-│   └── main.js         # Modo clásico
+│   ├── arena/
+│   │   ├── main.js             # Punto de entrada: carga Three.js y los demás archivos en orden
+│   │   ├── datos/              # Contenido del portafolio (proyectos, apps, habilidades, historia)
+│   │   ├── motor/              # Sonido, utilidades, render 3D y silueta
+│   │   ├── mundo/              # Texturas, terreno, edificios, cuevas, cielo, agua y decoración
+│   │   ├── personajes/         # Tu personaje, cartas, selección y la guía
+│   │   ├── criaturas/          # Animales de la granja, monstruos, ajolotes y murciélagos
+│   │   ├── castillo/           # Línea de tiempo, camas, princesas y rey
+│   │   ├── escenario/          # DJ del escenario
+│   │   ├── interfaz/           # HUD, minimapa, paneles, tutorial y pantalla final
+│   │   └── juego/              # Lugares, habilidades, movimiento, controles, bucle, progreso y arranque
+│   └── clasico.js              # Modo clásico
 ├── img/
 │   └── allison.jpg
 ├── cv/
 │   └── CV_Allison_Rocio_Vargas_Mejia.pdf
 └── README.md
 ```
+
+Los archivos de `js/arena/` comparten variables entre sí, por eso `main.js` los carga en un orden fijo: primero los datos y el motor, luego el mundo y los personajes, y al final el bucle del juego y el arranque.
 
 ## Cómo verlo en local
 
@@ -101,7 +125,7 @@ La arena usa módulos de JavaScript, así que necesita un servidor local:
 
 ## Cómo editar el contenido
 
-Los datos están al inicio de `js/arena.js`:
+Los datos están en `js/arena/datos/contenido.js` (las canciones, en `js/arena/motor/sonido.js`):
 
 - `proyectos`: los proyectos de la torre.
 - `aplicaciones`: las demos de la torre arcade.

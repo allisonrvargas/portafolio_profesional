@@ -1,0 +1,13 @@
+/* Pantalla de inicio. */
+/* inicio */
+.intro{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at center,rgba(255,240,247,.55),rgba(255,228,241,.15) 70%);transition:opacity .6s}
+.intro.out{opacity:0;pointer-events:none}
+.intro-card{max-width:620px;text-align:center;background:rgba(255,250,252,.88);backdrop-filter:blur(6px);padding:34px 30px 28px;
+  box-shadow:0 0 0 4px #fff,0 0 0 8px var(--line),0 14px 0 8px rgba(219,39,119,.15)}
+.kicker{font-family:var(--fun);font-size:15px;letter-spacing:.08em;color:var(--gold)}
+.intro h1{font-family:var(--script);font-weight:400;font-size:clamp(62px,11vw,104px);line-height:.95;color:var(--pink-2);text-shadow:3px 3px 0 #fff,0 0 24px rgba(236,72,153,.35);margin:6px 0 12px}
+.intro h1 span{color:var(--pink);padding-left:.5em}
+.intro-sub{color:var(--ink-2);font-size:16px;line-height:1.6;max-width:500px;margin:0 auto 22px}
+.intro-btns{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.classic-link{font-family:var(--fun);font-size:17px;color:var(--rose)}
+.keys{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin-top:18px;font-size:13px;color:var(--muted)}

@@ -1,0 +1,36 @@
+/* Selección de carta de personaje. */
+/* selección de personaje */
+.select{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:flex-start;padding:24px;pointer-events:none}
+.select-card{pointer-events:auto;width:min(600px,100%);max-height:calc(100vh - 40px);overflow:auto;background:rgba(255,250,252,.93);backdrop-filter:blur(6px);padding:22px 22px 24px;box-shadow:0 0 0 4px #fff,0 0 0 8px var(--line),0 12px 0 8px rgba(219,39,119,.15);animation:rise .4s steps(4)}
+.select-card h2{font-family:var(--script);font-weight:400;font-size:62px;line-height:1;color:var(--pink-2);text-shadow:3px 3px 0 #fff;margin:0 0 8px}
+.char-info b{font-family:var(--fun);font-weight:400;font-size:24px;color:var(--rose)}
+.char-info p{font-size:14px;color:var(--ink-2);min-height:42px;margin-bottom:12px}
+.cards-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px 10px;margin:14px 0 18px}
+.pcard{position:relative;aspect-ratio:3/4.2;border:0;cursor:pointer;padding:18px 4px 8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;font:inherit;color:#fff;
+  background:linear-gradient(170deg,var(--c1),var(--c2));box-shadow:inset 0 0 0 3px rgba(255,255,255,.55),0 0 0 3px #7a3d63,0 5px 0 3px rgba(0,0,0,.18);transition:transform .12s}
+.pcard:hover{transform:translateY(-4px)}
+.pcard.on{transform:translateY(-8px) scale(1.04);box-shadow:inset 0 0 0 3px #fff,0 0 0 4px #fcd34d,0 8px 0 4px rgba(217,119,6,.35)}
+.pcard:focus-visible{outline:3px dashed var(--pink);outline-offset:5px}
+.pcard .cost{position:absolute;top:-10px;left:-8px;width:30px;height:30px;display:grid;place-items:center;font-family:var(--fun);font-size:17px;background:#ec4899;clip-path:polygon(50% 0,100% 30%,100% 75%,50% 100%,0 75%,0 30%);box-shadow:inset 0 0 0 3px #fff}
+.pcard .rar{position:absolute;top:6px;right:6px;font-size:9px;font-weight:700;letter-spacing:.04em;background:rgba(0,0,0,.25);padding:2px 5px}
+.pcard .art{font-family:var(--fun);font-size:30px;flex:1;display:grid;place-items:center;text-shadow:2px 2px 0 rgba(0,0,0,.25)}
+.pcard b{font-family:var(--fun);font-weight:400;font-size:14px;line-height:1.05;text-align:center;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
+.pcard small{font-size:10px;font-weight:600;opacity:.95;text-align:center}
+.tool{display:inline-flex;align-items:center;gap:6px}
+.tool i{width:14px;height:14px;display:inline-block;background:#b07a55;box-shadow:inset -3px -3px 0 rgba(0,0,0,.2)}
+@media (max-width:620px){
+  .select{padding:10px}
+  .cards-row{grid-template-columns:repeat(5,1fr);gap:10px 6px}
+  .pcard .art{font-size:20px}.pcard b{font-size:11px}.pcard small{display:none}
+  .select-card h2{font-size:46px}
+}
+.pcard .art img{width:100%;height:100%;object-fit:contain;image-rendering:auto;filter:drop-shadow(2px 3px 0 rgba(0,0,0,.25))}
+.pcard .art{width:100%;min-height:0}
+.pcard{justify-content:flex-start;padding:16px 0 0;overflow:hidden}
+.pcard .art{flex:1 1 auto;height:0;width:100%;padding:0 4px}
+.pcard b{width:100%;background:rgba(74,18,56,.55);padding:4px 3px 1px;font-size:13px}
+.pcard small{width:100%;background:rgba(74,18,56,.55);padding:0 3px 5px}
+.pcard{overflow:visible}
+.pcard .art{overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
+.pcard .art img{height:100%;width:auto;max-width:100%}
+.pcard .cost{z-index:2}

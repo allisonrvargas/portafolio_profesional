@@ -1,0 +1,36 @@
+/* Barra superior, misiones, minimapa, inventario y botones del juego. */
+/* HUD */
+.hud{position:fixed;inset:0;z-index:10;pointer-events:none}
+.hud>*{pointer-events:auto}
+.hud-left{position:absolute;top:14px;left:14px;display:grid;gap:12px;max-width:270px}
+.player-chip{display:flex;align-items:center;gap:10px;background:rgba(255,250,252,.92);padding:8px 14px 8px 8px;box-shadow:0 0 0 3px var(--line),0 5px 0 3px rgba(219,39,119,.15)}
+.player-chip img{width:44px;height:44px;object-fit:cover;object-position:50% 15%;box-shadow:0 0 0 3px var(--pink)}
+.player-chip b{font-family:var(--fun);font-size:20px;display:block;line-height:1}
+.player-chip small{font-size:12px;color:var(--ink-2)}
+.quests{background:rgba(255,250,252,.9);padding:12px 14px;box-shadow:0 0 0 3px var(--line)}
+.q-title{font-family:var(--fun);font-size:17px;color:var(--gold);margin-bottom:6px}
+.quests ul{list-style:none;display:grid;gap:4px}
+.quests li{font-size:13px;color:var(--ink-2);display:flex;gap:8px;align-items:center;cursor:pointer}
+.quests li:hover{color:var(--rose)}
+.quests li:before{content:"";width:12px;height:12px;flex:none;background:#fff;box-shadow:0 0 0 2px var(--line)}
+.quests li.done{color:var(--muted);text-decoration:line-through}
+.quests li.done:before{background:var(--pink);box-shadow:0 0 0 2px var(--pink),inset 0 0 0 2px #fff}
+.hud-right{position:absolute;top:14px;right:14px;display:grid;justify-items:end;gap:12px}
+.hud-btns{display:flex;gap:12px}
+.minimap{width:150px;height:210px;background:#fff;box-shadow:0 0 0 3px var(--line),0 5px 0 3px rgba(219,39,119,.15);cursor:pointer;image-rendering:pixelated}
+.menu{position:absolute;top:60px;right:0;width:230px;background:#fff;padding:14px;box-shadow:0 0 0 3px var(--line),0 6px 0 3px rgba(219,39,119,.15);z-index:2}
+.menu #travelList{display:grid;gap:6px}
+.menu #travelList button{font-family:var(--fun);font-size:17px;text-align:left;background:var(--softer);border:0;padding:8px 10px;cursor:pointer;color:var(--ink);display:flex;gap:8px;align-items:center}
+.menu #travelList button:hover{background:var(--soft)}
+.menu #travelList i{width:12px;height:12px;flex:none}
+.prompt{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translate(-50%,-4px)}}
+.prompt .btn{font-size:20px;flex-direction:row;gap:10px}
+.prompt kbd{font-size:15px}
+.hotbar-wrap{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);max-width:calc(100% - 24px);text-align:center}
+.hotbar-title{font-family:var(--fun);font-size:15px;color:var(--rose);margin-bottom:6px;text-shadow:0 0 6px #fff,0 0 10px #fff}
+.hotbar{display:flex;gap:4px;background:rgba(255,250,252,.88);padding:6px;overflow-x:auto;box-shadow:0 0 0 3px var(--line)}
+.slot{width:44px;height:44px;flex:none;border:0;background:#f3dbe7;cursor:pointer;display:grid;place-items:center;font-family:var(--fun);font-size:12px;color:#c79bb5;box-shadow:inset 3px 3px 0 #e6c3d5,inset -3px -3px 0 #fff}
+.slot.got{color:#fff;background:var(--c);box-shadow:inset 3px 3px 0 rgba(255,255,255,.35),inset -3px -3px 0 rgba(0,0,0,.18);animation:pop .4s steps(3)}
+.slot:focus-visible{outline:3px dashed var(--pink)}
+@keyframes pop{40%{transform:scale(1.25)}}

@@ -1,0 +1,23 @@
+/* Nivel, barra de experiencia y aviso al subir de nivel. */
+/* ---------- niveles ---------- */
+.lvl-pic{position:relative;flex:none}
+.lvl-crown{position:absolute;left:-8px;bottom:-10px;width:30px;height:26px;display:grid;place-items:center;background:#fbbf24;color:#7c2d12;font-family:var(--fun);font-size:15px;line-height:1;
+  clip-path:polygon(0 30%,22% 55%,50% 0,78% 55%,100% 30%,92% 100%,8% 100%);box-shadow:inset 0 -4px 0 #d97706;padding-top:8px}
+.lvl-info{min-width:170px}
+.xp-row{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:11px;color:var(--ink-2);font-weight:700}
+.xp-row #lvlName{color:#b45309}
+.xp-bar{height:8px;margin-top:3px;background:#3f2a1d;box-shadow:0 0 0 2px #1f150e;position:relative;overflow:hidden}
+.xp-bar i{display:block;height:100%;width:0;background:linear-gradient(#a3e635,#65a30d);transition:width .6s ease;box-shadow:inset 0 2px 0 rgba(255,255,255,.35)}
+.player-chip.xp-glow{animation:xpGlow .7s ease}
+@keyframes xpGlow{40%{box-shadow:0 0 0 3px #a3e635,0 0 18px 4px rgba(163,230,53,.7)}}
+.xp-pops{position:relative;height:0}
+.xp-pop{position:absolute;left:8px;top:-4px;white-space:nowrap;font-family:var(--fun);font-size:15px;color:#3f6212;background:#ecfccb;padding:3px 10px;box-shadow:0 0 0 2px #84cc16;animation:xpPop 1.9s ease forwards;z-index:5}
+@keyframes xpPop{0%{opacity:0;transform:translateY(6px)}12%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+.lvl-up{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:60;display:grid;justify-items:center;gap:2px;padding:14px 34px 16px;background:#fffbeb;box-shadow:0 0 0 4px #fbbf24,0 8px 0 4px rgba(217,119,6,.35);pointer-events:none}
+.lvl-up small{font-family:var(--fun);letter-spacing:.08em;color:#b45309;font-size:15px}
+.lvl-up b{font-family:var(--fun);font-size:52px;line-height:1;color:#7c2d12;background:#fbbf24;width:78px;height:66px;display:grid;place-items:center;padding-top:16px;
+  clip-path:polygon(0 30%,22% 55%,50% 0,78% 55%,100% 30%,92% 100%,8% 100%);box-shadow:inset 0 -8px 0 #d97706}
+.lvl-up span{font-family:var(--fun);font-size:22px;color:var(--ink)}
+.lvl-up.show{animation:lvlUp 2.6s ease forwards}
+@keyframes lvlUp{0%{opacity:0;transform:translateX(-50%) scale(.6)}12%{opacity:1;transform:translateX(-50%) scale(1.08)}20%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}
+@media (max-width:700px){.lvl-info{min-width:120px}.xp-row #xpText{display:none}}
