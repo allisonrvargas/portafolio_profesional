@@ -1282,6 +1282,13 @@ function choosePet(a) {
   pet = a; a.state = 'mascota'; sfx('win'); award('pet', 60, 'Mascota nueva'); saveProgress();
   toast('♥', 'NUEVA MASCOTA', a.n, 'Ahora te acompaña por toda la arena.', '#ec4899');
 }
+// lugar libre junto a la jugadora (mismo nivel de suelo, sin muros)
+function spotNear(px, pz) {
+  for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1], [-1, 1], [1, 1], [-1, -1], [1, -1], [-0.6, 0], [0.6, 0], [0, 0]]) {
+    const x = px + dx, z = pz + dz; if (Math.abs(groundBelow(x, z, feet + 0.6) - feet) < 0.3) return [x, z, feet];
+  }
+  return [px, pz, feet];
+}
 function updateAnimals(dt, t) {
   const p = player.position; const leashed = animals.filter(a => a.state === 'lazo');
   animals.forEach(a => {
@@ -1290,7 +1297,7 @@ function updateAnimals(dt, t) {
       const idx = leashed.indexOf(a), lead = a.state === 'mascota' ? null : idx > 0 ? leashed[idx - 1].g.position : null;
       const fx = lead ? lead.x : p.x, fz = lead ? lead.z : p.z, d = Math.hypot(fx - a.g.position.x, fz - a.g.position.z);
       if (d > (a.state === 'mascota' ? 1.4 : 1.6)) { tx = fx; tz = fz; speed = Math.min(9, d * 2.4); }
-      if (d > 8) { a.g.position.set(fx - 1, groundBelow(fx - 1, fz, feet + 1), fz); a.y = a.g.position.y; }
+      if (d > 6) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; }
       if (a.state === 'lazo' && inCorral(a.g.position.x, a.g.position.z, 0.2)) { penAnimal(a); return; }
     } else {
       if (a.state === 'libre' && a.y > 1.6) { const [sx, sz] = spawnAnimal[a.i]; a.g.position.set(sx, groundBelow(sx, sz, 1.2), sz); a.y = a.g.position.y; a.goal = null; }
@@ -1307,11 +1314,13 @@ function updateAnimals(dt, t) {
     if (tx !== null) {
       const dx = tx - a.g.position.x, dz = tz - a.g.position.z, d = Math.hypot(dx, dz) || 1, st = Math.min(d, speed * dt);
       const nx = a.g.position.x + dx / d * st, nz = a.g.position.z + dz / d * st;
-      const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => animalOk(x, z, a.y) || a.state !== 'libre';
+      const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => Math.abs(groundBelow(x, z, a.y + 0.6) - a.y) <= 0.6; // con lazo o mascota: no se suben a muros ni faroles
       if (free(nx, nz)) { a.g.position.x = nx; a.g.position.z = nz; moving = true; } else a.goal = null;
       const want = Math.atan2(dx, dz); let df = want - a.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); a.g.rotation.y += df * Math.min(1, dt * 8);
     }
-    const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + 1.2); a.y += (gy - a.y) * Math.min(1, dt * 12);
+    const climb = a.state === 'libre' ? 1.2 : 0.6;
+    const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + climb); a.y += (gy - a.y) * Math.min(1, dt * 12);
+    if ((a.state === 'lazo' || a.state === 'mascota') && a.y > feet + 0.6) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; } // si quedó en lo alto, baja junto a ti
     const hop = a.id === 'conejo' && moving ? Math.abs(Math.sin(a.t * 9)) * 0.25 : 0;
     a.g.position.y = a.y + hop;
     const sw = moving ? Math.sin(a.t * 10) * 0.6 : 0; a.legs.forEach((l, k) => l.rotation.x = sw * (k % 2 ? 1 : -1) * (k > 1 ? -1 : 1));
