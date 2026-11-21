@@ -12,6 +12,7 @@ function nearest() {
     if (feet < -3 && dbed < 2) return { kind: 'bed', where: 'cave' };
     if (feet < -3 && da < 2.2 && da <= dc) return { kind: 'axo', a: axo };
     if (feet < -3 && dc < 2.4) return { kind: 'loc', L: cv };
+    const ob = feet < -3 && nearObra(p); if (ob) return { kind: 'obra', g: ob };
     return null;
   }
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
@@ -26,6 +27,7 @@ function nearest() {
 function interact() {
   if (!near || panelOpen) return;
   if (near.kind === 'kart') return enterKart();
+  if (near.kind === 'obra') return verObra(near.g);
   if (near.kind === 'kartExit') return leaveKart();
   if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(near.where); else if (near.kind === 'axo') greetAxolotl(near.a); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }

@@ -131,7 +131,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'kart' ? 'Subir al carrito' : near.kind === 'kartExit' ? 'Bajar del carrito' : near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'kart' ? 'Subir al carrito' : near.kind === 'obra' ? 'Ver la obra: ' + near.g.o.t : near.kind === 'kartExit' ? 'Bajar del carrito' : near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
@@ -146,7 +146,7 @@ function update(dt, t) {
   const lp = player.position;
   lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15;
     const near = Math.hypot(lp.x - L.at[0], lp.z - L.at[1]) < (L.id === 'castillo' ? 9 : 4.5); // de cerca ya sale el botón "Entrar"
-    L.sprite.visible = !selecting && !near && !(L.id === 'castillo' && feet > 1.2) && !(L.id === 'cueva' && feet < -0.6); });
+    L.sprite.visible = !selecting && !near && feet > -1 && !(L.id === 'castillo' && feet > 1.2) && !(L.id === 'cueva' && feet < -0.6); });
   bedSign.visible = !selecting && feet < 3 && Math.hypot(lp.x - BED[0], lp.z - BED[1]) < 5;
   hitos.forEach(h => h.sprite.visible = !selecting && feet > 1.2 && Math.hypot(lp.x - h.sprite.position.x, lp.z - h.sprite.position.z, (feet + 2) - h.sprite.position.y) < 3.6);
   lid.rotation.x += ((lidOpen ? -1.1 : 0) - lid.rotation.x) * Math.min(1, dt * 6); lid.position.z = lidOpen ? -0.2 : 0; lid.position.y = lidOpen ? 0.95 : 0.72;

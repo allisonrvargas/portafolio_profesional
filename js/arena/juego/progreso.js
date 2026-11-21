@@ -10,7 +10,7 @@ const niveles = [
   { xp: 800, n: 'Granjera' }, { xp: 1080, n: 'Arquera' }, { xp: 1400, n: 'Hechicera' }, { xp: 1720, n: 'Campeona' }, { xp: 2000, n: 'Leyenda de la arena' }
 ];
 const xpKeys = new Set(progress.xpKeys || []); let xp = 0; var xpReady = true;
-const xpValue = k => k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, axoBlue: 60, sleep: 30 })[k] || 0;
+const xpValue = k => k.startsWith('obra:') ? 20 : k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, axoBlue: 60, sleep: 30 })[k] || 0;
 const levelOf = v => { let l = 0; while (l < niveles.length - 1 && v >= niveles[l + 1].xp) l++; return l; };
 function renderLevel() {
   const l = levelOf(xp), cur = niveles[l], next = niveles[l + 1];

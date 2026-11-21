@@ -29,6 +29,7 @@ const archivos = [
   'castillo/camas.js',
   'castillo/guardianes.js',
   'escenario/dj.js',
+  'mundo/galeria.js',
   'motor/silueta.js',
   'mundo/cielo.js',
   'criaturas/monstruos.js',
