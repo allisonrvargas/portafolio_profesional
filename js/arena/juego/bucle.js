@@ -75,7 +75,7 @@ function update(dt, t) {
   if (onStage && !wasOnStage) toast('♪', '¡SUBISTE AL ESCENARIO!', playing ? 'A bailar' : 'Pon música para bailar', playing ? '' : 'Pulsa E junto al tocadiscos o M para la música.', '#ec4899');
   wasOnStage = onStage;
   walkT += dt * (moving ? (keys.shift ? 15 : 11) : 0);
-  if (moving && onGround && Math.floor(walkT / Math.PI) !== lastStep) { lastStep = Math.floor(walkT / Math.PI); footstep(); if (lastStep % 2 === 0) { const g = groundType(); if (dustColor[g]) dust(p.x, feet, p.z, 2, dustColor[g]); } }
+  if (moving && onGround && !driving && Math.floor(walkT / Math.PI) !== lastStep) { lastStep = Math.floor(walkT / Math.PI); footstep(); if (lastStep % 2 === 0) { const g = groundType(); if (dustColor[g]) dust(p.x, feet, p.z, 2, dustColor[g]); } }
   const sw = moving ? Math.sin(walkT) * 0.7 : 0;
   P.legL.g.rotation.x = sw; P.legR.g.rotation.x = -sw;
   if (!mining) { P.armL.g.rotation.x = -sw; P.armR.g.rotation.x = sw; }
@@ -84,6 +84,12 @@ function update(dt, t) {
   if (dancing && !mining) { P.armL.g.rotation.x = -2.6 + Math.sin(t * 7) * 0.5; P.armR.g.rotation.x = -2.6 - Math.sin(t * 7) * 0.5; }
   airT = onGround ? 0 : airT + dt;
   if (airT > 0.12) { P.legL.g.rotation.x = -0.5; P.legR.g.rotation.x = 0.4; P.armL.g.rotation.x = -2.4; P.armR.g.rotation.x = -2.4; }
+  if (toolHolder) toolHolder.visible = !driving;          // el pico se guarda mientras manejas
+  if (driving) { // sentada en el carrito: piernas hacia adelante y manos en el volante
+    player.position.y = feet;
+    P.legL.g.rotation.x = P.legR.g.rotation.x = -1.5;
+    P.armL.g.rotation.x = P.armR.g.rotation.x = -0.85; P.armL.g.rotation.z = 0.25; P.armR.g.rotation.z = -0.25; P.armL.g.rotation.y = P.armR.g.rotation.y = 0;
+  }
   const gY = groundBelow(p.x, p.z, feet + 0.1);
   pShadow.position.set(p.x, gY + 0.02, p.z); pShadow.scale.setScalar(Math.max(0.4, 1 - (feet - gY) * 0.25));
   head.rotation.z = playing && !moving ? Math.sin(t * 6) * (dancing ? 0.15 : 0.06) : 0;

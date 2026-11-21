@@ -70,7 +70,7 @@ function enterKart() {
 }
 function leaveKart(sendHome) {
   if (!driving) return;
-  driving = false; rig.position.y = 0;
+  driving = false; rig.position.y = 0; rig.position.z = 0;
   if (sendHome) { kart.position.set(KART_HOME[0], 0.5, KART_HOME[1]); kartRot = 0; kart.rotation.y = 0; return; }
   kart.position.set(player.position.x, feet, player.position.z); kartRot = player.rotation.y; kart.rotation.y = kartRot;
   // te bajas por un lado
@@ -82,7 +82,7 @@ function updateKart(dt, t, moving) {
   kartMsgT = Math.max(0, kartMsgT - dt);
   if (!driving) return;
   kart.position.set(player.position.x, feet, player.position.z); kartRot = player.rotation.y; kart.rotation.y = kartRot;
-  rig.position.y = 0.3;                                    // va sentada en el asiento
+  rig.position.y = -0.05; rig.position.z = -0.3;            // sentada en el asiento (las piernas se doblan en el bucle)
   kartWheels.forEach(w => w.rotation.x += dt * (moving ? 14 : 0));
   kartWheel.rotation.z = moving ? Math.sin(t * 3) * 0.2 : 0;
   if (moving && Math.random() < dt * 8) dust(player.position.x - Math.sin(kartRot) * 0.9, feet, player.position.z - Math.cos(kartRot) * 0.9, 1, 0xe5e7eb);
