@@ -269,6 +269,7 @@ for (let x = X0; x <= X1; x++) for (let z = Z0; z <= Z1; z++) {
     for (let y = 0; y < h; y++) put(x, y, z, y === h - 1 ? 'grass' : 'dirt');
     continue;
   }
+  if (isRiver(z)) { put(x, -1, z, 'air'); put(x, -2, z, 'sand'); } // cauce del río
   if (isRiver(z) && !onBridge(x)) continue; // agua
   put(x, 0, z, isRiver(z) ? 'planks' : isPath(x, z) ? 'sand' : 'grass');
 }
@@ -444,9 +445,10 @@ M.oreAme = lambert(T.oreAme, { emissive: 0x7e22ce, emissiveIntensity: 0.5 }); M.
   // agujero del río: el agua cae desde la superficie hasta el lago de la cueva
   for (let x = -18; x <= -15; x++) for (let z = -2; z <= 1; z++) for (let y = -1; y <= 4; y++) {
     const wall = x === -18 || z === -2 || z === 1;
-    if (x === -15 && !wall) { if (y === -1) put(x, y, z, 'stone'); continue; }
+    if (x === -15 && !wall) { if (y === -1) { put(x, -1, z, 'air'); put(x, -2, z, 'sand'); } continue; }
     put(x, y, z, y > 0 ? 'air' : wall ? (y === 0 ? 'cobble' : 'stone') : 'air');
   }
+  for (let x = -15; x <= -11; x++) for (const z of [-1, 0]) put(x, -2, z, 'sand');    // fondo del río encima de la caverna
   // lago del ajolote, justo debajo de la caída de agua
   CAVE_LAKE.forEach(([x, z]) => { put(x, -6, z, 'agua'); put(x, -7, z, 'sand'); });
   // gradas: bajan desde la orilla sur hacia el río
@@ -484,8 +486,8 @@ buildBlocks();
 // Agua animada
 const waterTex = texture((g, r) => speckle(g, r, ['#9fd8ff', '#b4e2ff', '#8ccdf8', '#c4eaff']), 21);
 waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping; waterTex.repeat.set(36, 2);
-const water = new THREE.Mesh(new THREE.BoxGeometry(32.6, 0.7, 2), new THREE.MeshLambertMaterial({ map: waterTex, transparent: true, opacity: 0.88 }));
-water.position.set(1.2, -0.25, -0.5); water.receiveShadow = true; scene.add(water);
+const water = new THREE.Mesh(new THREE.BoxGeometry(32.6, 1.15, 2), new THREE.MeshLambertMaterial({ map: waterTex, transparent: true, opacity: 0.72, depthWrite: false }));
+water.position.set(1.2, -1.02, -0.5); water.receiveShadow = true; scene.add(water);
 
 // Etiquetas flotantes
 function label(text, color = '#db2777') {
@@ -701,7 +703,7 @@ function swayGrass(t) {
 swayGrass(0); scene.add(tuftMesh);
 // brillos en el agua
 const spN = 50, spGeo = new THREE.BufferGeometry(), spPos = new Float32Array(spN * 3);
-for (let i = 0; i < spN; i++) spPos.set([Math.random() * 30 - 15, 0.12, -1.4 + Math.random() * 1.8], i * 3);
+for (let i = 0; i < spN; i++) spPos.set([Math.random() * 30 - 15, -0.42, -1.4 + Math.random() * 1.8], i * 3);
 spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
 const sparkles = new THREE.Points(spGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8 })); scene.add(sparkles);
 // cascada
@@ -713,23 +715,23 @@ const caveMouth = new THREE.Mesh(new THREE.PlaneGeometry(2, 2.6), new THREE.Mesh
 caveMouth.rotation.y = -Math.PI / 2; caveMouth.position.set(16.75, 1.0, -0.5); scene.add(caveMouth);
 const foam = []; for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 })); f.userData.t = Math.random(); scene.add(f); foam.push(f); }
 // chorro que cae al agujero del oeste
-const drainFall = new THREE.Mesh(new THREE.PlaneGeometry(2, 5.8), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
-drainFall.rotation.y = Math.PI / 2; drainFall.position.set(-15.55, -2.75, -0.5); scene.add(drainFall);
+const drainFall = new THREE.Mesh(new THREE.PlaneGeometry(2, 5.2), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
+drainFall.rotation.y = Math.PI / 2; drainFall.position.set(-15.55, -3.05, -0.5); scene.add(drainFall);
 // espuma que se mete al agujero del oeste
 const drain = []; for (let i = 0; i < 10; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.18), new THREE.MeshLambertMaterial({ color: 0xe0f4ff, transparent: true, opacity: 0.8 })); f.userData.t = Math.random(); f.userData.z = -1.3 + Math.random() * 1.6; scene.add(f); drain.push(f); }
 // peces que saltan
 const fish = [0xfb7185, 0xfdba74, 0xa78bfa].map(c => { const g = new THREE.Group(); part(0.4, 0.2, 0.14, c, 0, 0, 0, g); part(0.14, 0.18, 0.06, c, -0.26, 0, 0, g); part(0.05, 0.05, 0.02, 0x111111, 0.14, 0.04, 0.075, g); g.visible = false; scene.add(g); return { g, t: Math.random() * 4, x: 0, dir: 1 }; });
 function updateAmbient(dt, t) {
   fallTex.offset.y = t * 1.6;
-  foam.forEach(f => { f.userData.t += dt * 0.9; if (f.userData.t > 1) f.userData.t = 0; const k = f.userData.t; f.position.set(15.6 - k * 1.6, 0.2 + Math.sin(k * Math.PI) * 0.6, -1 + ((f.id * 37) % 10) / 10 * 1.4); f.material.opacity = 0.85 * (1 - k); });
+  foam.forEach(f => { f.userData.t += dt * 0.9; if (f.userData.t > 1) f.userData.t = 0; const k = f.userData.t; f.position.set(15.6 - k * 1.6, -0.35 + Math.sin(k * Math.PI) * 0.6, -1 + ((f.id * 37) % 10) / 10 * 1.4); f.material.opacity = 0.85 * (1 - k); });
   sparkles.material.opacity = 0.35 + Math.abs(Math.sin(t * 3)) * 0.5;
   drain.forEach(f => { f.userData.t += dt * 0.5; if (f.userData.t > 1) { f.userData.t = 0; f.userData.z = -1.3 + Math.random() * 1.6; } const k = f.userData.t;
-    f.position.set(-12 - k * 4, k < 0.85 ? 0.13 : 0.13 - (k - 0.85) * 20, f.userData.z + (-0.5 - f.userData.z) * k * k); f.rotation.y = t * 3; f.material.opacity = 0.8 * (1 - k * k); });
+    f.position.set(-12 - k * 4, k < 0.85 ? -0.42 : -0.42 - (k - 0.85) * 20, f.userData.z + (-0.5 - f.userData.z) * k * k); f.rotation.y = t * 3; f.material.opacity = 0.8 * (1 - k * k); });
   const sp = spGeo.attributes.position.array; for (let i = 0; i < spN; i++) { sp[i * 3] -= dt * 0.8; if (sp[i * 3] < -16.5) sp[i * 3] = 15.5; } spGeo.attributes.position.needsUpdate = true;
   fish.forEach(f => {
     f.t -= dt;
     if (f.t <= 0 && !f.g.visible) { f.x = Math.random() * 24 - 12; if (bridges.some(([a, b]) => f.x > a - 1 && f.x < b + 1)) f.x = 3; f.dir = Math.random() < 0.5 ? -1 : 1; f.g.visible = true; f.t = 1.1; f.z = -1 + Math.random(); }
-    if (f.g.visible) { const k = 1 - f.t / 1.1; f.g.position.set(f.x + f.dir * k * 1.6, -0.1 + Math.sin(k * Math.PI) * 1.4, f.z); f.g.rotation.set(0, f.dir > 0 ? 0 : Math.PI, (0.5 - k) * 1.6 * f.dir); if (f.t <= 0) { f.g.visible = false; f.t = 3 + Math.random() * 5; } }
+    if (f.g.visible) { const k = 1 - f.t / 1.1; f.g.position.set(f.x + f.dir * k * 1.6, -0.65 + Math.sin(k * Math.PI) * 1.4, f.z); f.g.rotation.set(0, f.dir > 0 ? 0 : Math.PI, (0.5 - k) * 1.6 * f.dir); if (f.t <= 0) { f.g.visible = false; f.t = 3 + Math.random() * 5; } }
   });
   if (fireflies.visible) { for (let i = 0; i < ffN; i++) { const b = ffBase[i]; ffPos[i * 3] = b[0] + Math.sin(t * 0.7 + b[3]) * 0.8; ffPos[i * 3 + 1] = b[1] + Math.sin(t * 1.3 + b[3] * 2) * 0.4; ffPos[i * 3 + 2] = b[2] + Math.cos(t * 0.6 + b[3]) * 0.8; } ffGeo.attributes.position.needsUpdate = true; fireflies.material.opacity = 0.6 + Math.sin(t * 5) * 0.4; }
 }
@@ -885,12 +887,11 @@ function updateToolHud() {
 const keys = {};
 let target = null, waypoints = [], onArrive = null, stuckT = 0, lastDist = Infinity, mining = null;
 let feet = 0.5, vy = 0, onGround = true, coyote = 0, jumpReq = 0, autoWalk = false;
-const PR = 0.3, PH = 1.7, JUMP = 8.6, GRAV = 26;
+const PR = 0.3, JUMP = 8.6, GRAV = 26; let PH = 1.7; // al nadar el personaje va acostado (más bajo)
 const chestBox = [4.85, -16, 6.15, -15, 1.5];
 function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air' && t !== 'agua') || oreCells.has(`${i},${j},${k}`); }
 function hits(x, y, z) {
   if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
-  if (y > -0.8 && z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
   const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.ceil(y - 0.5 + 0.001), j1 = Math.ceil(y + PH + 0.5 - 0.001) - 1;
   for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
   if (x + PR > 9.45 && x - PR < 12.55 && z + PR > 12.48 && z - PR < 13.52 && y < 2.25 && y > 0.9) return true; // cabina del DJ
@@ -1041,7 +1042,7 @@ function updateGuards(dt, t) {
 function updateCave(dt, t) {
   const p = player.position, inside = inCaveArea(p.x, p.z) && feet < -1;
   caveK += ((inside ? 1 : 0) - caveK) * Math.min(1, dt * 3);
-  updateBats(dt, t); water.material.opacity = 0.88 - 0.5 * caveK; // el río se ve transparente desde la cueva
+  updateBats(dt, t); water.material.opacity = 0.72 - 0.4 * caveK; // el río se ve transparente desde la cueva
   hemi.intensity = baseHemi * (1 - 0.6 * caveK); sun.intensity = baseSun * (1 - 0.8 * caveK);
   caveLights.forEach((c, i) => { c.L.intensity = c.base * (0.85 + Math.sin(t * 9 + i * 2) * 0.1 + Math.sin(t * 23 + i) * 0.05); });
   T.lava.offset.y = (t * 0.05) % 1;
@@ -1464,7 +1465,7 @@ function followOk(x, z, y) {
 // lugar libre junto a la jugadora (mismo nivel de suelo, sin muros)
 function spotNear(px, pz) {
   for (const [dx, dz] of [[-1, 0], [1, 0], [0, 1], [0, -1], [-1, 1], [1, 1], [-1, -1], [1, -1], [-0.6, 0], [0.6, 0], [0, 0]]) {
-    const x = px + dx, z = pz + dz; if (Math.abs(groundBelow(x, z, feet + 0.6) - feet) < 0.3) return [x, z, feet];
+    const x = px + dx, z = pz + dz; if (z > -1.7 && z < 0.7) continue; if (Math.abs(groundBelow(x, z, feet + 0.6) - feet) < 0.3) return [x, z, feet];
   }
   return [px, pz, feet];
 }
@@ -1478,7 +1479,7 @@ function updateAnimals(dt, t) {
       if (d > (a.state === 'mascota' ? 1.4 : 1.6)) { tx = fx; tz = fz; speed = Math.min(9, d * 2.4); }
       if (!lead && feet - a.y > 0.5 && d < 5) { // tú estás más arriba: busca un lugar libre a tu nivel y sube contigo
         const [sx, sz] = spotNear(p.x, p.z); if (Math.hypot(sx - a.g.position.x, sz - a.g.position.z) > 0.15) { tx = sx; tz = sz; speed = 3; } }
-      if (d > 6) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; }
+      if (d > 6 && !swimming) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; }
       if (a.state === 'lazo' && inCorral(a.g.position.x, a.g.position.z, 0.2)) { penAnimal(a); return; }
     } else {
       if (a.state === 'libre' && a.y > 1.6) { const [sx, sz] = spawnAnimal[a.i]; a.g.position.set(sx, groundBelow(sx, sz, 1.2), sz); a.y = a.g.position.y; a.goal = null; }
@@ -1497,7 +1498,7 @@ function updateAnimals(dt, t) {
       const nx = a.g.position.x + dx / d * st, nz = a.g.position.z + dz / d * st;
       const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => followOk(x, z, a.y); // con lazo o mascota: sube 1 bloque contigo, sin atravesar nada
       if (free(nx, nz)) { a.g.position.x = nx; a.g.position.z = nz; moving = true; a.stuck = 0; } else a.goal = null;
-      if (!moving && (a.state === 'lazo' || a.state === 'mascota') && (a.stuck = (a.stuck || 0) + dt) > 0.7) { // trabado (baranda, río, muro): aparece a tu lado
+      if (!moving && !swimming && (a.state === 'lazo' || a.state === 'mascota') && (a.stuck = (a.stuck || 0) + dt) > 0.7) { // trabado (baranda, río, muro): aparece a tu lado
         const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; a.stuck = 0; dust(sx, sy + 0.3, sz, 6, 0xffffff); }
       const want = Math.atan2(dx, dz); let df = want - a.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); a.g.rotation.y += df * Math.min(1, dt * 8);
     }
@@ -1841,6 +1842,7 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 /* ---------------- BUCLE ---------------- */
 const clock = new THREE.Clock();
 const camPos = new THREE.Vector3(0, 30, 50), camLook = new THREE.Vector3(0, 0, 0);
+let swimming = false, wasSwimming = false, riverTold = false;
 let walkT = 0, mapT = 0, wasOnStage = false, airT = 0, lastSaveSec = -1;
 function update(dt, t) {
   // movimiento
@@ -1851,7 +1853,7 @@ function update(dt, t) {
     if (keys.a || keys.arrowleft) mx -= 1; if (keys.d || keys.arrowright) mx += 1;
   }
   const p = player.position; let moving = false;
-  const speed = keys.shift ? 8.5 : 5;
+  const speed = (keys.shift ? 8.5 : 5) * (swimming ? 0.35 : 1);
   if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
     const c = Math.cos(camYaw), sN = Math.sin(camYaw); const wx = mx * c + mz * sN, wz = -mx * sN + mz * c; mx = wx; mz = wz; }
   else if (target && !mining) {
@@ -1875,6 +1877,18 @@ function update(dt, t) {
     const want = Math.atan2(mx, mz); let diff = want - player.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); player.rotation.y += diff * Math.min(1, dt * 14);
     moving = true;
   }
+  // en el río: nadas acostado y la corriente te arrastra hacia el hoyo (pasando debajo de los puentes)
+  swimming = p.z > -1.65 && p.z < 0.65 && feet < -0.6 && feet > -2.2 && p.x > -15.7 && p.x < 15.8;
+  PH = swimming ? 0.8 : 1.7;
+  if (swimming) {
+    const cx = p.x - 3.4 * dt; if (!hits(cx, feet, p.z)) p.x = cx;                      // corriente hacia el oeste
+    const cz = p.z + (-0.5 - p.z) * Math.min(1, dt * 2.5); if (!hits(p.x, feet, cz)) p.z = cz; // al centro del río
+    if (!(mx || mz)) { const want = -Math.PI / 2; let diff = want - player.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); player.rotation.y += diff * Math.min(1, dt * 6); }
+    if (Math.random() < dt * 6) dust(p.x + 0.4, -0.45, p.z + (Math.random() - 0.5) * 0.6, 1, 0xe0f4ff);
+    if (!wasSwimming) { sfx('splash'); dust(p.x, -0.4, p.z, 20, 0x67e8f9); if (!riverTold) { riverTold = true; toast('≈', '¡TE ARRASTRA LA CORRIENTE!', 'El río te lleva', 'Pasarás debajo de los puentes y caerás por el hoyo hasta la cueva.', '#0ea5e9'); } }
+  }
+  rig.rotation.x = swimming ? -1.35 : 0; if (swimming) rig.position.y = 0.35; else if (wasSwimming) rig.position.y = 0;
+  wasSwimming = swimming;
   // salto y gravedad
   coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
   if (jumpReq > 0) {
