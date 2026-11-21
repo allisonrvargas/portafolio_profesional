@@ -1056,6 +1056,32 @@ function updateDJ(dt, t) {
   djLight.intensity = playing ? 4 + Math.abs(Math.sin(beat)) * 6 : 0;
   if (playing) djLight.color.setHSL(((t * 0.15) % 1), 0.8, 0.6);
 }
+/* ---------------- SILUETA CUANDO ALGO TE TAPA ---------------- */
+// Si un techo, árbol o torre queda entre la cámara y tú, se dibuja tu silueta rosa encima.
+const xrayScene = new THREE.Scene();
+const xrayFill = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthTest: false, depthWrite: false });
+const xrayEdge = new THREE.MeshBasicMaterial({ color: 0xbe185d, transparent: true, opacity: 0.95, depthTest: false, depthWrite: false });
+let xrayT = 0, occluded = false;
+function hiddenByZone(i, j, k) { return roofZones.some(r => r.meshes && r.meshes[0] && !r.meshes[0].visible && i >= r.x1 && i <= r.x2 && k >= r.z1 && k <= r.z2 && j >= r.y); }
+function checkOccluded() {
+  const from = new THREE.Vector3(player.position.x, feet + 0.9, player.position.z), dir = camera.position.clone().sub(from);
+  const len = dir.length(); dir.normalize();
+  for (let d = 0.9; d < len; d += 0.25) {
+    const x = from.x + dir.x * d, y = from.y + dir.y * d, z = from.z + dir.z * d;
+    const i = Math.round(x), j = Math.round(y), k = Math.round(z), t = blocks.get(`${i},${j},${k}`);
+    if (t && t !== 'air' && t !== 'glass' && t !== 'agua' && !hiddenByZone(i, j, k)) return true;
+  }
+  return false;
+}
+function drawXray(dt) {
+  if (!started || selecting || sleeping) return;
+  if ((xrayT -= dt) <= 0) { xrayT = 0.12; occluded = checkOccluded(); }
+  if (!occluded) return;
+  const parent = player.parent, sc = player.scale.x; xrayScene.add(player); renderer.autoClear = false;
+  player.scale.setScalar(sc * 1.12); player.updateMatrixWorld(true); xrayScene.overrideMaterial = xrayEdge; renderer.render(xrayScene, camera);   // borde
+  player.scale.setScalar(sc); player.updateMatrixWorld(true); xrayScene.overrideMaterial = xrayFill; renderer.render(xrayScene, camera);          // relleno
+  renderer.autoClear = true; parent.add(player);
+}
 let sleeping = false;
 function sleep() {
   award('sleep', 30, 'Dormiste en el castillo');
@@ -1911,7 +1937,7 @@ function adaptQuality() {
 }
 function loop() {
   const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
-  update(dt, t); renderer.render(scene, camera); if (started) adaptQuality(); requestAnimationFrame(loop);
+  update(dt, t); renderer.render(scene, camera); drawXray(dt); if (started) adaptQuality(); requestAnimationFrame(loop);
 }
 
 /* ---------------- PROGRESO GUARDADO ---------------- */
