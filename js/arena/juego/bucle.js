@@ -122,7 +122,7 @@ function update(dt, t) {
     if (r.layered) { king.g.visible = !inside || feet > 9.4; }
     });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
-  finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
+  finder.visible = started && !selecting && camMode === 'arriba'; // de cerca no hace falta el triángulo finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
   // bloques de habilidad
   ores.forEach(o => { if (o.mined || mining?.o === o) return; o.m.position.y = 1 + Math.sin(t * 2 + o.i) * 0.08; o.m.rotation.y = Math.sin(t * 0.8 + o.i) * 0.25; o.m.material.emissiveIntensity = 0.18 + Math.max(0, Math.sin(t * 3 + o.i)) * 0.3; });
 
@@ -146,7 +146,7 @@ function update(dt, t) {
   const lp = player.position;
   lugares.forEach((L, i) => { L.sprite.position.y = L.at[2] + Math.sin(t * 1.5 + i) * 0.15;
     const near = Math.hypot(lp.x - L.at[0], lp.z - L.at[1]) < (L.id === 'castillo' ? 9 : 4.5); // de cerca ya sale el botón "Entrar"
-    L.sprite.visible = !selecting && !near && feet > -1 && !(L.id === 'castillo' && feet > 1.2) && !(L.id === 'cueva' && feet < -0.6); });
+    L.sprite.visible = !selecting && !near && feet > -1 && (camMode === 'arriba' || (!roofZones.some(r => r.inside) && Math.hypot(lp.x - L.at[0], lp.z - L.at[1]) > 6)) && !(L.id === 'castillo' && feet > 1.2) && !(L.id === 'cueva' && feet < -0.6); });
   bedSign.visible = !selecting && feet < 3 && Math.hypot(lp.x - BED[0], lp.z - BED[1]) < 5;
   hitos.forEach(h => h.sprite.visible = !selecting && feet > 1.2 && Math.hypot(lp.x - h.sprite.position.x, lp.z - h.sprite.position.z, (feet + 2) - h.sprite.position.y) < 3.6);
   lid.rotation.x += ((lidOpen ? -1.1 : 0) - lid.rotation.x) * Math.min(1, dt * 6); lid.position.z = lidOpen ? -0.2 : 0; lid.position.y = lidOpen ? 0.95 : 0.72;
@@ -155,6 +155,7 @@ function update(dt, t) {
 
   // cámara
   if (camaraObra(dt)) { player.visible = false; } // mirando una obra: vista de los ojos del personaje
+  else if (started && !selecting && camaraJugador(dt)) { if (camMode === 'ojos') player.visible = false; else if (!muriendo && invulnerable <= 0) player.visible = true; }
   else if (started && !selecting) {
     if (!muriendo && invulnerable <= 0) player.visible = true;
     const hz = 12.5 * (1.15 - camPitch * 0.15) * (1 - 0.6 * caveK); // en la cueva la cámara mira más desde arriba

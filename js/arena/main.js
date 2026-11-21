@@ -39,6 +39,7 @@ const archivos = [
   'interfaz/minimapa.js',
   'interfaz/paneles.js',
   'juego/controles.js',
+  'juego/camara.js',
   'juego/bucle.js',
   'juego/progreso.js',
   'juego/vidas.js',

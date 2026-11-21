@@ -56,7 +56,7 @@ function camaraObra(dt) {
     gp.tilt.rotation.x += ((on ? 0 : -0.75) - gp.tilt.rotation.x) * Math.min(1, dt * 6);
     gp.tilt.position.z += ((on ? 0.14 : 0.42) - gp.tilt.position.z) * Math.min(1, dt * 6);
   });
-  camera.fov += ((viendo ? verFov : 38) - camera.fov) * Math.min(1, dt * 5); camera.updateProjectionMatrix();
+  camera.fov += ((viendo ? verFov : started && !selecting ? camFov() : 38) - camera.fov) * Math.min(1, dt * 5); camera.updateProjectionMatrix();
   if (!viendo) return false;
   viendo.canvas.getWorldPosition(_c); _n.set(0, 0, 1).applyQuaternion(viendo.canvas.getWorldQuaternion(_q));
   // distancia según el alto del cuadro, para que se vea completo arriba de la tarjeta (cámara derecha, como los ojos)

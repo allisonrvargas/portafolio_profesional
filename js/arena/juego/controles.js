@@ -23,6 +23,7 @@ addEventListener('keydown', e => {
     if (!e.repeat) jumpReq = 0.18;
   }
   if (k === 'm' && !e.repeat) setMusic(!soundOn);
+  if (k === 'v' && !e.repeat) cycleCam();
   if ((k === '+' || k === '=') && !e.repeat) setVolume(volume + 0.1);
   if (k === '-' && !e.repeat) setVolume(volume - 0.1);
   if (k === 'n' && !e.repeat) jumpToNight(!night);

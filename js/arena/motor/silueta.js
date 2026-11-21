@@ -19,7 +19,7 @@ function checkOccluded() {
   return false;
 }
 function drawXray(dt) {
-  if (!started || selecting || sleeping) return;
+  if (!started || selecting || sleeping || camMode !== 'arriba') return; // en las vistas de cerca no hace falta
   if ((xrayT -= dt) <= 0) { xrayT = 0.12; occluded = checkOccluded(); }
   if (!occluded) return;
   const parent = player.parent, sc = player.scale.x; xrayScene.add(player); renderer.autoClear = false;
