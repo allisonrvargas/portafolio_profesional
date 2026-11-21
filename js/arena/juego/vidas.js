@@ -32,7 +32,7 @@ function perderVida(razon) {
   d.querySelector('button').hidden = vidas > 0;
   d.classList.toggle('over', vidas === 0);
   d.hidden = false; requestAnimationFrame(() => d.classList.add('on'));
-  if (vidas === 0) { sfx('boom'); return; }                        // espera a que pulse "Empezar de nuevo"
+  if (vidas === 0) { sfx('boom'); unlockMouse(); return; }                        // espera a que pulse "Empezar de nuevo"
   setTimeout(() => {
     rig.rotation.z = 0; rig.position.y = 0;
     player.position.set(0, 0.5, 18); feet = 0.5; vy = 0; player.rotation.y = Math.PI; camPos.set(0, 22, 31);

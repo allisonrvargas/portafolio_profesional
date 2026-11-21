@@ -14,7 +14,7 @@ try { if (camModes.includes(localStorage.getItem('arenaCam'))) camMode = localSt
 function setCamMode(m, quiet) {
   camMode = m; try { localStorage.setItem('arenaCam', m); } catch (e) { }
   const b = $('#camBtn'); b.textContent = camInfo[m].icon; b.setAttribute('aria-label', 'Cámara: ' + camInfo[m].n + '. Cambiar vista');
-  if (m !== 'arriba') camPitch = 1;
+  if (m !== 'arriba') camPitch = 1; else unlockMouse();
   if (!quiet) { sfx('blip'); toast(camInfo[m].icon, 'CÁMARA (V)', camInfo[m].n, camInfo[m].d, '#7c3aed'); }
 }
 function cycleCam() { setCamMode(camModes[(camModes.indexOf(camMode) + 1) % camModes.length]); }
@@ -48,3 +48,19 @@ function camaraJugador(dt) {
   return true;
 }
 const camFov = () => camMode === 'ojos' ? 72 : camMode === 'detras' ? 58 : 38;
+
+// Mirar con el mouse sin arrastrar (como en Minecraft): un clic captura el mouse, Esc lo suelta.
+const mouseLocked = () => document.pointerLockElement === canvas;
+function lockMouse() { try { const r = canvas.requestPointerLock?.(); r?.catch?.(() => { }); } catch (e) { } }
+function unlockMouse() { if (mouseLocked()) document.exitPointerLock?.(); }
+document.addEventListener('mousemove', e => {
+  if (!mouseLocked() || !started || panelOpen || selecting || camMode === 'arriba') return;
+  camYaw -= e.movementX * 0.0028;
+  camPitch = Math.min(1.5, Math.max(0.35, camPitch + e.movementY * 0.0018));
+});
+function updateLockUI() {
+  const fine = matchMedia('(pointer: fine)').matches, locked = mouseLocked();
+  $('#lockHint').hidden = !fine || locked || !started || selecting || panelOpen || camMode === 'arriba';
+  $('#crosshair').hidden = !locked || camMode !== 'ojos';
+}
+document.addEventListener('pointerlockchange', updateLockUI);

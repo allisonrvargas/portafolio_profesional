@@ -5,6 +5,7 @@
 let panelOpen = false;
 const panelBg = $('#panelBg'), panelBody = $('#panelBody');
 function showPanel(html, after) {
+  unlockMouse(); // para poder hacer clic en el panel
   panelBody.innerHTML = html; panelBg.hidden = false; panelOpen = true; target = null; waypoints = [];
   $('#panelClose').focus(); if (after) after();
 }

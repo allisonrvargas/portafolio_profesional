@@ -52,7 +52,10 @@ canvas.addEventListener('pointerup', e => { canvas.style.cursor = '';
   pointers.delete(e.pointerId); if (pointers.size < 2) pinch = 0;
   if (!down || !started || panelOpen) return;
   if (Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 8) return;
-  ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  // con mouse y cámara de cerca: el primer clic captura el mouse para mirar sin arrastrar
+  if (e.pointerType === 'mouse' && camMode !== 'arriba' && !selecting && !mouseLocked()) { lockMouse(); return; }
+  if (mouseLocked()) ndc.set(0, 0); else ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
   const hit = ray.intersectObjects(hitMeshes, false)[0];
   if (hit) {
     const u = hit.object.userData;
@@ -61,6 +64,7 @@ canvas.addEventListener('pointerup', e => { canvas.style.cursor = '';
     else { const L = lugares.find(l => l.id === u.id); planTo(L.door[0], L.door[1], () => openPlace(L)); }
     sfx('blip'); return;
   }
+  if (mouseLocked()) return; // con el mouse capturado, el clic solo sirve para objetos en la mira
   const bh = ray.intersectObjects(blockMeshes, false).find(h => h.face && h.face.normal.y > 0.5);
   const pt = bh ? bh.point : new THREE.Vector3(); if (bh || ray.ray.intersectPlane(groundPlane, pt)) { if (!blocked(pt.x, pt.z)) { planTo(pt.x, pt.z, null); marker.position.set(pt.x, pt.y + 0.03, pt.z); marker.visible = true; } }
 });
