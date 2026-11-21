@@ -1,5 +1,5 @@
 'use strict';
-// Vidas: 5 corazones. La lava y los monstruos de la noche te quitan uno.
+// Vidas: 5 corazones. La lava, los monstruos de la noche y las caídas muy altas te quitan uno.
 // Al perder los 5 sale "Fin del juego" y todo se reinicia desde cero.
 
 const MAX_VIDAS = 5;
@@ -24,7 +24,7 @@ function perderVida(razon) {
   target = null; waypoints = []; mining = null; crack.visible = false; vy = 0;
   sfx('hurt'); const f = $('#hurt'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
   rig.rotation.z = Math.PI / 2; rig.position.y = 0.25;             // cae al suelo
-  const quien = razon === 'lava' ? 'Caíste en la lava' : `Te atrapó ${razon === 'arana' ? 'una araña' : razon === 'petardin' ? 'un Petardín' : 'un esqueleto'}`;
+  const quien = razon === 'lava' ? 'Caíste en la lava' : razon === 'caida' ? 'Caíste desde muy alto' : `Te atrapó ${razon === 'arana' ? 'una araña' : razon === 'petardin' ? 'un Petardín' : 'un esqueleto'}`;
   const d = $('#death');
   d.querySelector('h2').textContent = vidas > 0 ? '¡Perdiste una vida!' : 'Fin del juego';
   d.querySelector('p').textContent = vidas > 0 ? `${quien}. Te quedan ${vidas} ${vidas === 1 ? 'corazón' : 'corazones'}.` : `${quien} y se acabaron tus 5 corazones. La arena empieza de nuevo.`;
@@ -39,6 +39,12 @@ function perderVida(razon) {
     clearMonsters(false);
     d.classList.remove('on'); setTimeout(() => { d.hidden = true; muriendo = false; invulnerable = 2.5; }, 600);
   }, 1800);
+}
+// caída: más de 4 bloques sin agua abajo te quita una vida (como en Minecraft)
+function checkFall(drop, landY) {
+  if (drop < 4.2) return;
+  const p = player.position, enAgua = blocks.get(`${Math.round(p.x)},${Math.round(landY + 0.2)},${Math.round(p.z)}`) === 'agua' || inRiverChannel(p.x, landY, p.z);
+  if (!enAgua) perderVida('caida');
 }
 function reiniciarTodo() {
   try { localStorage.removeItem('arenaSave'); localStorage.removeItem('arenaTut'); } catch (e) { }

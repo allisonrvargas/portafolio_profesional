@@ -4,6 +4,7 @@
 /* ---------------- BUCLE ---------------- */
 const clock = new THREE.Clock();
 const camPos = new THREE.Vector3(0, 30, 50), camLook = new THREE.Vector3(0, 0, 0);
+let fallTop = 0.5;
 let swimming = false, wasSwimming = false, riverTold = false;
 let walkT = 0, mapT = 0, wasOnStage = false, airT = 0, lastSaveSec = -1;
 function update(dt, t) {
@@ -63,8 +64,9 @@ function update(dt, t) {
   }
   vy -= GRAV * dt;
   let ny = feet + vy * dt;
+  fallTop = onGround ? feet : Math.max(fallTop, feet); // altura desde donde empezaste a caer
   if (vy <= 0) {
-    if (hits(p.x, ny, p.z)) { ny = Math.floor(ny - 0.5) + 1.5; if (!onGround && vy < -6) { sfx('land'); const g = groundType(); dust(p.x, ny, p.z, 8, dustColor[g] || 0xe5e7eb); } vy = 0; onGround = true; }
+    if (hits(p.x, ny, p.z)) { ny = Math.floor(ny - 0.5) + 1.5; if (!onGround && vy < -6) { sfx('land'); const g = groundType(); dust(p.x, ny, p.z, 8, dustColor[g] || 0xe5e7eb); } if (!onGround) checkFall(fallTop - ny, ny); vy = 0; onGround = true; }
     else onGround = false;
   } else if (hits(p.x, ny, p.z)) { vy = 0; ny = feet; }
   feet = ny;
