@@ -1315,7 +1315,9 @@ function updateAnimals(dt, t) {
       const dx = tx - a.g.position.x, dz = tz - a.g.position.z, d = Math.hypot(dx, dz) || 1, st = Math.min(d, speed * dt);
       const nx = a.g.position.x + dx / d * st, nz = a.g.position.z + dz / d * st;
       const free = a.state === 'libre' ? (x, z) => animalOk(x, z, a.y) && !inCorral(x, z, -0.6) : a.state === 'corral' ? (x, z) => inCorral(x, z, 0.1) : (x, z) => Math.abs(groundBelow(x, z, a.y + 0.6) - a.y) <= 0.6; // con lazo o mascota: no se suben a muros ni faroles
-      if (free(nx, nz)) { a.g.position.x = nx; a.g.position.z = nz; moving = true; } else a.goal = null;
+      if (free(nx, nz)) { a.g.position.x = nx; a.g.position.z = nz; moving = true; a.stuck = 0; } else a.goal = null;
+      if (!moving && (a.state === 'lazo' || a.state === 'mascota') && (a.stuck = (a.stuck || 0) + dt) > 0.7) { // trabado (baranda, río, muro): aparece a tu lado
+        const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; a.stuck = 0; dust(sx, sy + 0.3, sz, 6, 0xffffff); }
       const want = Math.atan2(dx, dz); let df = want - a.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); a.g.rotation.y += df * Math.min(1, dt * 8);
     }
     const climb = a.state === 'libre' ? 1.2 : 0.6;
