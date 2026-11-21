@@ -457,7 +457,7 @@ function flag(x, y, z, color) {
   const cloth = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 0.08), new THREE.MeshLambertMaterial({ color })); cloth.geometry.translate(0.7, 0, 0);
   cloth.position.set(x + 0.08, y + 2.5, z); cloth.castShadow = true; scene.add(cloth); flags.push(cloth);
 }
-flag(0, 12.5, -21, '#ec4899'); flag(-9, 11.5, -12, '#c4b5fd'); flag(9, 11.5, -12, '#f472b6');
+flag(-2, 10.5, -22, '#ec4899'); flag(-9, 11.5, -12, '#c4b5fd'); flag(9, 11.5, -12, '#f472b6');
 
 // Nubes de bloques
 const clouds = new THREE.Group(); scene.add(clouds);
@@ -833,8 +833,8 @@ function buildKing() {
   return { g, body, arm };
 }
 const princesses = [-6, 6].map(x => { const pr = buildPrincess(); pr.g.position.set(x, 9.5, -17); pr.g.scale.setScalar(1.3); pr.cool = Math.random(); scene.add(pr.g); return pr; });
-const king = buildKing(); king.g.position.set(0, 11.5, -21); king.g.scale.setScalar(1.35); scene.add(king.g);
-const kingSign = label('El rey del castillo', '#6d28d9'); kingSign.scale.set(3.6, 0.9, 1); kingSign.position.set(0, 14.3, -21); scene.add(kingSign);
+const king = buildKing(); king.body.rotation.x = -0.25; king.g.position.set(0, 10.5, -19.9); king.g.scale.setScalar(1.75); scene.add(king.g);
+const kingSign = label('El rey del castillo', '#6d28d9'); kingSign.scale.set(3.6, 0.9, 1); kingSign.position.set(0, 14.2, -19.9); scene.add(kingSign);
 const arrows = [];
 function shootArrow(pr, m) {
   const from = new THREE.Vector3(pr.g.position.x, pr.g.position.y + 1.1, pr.g.position.z);
@@ -847,7 +847,7 @@ function updateGuards(dt, t) {
     pr.cool = Math.max(0, pr.cool - dt);
     let target = null, bd = 11;
     if (night) monsters.forEach(m => { const d = Math.hypot(m.g.position.x - pr.g.position.x, m.g.position.z - pr.g.position.z); if (d < bd && !arrows.some(a => a.m === m)) { bd = d; target = m; } });
-    const look = target ? target.g.position : p;
+    const look = target ? target.g.position : camera.position; // sin monstruos, mira a la cámara
     const want = Math.atan2(look.x - pr.g.position.x, look.z - pr.g.position.z);
     pr.g.rotation.y += Math.atan2(Math.sin(want - pr.g.rotation.y), Math.cos(want - pr.g.rotation.y)) * Math.min(1, dt * 6);
     pr.body.position.y = Math.sin(t * 2 + k) * 0.04;
@@ -868,7 +868,7 @@ function updateGuards(dt, t) {
   }
   // el rey saluda cuando te acercas
   const dk = Math.hypot(p.x - king.g.position.x, p.z - king.g.position.z);
-  const wantK = Math.atan2(p.x - king.g.position.x, p.z - king.g.position.z);
+  const wantK = Math.atan2(camera.position.x - king.g.position.x, camera.position.z - king.g.position.z); // siempre de frente a la cámara
   king.g.rotation.y += Math.atan2(Math.sin(wantK - king.g.rotation.y), Math.cos(wantK - king.g.rotation.y)) * Math.min(1, dt * 3);
   king.body.position.y = Math.sin(t * 1.6) * 0.03;
   king.arm.rotation.z = dk < 9 ? 2.4 + Math.sin(t * 8) * 0.35 : 0.15;
@@ -1608,7 +1608,7 @@ function update(dt, t) {
     r.meshes.forEach(m => m.visible = !inside || (m.userData.layer !== null && (m.userData.layer <= feet - 0.4 || feet > 9.4)));
     if (r === roofZones[2]) arcade.visible = !inside;
     if (r === roofZones[3]) princesses.forEach(pr => pr.g.visible = !inside);
-    if (r.layered) king.g.visible = kingSign.visible = !inside || feet > 9.4;
+    if (r.layered) { king.g.visible = !inside || feet > 9.4; kingSign.visible = !inside; }
     });
   if (started && Math.floor(playTime) % 15 === 0 && Math.floor(playTime) !== lastSaveSec) { lastSaveSec = Math.floor(playTime); saveProgress(); }
   finder.visible = started && !selecting; finder.position.set(p.x, player.position.y + 2.7 + Math.sin(t * 4) * 0.12, p.z);
