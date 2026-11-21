@@ -17,7 +17,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 | La casa | Sobre mí: historia, línea de tiempo "Bloque a bloque" y lo que me gusta |
 | Torre de proyectos | Mis 15 proyectos, con filtros por área y detalle de cada uno |
 | Torre arcade | Aplicaciones: mis páginas publicadas, funcionando dentro del portafolio |
-| Escenario | Radio Allison: música chiptune original |
+| Escenario | Radio Allison: música chiptune original. Hay un DJ con tornamesas que baila cuando suena la música |
 | Castillo | Contacto. Adentro hay gradas: al subirlas aparece mi línea de tiempo "Bloque a bloque", dos princesas cuidan las torres, el rey está en lo más alto y en el patio hay una cama que te regresa al inicio |
 | Granja | Corral donde llevas con un lazo a 6 animales originales; cada uno te muestra un proyecto y al juntarlos todos ganas una mascota |
 | Cofre | Mi CV para abrir o descargar |
