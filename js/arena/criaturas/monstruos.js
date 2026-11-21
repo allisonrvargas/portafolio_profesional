@@ -63,7 +63,7 @@ function spawnMonster() {
   for (let tries = 0; tries < 40 && !pos; tries++) {
     const a = Math.random() * Math.PI * 2, r = 9 + Math.random() * 5, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
     if (x < -15 || x > 15 || z < -25 || z > 22) continue;
-    if (!blocked(x, z) && (z > -0.5) === (p.z > -0.5) && Math.abs(groundBelow(x, z, 1.2) - 0.5) < 0.1) pos = [x, z];
+    if (!blocked(x, z) && !hits(x, 0.5, z) && (z > -0.5) === (p.z > -0.5) && Math.abs(groundBelow(x, z, 1.2) - 0.5) < 0.1) pos = [x, z];
   }
   if (!pos) return;
   const { g, legs } = monsterModel(kind); const y = groundBelow(pos[0], pos[1], 1.2);
@@ -106,11 +106,19 @@ function updateMonsters(dt, t) {
     if (!panelOpen && d > 0.9 && m.fuse === 0) {
       const sp = info.speed * dt, nx = m.g.position.x + dx / d * sp, nz = m.g.position.z + dz / d * sp;
       const gy = groundBelow(nx, nz, m.y + 1.2);
-      const ok = (x, z) => !inCaveArea(x, z) && Math.abs(groundBelow(x, z, m.y + 1.2) - m.y) <= 1.01 && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4));
-      if (ok(nx, nz)) { m.g.position.x = nx; m.g.position.z = nz; moving = true; }
-      else if (ok(nx, m.g.position.z)) { m.g.position.x = nx; moving = true; }
-      else if (ok(m.g.position.x, nz)) { m.g.position.z = nz; moving = true; }
-      const gy2 = groundBelow(m.g.position.x, m.g.position.z, m.y + 1.2); m.y += (gy2 - m.y) * Math.min(1, dt * 10); m.g.position.y = m.y;
+      // solo caminan por suelo al mismo nivel (sin subirse a faroles ni muros) y sin meterse en bloques
+      const ok = (x, z) => Math.abs(groundBelow(x, z, m.y + 0.6) - m.y) <= 0.55 && !hits(x, m.y, z) && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4));
+      const ang = Math.atan2(dx, dz);
+      // si algo estorba, prueba rodearlo (hacia el lado que eligió la última vez)
+      m.side = m.side || (Math.random() < 0.5 ? 1 : -1);
+      let moved = false;
+      for (const off of [0, 0.6, -0.6, 1.2, -1.2, 1.7, -1.7]) {
+        const a2 = ang + off * m.side, tx = m.g.position.x + Math.sin(a2) * sp, tz = m.g.position.z + Math.cos(a2) * sp;
+        if (ok(tx, tz)) { m.g.position.x = tx; m.g.position.z = tz; moving = moved = true; if (off !== 0) m.rodeoT = 0.6; break; }
+      }
+      if (!moved) { m.side = -m.side; m.stuckT = (m.stuckT || 0) + dt; } else m.stuckT = 0;
+      if (m.stuckT > 3) { killMonster(m, 0x7c3aed); monsters.splice(i, 1); continue; }   // atrapado del todo: desaparece en humo
+      const gy2 = groundBelow(m.g.position.x, m.g.position.z, m.y + 0.6); m.y += (gy2 - m.y) * Math.min(1, dt * 10); m.g.position.y = m.y;
       m.g.rotation.y = Math.atan2(dx, dz);
     }
     const sw = moving ? Math.sin(m.t * (m.kind === 'arana' ? 16 : 10)) : 0;
