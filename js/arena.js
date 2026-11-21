@@ -106,6 +106,15 @@ function sfx(k) {
   if (k === 'hit') { noise(t, 0.35); tone(45, t, 0.08, 'square', 0.3); }
   if (k === 'dig') grit(t, 0.09, 600 + Math.random() * 500, 0.9);
   if (k === 'break') { grit(t, 0.28, 900, 1.2, 250); [0.05, 0.11, 0.17, 0.24].forEach((d, i) => grit(t + d, 0.06, 500 + i * 180, 0.6)); tone(40, t, 0.12, 'triangle', 0.5); }
+  if (k === 'splash') { // chapuzón: golpe de agua, salpicadura y burbujitas
+    grit(t, 0.08, 700, 0.9, 300);                     // golpe al caer
+    grit(t + 0.02, 0.45, 2600, 0.55, 900);             // salpicadura que se apaga
+    grit(t + 0.05, 0.3, 5200, 0.25, 2000);             // gotitas finas
+    [0, 1, 2, 3, 4].forEach(i => { const b = t + 0.18 + i * 0.07 + Math.random() * 0.03, o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(380 + Math.random() * 300, b); o.frequency.exponentialRampToValueAtTime(900 + Math.random() * 500, b + 0.06);
+      g.gain.setValueAtTime(0.18, b); g.gain.exponentialRampToValueAtTime(0.001, b + 0.07); o.connect(g); g.connect(master); o.start(b); o.stop(b + 0.09); });
+  }
+  if (k === 'splashOut') { grit(t, 0.2, 1800, 0.3, 700); grit(t + 0.05, 0.15, 4200, 0.12, 2500); }
   if (k === 'arrow') { grit(t, 0.12, 2400, 0.35); tone(81, t, 0.05, 'triangle', 0.15); }
   if (k === 'pop') { [76, 83, 88].forEach((n, i) => tone(n, t + i * 0.05, 0.1, 'square', 0.3)); }
   if (k === 'open') { tone(72, t, 0.07); tone(79, t + 0.07, 0.12); }
@@ -373,7 +382,7 @@ const roofZones = [
   { x1: -17, x2: -11, z1: -4, z2: 4, y: -1, feetBelow: -0.6, inX: [-18, -10.5], inZ: [-4.6, 8.6], cave: true, groups: {} },
   { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} },
   // túnel bajo la casa: al entrar se corta todo lo que está encima (también la casa) para ver el pasadizo por dentro
-  { x1: -12, x2: -9, z1: 5, z2: 17, y: -2, feetBelow: -0.6, inX: [-11.6, -9.4], inZ: [4.5, 17.5], tunnel: true, priority: true, groups: {} }
+  { x1: -12, x2: -9, z1: 5, z2: 17, y: -2, feetBelow: -0.6, inX: [-12.6, -8.4], inZ: [2.5, 19.5], tunnel: true, priority: true, groups: {} }
 ];
 function buildBlocks() {
   const byType = {};
@@ -776,9 +785,8 @@ for (let z = 3.6; z <= 17.4; z += 0.6) part(1.3, 0.05, 0.16, 0x6b4a33, -10.5, -5
     c.position.set(x + (k - 1) * 0.18, -5.5 + (0.5 - k * 0.12) / 2, z + (k % 2) * 0.12); c.rotation.z = (k - 1) * 0.3; scene.add(c); }
 });
 // Ajolote (diseño original)
-function buildAxolotl() {
+function buildAxolotl(pink = 0xf9a8d4, gill = 0xdb2777) {
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
-  const pink = 0xf9a8d4, gill = 0xdb2777;
   part(0.34, 0.2, 0.6, pink, 0, 0, 0, body);                      // cuerpo
   part(0.4, 0.26, 0.3, pink, 0, 0.03, 0.42, body);                // cabeza
   part(0.06, 0.06, 0.02, 0x111827, -0.12, 0.08, 0.575, body); part(0.06, 0.06, 0.02, 0x111827, 0.12, 0.08, 0.575, body); // ojos
@@ -791,12 +799,20 @@ function buildAxolotl() {
 }
 const axo = buildAxolotl(); axo.g.position.set(-16, -5.6, -0.5); scene.add(axo.g); axo.t = 0; axo.dir = 1; axo.happy = 0;
 { const L = new THREE.PointLight(0x22d3ee, 5, 6, 1.6); L.position.set(-16, -4.4, -0.5); scene.add(L); caveLights.push({ L, base: 5 }); }
-let axoMet = false, wasInWater = false;
-function greetAxolotl() {
+const axo2 = buildAxolotl(0x7dd3fc, 0x1d4ed8); axo2.g.position.set(-8, -5.6, 18.5); scene.add(axo2.g); axo2.t = 0.5; axo2.dir = -1; axo2.happy = 0; axo2.blue = true;
+let axoMet = false, axo2Met = false, wasInWater = false;
+function greetAxolotl(a = axo) {
+  if (a.blue) return greetBlue();
   award('axo', 40, 'Amigo ajolote');
   axo.happy = 1.6; sfx('pop');
   for (let i = 0; i < 6; i++) { const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthTest: false })); h.scale.set(0.6, 0.6, 1); h.position.set(axo.g.position.x + (Math.random() - 0.5) * 0.8, -5.2, axo.g.position.z + (Math.random() - 0.5) * 0.6); scene.add(h); h.userData.v = 0.8 + Math.random() * 0.6; axoHearts.push(h); }
   toast('♥', 'AJOLOTE', axoMet ? '¡Te saluda otra vez!' : '¡Hiciste un amigo!', 'Vive en el lago de la cueva. Le gusta nadar de un lado a otro.', '#db2777'); axoMet = true;
+}
+function greetBlue() {
+  award('axoBlue', 60, 'Ajolote azul');
+  axo2.happy = 1.6; sfx('win');
+  for (let i = 0; i < 8; i++) { const h = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthTest: false, color: 0x93c5fd })); h.scale.set(0.6, 0.6, 1); h.position.set(axo2.g.position.x + (Math.random() - 0.5) * 0.8, -5.2, axo2.g.position.z + (Math.random() - 0.5) * 0.8); h.userData.v = 0.8 + Math.random() * 0.6; scene.add(h); axoHearts.push(h); }
+  toast('♥', 'AJOLOTE AZUL', axo2Met ? '¡Te saluda otra vez!' : '¡Encontraste al ajolote azul!', 'En Minecraft es el ajolote más raro de todos. Vive en el laguito de la cueva del jardín.', '#1d4ed8'); axo2Met = true;
 }
 const axoHearts = [];
 const heartTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.fillStyle = '#ec4899';
@@ -937,6 +953,11 @@ const BED = [-4, -21]; const bed = new THREE.Group(); bed.position.set(BED[0], 1
 part(2, 0.3, 1, 0x7a4e3a, 0, 0.15, 0, bed); part(1.96, 0.18, 0.96, 0xec4899, 0.18, 0.39, 0, bed); part(0.5, 0.2, 0.9, 0xffffff, -0.7, 0.4, 0, bed);
 part(0.1, 0.7, 1, 0x7a4e3a, -1, 0.35, 0, bed); part(0.1, 0.45, 1, 0x7a4e3a, 1, 0.22, 0, bed);
 put(0, 10, -20, 'gold'); put(1, 10, -20, 'gold'); put(2, 10, -20, 'gold');
+// segunda cama: en la cueva del jardín
+const CAVE_BED = [-14.9, 20.5]; const caveBed = new THREE.Group(); caveBed.position.set(CAVE_BED[0], -5.5, CAVE_BED[1]); caveBed.rotation.y = Math.PI / 2; scene.add(caveBed);
+part(2, 0.3, 1, 0x7a4e3a, 0, 0.15, 0, caveBed); part(1.96, 0.18, 0.96, 0x38bdf8, 0.18, 0.39, 0, caveBed); part(0.5, 0.2, 0.9, 0xffffff, -0.7, 0.4, 0, caveBed);
+part(0.1, 0.7, 1, 0x7a4e3a, -1, 0.35, 0, caveBed); part(0.1, 0.45, 1, 0x7a4e3a, 1, 0.22, 0, caveBed);
+let sleepAt = 'castle';
 const bedSign = label('Cama · Volver al inicio', '#9d174d'); bedSign.scale.set(4.4, 1.1, 1); bedSign.position.set(BED[0], 3.4, BED[1]); scene.add(bedSign);
 /* ---------------- GUARDIANES DEL CASTILLO (diseño original) ---------------- */
 function buildPrincess() {
@@ -1032,10 +1053,18 @@ function updateCave(dt, t) {
   if (axo.happy > 0) { axo.happy -= dt; axo.g.rotation.y += dt * 8; axo.g.position.y += Math.abs(Math.sin(t * 10)) * 0.3; }
   else { const want = axo.dir > 0 ? 0 : Math.PI; axo.g.rotation.y += Math.atan2(Math.sin(want - axo.g.rotation.y), Math.cos(want - axo.g.rotation.y)) * Math.min(1, dt * 4); }
   axo.tail.rotation.y = Math.sin(t * 6) * 0.5;
+  // ajolote azul: nada de lado a lado en el laguito del jardín
+  axo2.t += dt * (axo2.happy > 0 ? 0 : 0.3) * axo2.dir;
+  if (axo2.t > 1) { axo2.t = 1; axo2.dir = -1; } if (axo2.t < 0) { axo2.t = 0; axo2.dir = 1; }
+  axo2.g.position.set(-9.2 + axo2.t * 2.4, -5.6 + Math.sin(t * 2.2) * 0.05, 18.5 + Math.sin(t * 0.7) * 0.35);
+  if (axo2.happy > 0) { axo2.happy -= dt; axo2.g.rotation.y += dt * 8; axo2.g.position.y += Math.abs(Math.sin(t * 10)) * 0.3; }
+  else { const want = axo2.dir > 0 ? Math.PI / 2 : -Math.PI / 2; axo2.g.rotation.y += Math.atan2(Math.sin(want - axo2.g.rotation.y), Math.cos(want - axo2.g.rotation.y)) * Math.min(1, dt * 4); }
+  axo2.tail.rotation.y = Math.sin(t * 6 + 1) * 0.5;
   for (let i = axoHearts.length - 1; i >= 0; i--) { const h = axoHearts[i]; h.position.y += dt * h.userData.v; h.material.opacity = Math.max(0, 1 - (h.position.y + 5.2) / 1.6); if (h.material.opacity <= 0) { scene.remove(h); axoHearts.splice(i, 1); } }
   // chapoteo al entrar al agua
   const inWater = blocks.get(`${Math.round(p.x)},${Math.round(feet + 0.2)},${Math.round(p.z)}`) === 'agua';
-  if (inWater && !wasInWater) { sfx('pop'); dust(p.x, feet + 0.6, p.z, 14, 0x67e8f9); }
+  if (inWater && !wasInWater) { sfx('splash'); dust(p.x, feet + 0.6, p.z, 22, 0x67e8f9); dust(p.x, feet + 0.9, p.z, 10, 0xffffff); }
+  if (!inWater && wasInWater) sfx('splashOut'); // salir del agua
   wasInWater = inWater;
   if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); award('cave', 80, 'Cueva secreta'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
   if (onGround && groundType() === 'lava') {
@@ -1113,10 +1142,12 @@ function drawXray(dt) {
   renderer.autoClear = true; parent.add(player);
 }
 let sleeping = false;
-function sleep() {
-  award('sleep', 30, 'Dormiste en el castillo');
-  if (sleeping) return; sleeping = true; sfx('open');
-  player.position.set(BED[0], 1.5, BED[1] - 0.2); feet = 1.9; vy = 0; player.rotation.y = 0;
+function sleep(where = 'castle') {
+  award('sleep', 30, 'Dormiste en una cama');
+  if (sleeping) return; sleeping = true; sfx('open'); sleepAt = where;
+  if (where === 'cave') { player.position.set(CAVE_BED[0], -5.5, CAVE_BED[1] - 0.2); feet = -5.1; }
+  else { player.position.set(BED[0], 1.5, BED[1] - 0.2); feet = 1.9; }
+  vy = 0; player.rotation.y = 0;
   rig.rotation.z = Math.PI / 2; rig.position.y = 0.25;
   const f = $('#fade'); f.hidden = false; requestAnimationFrame(() => f.classList.add('on'));
   setTimeout(() => {
@@ -1492,7 +1523,10 @@ function nearest() {
   const p = player.position; let best = null, bd = 1e9;
   if (feet < -1) { // bajo tierra solo cuentan las cosas de la cueva
     const cv = lugares.find(L => L.id === 'cueva'), dc = Math.hypot(p.x - cv.door[0], p.z - cv.door[1]), da = Math.hypot(p.x - axo.g.position.x, p.z - axo.g.position.z);
-    if (feet < -3 && da < 2.2 && da <= dc) return { kind: 'axo' };
+    const db = Math.hypot(p.x - axo2.g.position.x, p.z - axo2.g.position.z), dbed = Math.hypot(p.x - CAVE_BED[0], p.z - CAVE_BED[1]);
+    if (feet < -3 && db < 2.2 && db <= dbed) return { kind: 'axo', a: axo2 };
+    if (feet < -3 && dbed < 2) return { kind: 'bed', where: 'cave' };
+    if (feet < -3 && da < 2.2 && da <= dc) return { kind: 'axo', a: axo };
     if (feet < -3 && dc < 2.4) return { kind: 'loc', L: cv };
     return null;
   }
@@ -1507,7 +1541,7 @@ function nearest() {
 }
 function interact() {
   if (!near || panelOpen) return;
-  if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(); else if (near.kind === 'axo') greetAxolotl(); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
+  if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(near.where); else if (near.kind === 'axo') greetAxolotl(near.a); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);
 }
 function openPlace(L) {
   sfx('open'); L.open();
@@ -1909,7 +1943,7 @@ function update(dt, t) {
     near = mining ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? 'Saludar al ajolote' : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 
@@ -1981,7 +2015,7 @@ const niveles = [
   { xp: 800, n: 'Granjera' }, { xp: 1080, n: 'Arquera' }, { xp: 1400, n: 'Hechicera' }, { xp: 1720, n: 'Campeona' }, { xp: 2000, n: 'Leyenda de la arena' }
 ];
 const xpKeys = new Set(progress.xpKeys || []); let xp = 0; var xpReady = true;
-const xpValue = k => k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, sleep: 30 })[k] || 0;
+const xpValue = k => k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, axoBlue: 60, sleep: 30 })[k] || 0;
 const levelOf = v => { let l = 0; while (l < niveles.length - 1 && v >= niveles[l + 1].xp) l++; return l; };
 function renderLevel() {
   const l = levelOf(xp), cur = niveles[l], next = niveles[l + 1];
