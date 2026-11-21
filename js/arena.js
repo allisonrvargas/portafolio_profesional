@@ -267,7 +267,7 @@ for (let x = X0; x <= X1; x++) for (let z = Z0; z <= Z1; z++) {
 bridges.forEach(([a, b]) => { [-2, 1].forEach(z => { put(a - 1, 1, z, 'log'); put(b + 1, 1, z, 'log'); }); [-1, 0].forEach(z => { put(a - 1, 1, z, 'planks'); put(b + 1, 1, z, 'planks'); }); });
 
 // Cerezos
-const trees = [[-13, 7], [-5, 8], [5, 7], [13, 7], [-13, -6], [13, -6], [-14, 21], [14, 21], [-13, -21], [13, -21], [-13, -15], [13, -15]];
+const trees = [ [-5, 8], [5, 7], [13, 7], [-13, -6], [13, -6], [-14, 21], [14, 21], [-13, -21], [13, -21], [-13, -15], [13, -15]];
 function tree(x, z, h = 4) {
   for (let y = 1; y <= h; y++) put(x, y, z, 'log');
   for (let y = h - 1; y <= h + 1; y++) for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) {
@@ -370,7 +370,7 @@ const roofZones = [
   // la torre central se corta por capas: solo se ve hasta la altura de tus pies
   { x1: -2, x2: 2, z1: -22, z2: -20, y: 2, inX: [-5.6, 5.6], inZ: [-23.8, -17.4], always: true, layered: true, groups: {} },
   // cueva: al bajar se oculta el suelo de arriba para ver adentro
-  { x1: -16, x2: -7, z1: 18, z2: 23, y: -1, feetBelow: -0.6, inX: [-16.6, -4.5], inZ: [17.5, 23.6], cave: true, groups: {} }
+  { x1: -17, x2: -11, z1: -4, z2: 4, y: -1, feetBelow: -0.6, inX: [-18, -10.5], inZ: [-4.6, 8.6], cave: true, groups: {} }
 ];
 function buildBlocks() {
   const byType = {};
@@ -380,7 +380,7 @@ function buildBlocks() {
     if (t === 'air') continue;
     const [x, y, z] = k.split(',').map(Number);
     // ocultar bloques totalmente rodeados
-    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2) || (y <= 0 && y >= -7 && x >= -17 && x <= -3 && z >= 16 && z <= 24); // la cueva se ve por dentro
+    const cutLayer = roofZones.some(r => r.layered && y >= 1 && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2) || (y <= 0 && y >= -7 && x >= -18 && x <= -10 && z >= -5 && z <= 9); // la cueva se ve por dentro
     if (!cutLayer && opaque(key(x + 1, y, z)) && opaque(key(x - 1, y, z)) && opaque(key(x, y + 1, z)) && opaque(key(x, y - 1, z)) && opaque(key(x, y, z + 1)) && opaque(key(x, y, z - 1))) continue;
     const zone = roofZones.find(r => y >= r.y && x >= r.x1 && x <= r.x2 && z >= r.z1 && z <= r.z2);
     if (zone) { (zone.groups[zone.layered ? t + '|' + y : t] ||= []).push([x, y, z]); continue; }
@@ -411,16 +411,9 @@ for (let z = -1; z <= 0; z++) for (let y = 0; y <= 6; y++) blocks.set(`16,${y},$
 for (let z = -1; z <= 0; z++) { for (let y = 0; y <= 2; y++) { put(17, y, z, 'air'); put(18, y, z, 'dark'); } put(17, 3, z, 'stone'); }
 [[-2, 0], [-2, 1], [-2, 2], [1, 0], [1, 1], [1, 2]].forEach(([z, y]) => put(16, y, z, 'cobble'));   // marco de la cueva
 put(16, 3, -2, 'cobble'); put(16, 3, 1, 'cobble');
-// al oeste: un agujero en el suelo donde se mete el río
-for (let x = -18; x <= -15; x++) for (let z = -2; z <= 1; z++) for (let y = -5; y <= 4; y++) {
-  const wall = x === -18 || z === -2 || z === 1;
-  if (x === -15 && !wall) continue;                                              // aquí llega el río
-  put(x, y, z, y > 0 ? 'air' : wall ? (y === 0 ? 'cobble' : y === -1 ? 'stone' : 'dark') : y === -5 ? 'dark' : 'air');
-}
-fill(-15, -4, -1, -15, -1, 0, 'dark');                                           // borde por donde cae el agua
-// Faroles junto a los caminos
 /* ---------------- CUEVA (estilo Minecraft) ---------------- */
-const inCaveArea = (x, z) => x > -16.5 && x < -4.5 && z > 17.5 && z < 23.5;
+const CAVE_LAKE = [[-17, -2], [-16, -2], [-15, -2], [-17, -1], [-16, -1], [-15, -1], [-17, 0], [-16, 0], [-15, 0], [-17, 1], [-16, 1]];
+const inCaveArea = (x, z) => x > -18 && x < -10.5 && z > -4.6 && z < 8.6;
 T.oreCoal = oreTexture('#27272a', 31); T.oreGem = oreTexture('#22d3ee', 32); T.oreAme = oreTexture('#a855f7', 33);
 T.lava = texture((g, r) => speckle(g, r, ['#f97316', '#fb923c', '#ea580c', '#fbbf24', '#f59e0b', '#fdba74']), 34);
 T.lava.wrapS = T.lava.wrapT = THREE.RepeatWrapping;
@@ -428,20 +421,26 @@ M.oreCoal = lambert(T.oreCoal); M.oreGem = lambert(T.oreGem, { emissive: 0x0e749
 M.agua = new THREE.MeshLambertMaterial({ map: texture((g, r) => speckle(g, r, ['#38bdf8', '#22d3ee', '#0ea5e9', '#67e8f9']), 35), transparent: true, opacity: 0.72, emissive: 0x0e7490, emissiveIntensity: 0.35, depthWrite: false });
 M.oreAme = lambert(T.oreAme, { emissive: 0x7e22ce, emissiveIntensity: 0.5 }); M.lava = new THREE.MeshBasicMaterial({ map: T.lava });
 { const cr = rng(91);
-  for (let x = -16; x <= -4; x++) for (let z = 17; z <= 23; z++) for (let y = -7; y <= -2; y++) {
+  // roca alrededor de la cueva (bajo la orilla oeste del río)
+  for (let x = -18; x <= -10; x++) for (let z = -5; z <= 4; z++) for (let y = -7; y <= -2; y++) {
     const k = cr(); put(x, y, z, k < 0.06 ? 'oreCoal' : k < 0.09 ? 'oreGem' : k < 0.11 ? 'gold' : k < 0.13 ? 'oreAme' : k < 0.3 ? 'cobble' : 'stone');
   }
-  // gradas que bajan hacia la izquierda
-  for (let i = 1; i <= 5; i++) { const x = -5 - i; for (const z of [21, 22]) { for (let y = -i + 1; y <= 0; y++) put(x, y, z, 'air'); put(x, -i, z, 'cobble'); } }
+  for (let x = -15; x <= -12; x++) for (let z = 5; z <= 9; z++) for (let y = -6; y <= -2; y++) put(x, y, z, cr() < 0.25 ? 'cobble' : 'stone');
   // caverna
-  for (let x = -15; x <= -11; x++) for (let z = 18; z <= 22; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
-  [[-12, 18], [-14, 22], [-15, 19]].forEach(([x, z]) => put(x, -2, z, 'stone'));   // estalactitas
-  put(-15, -5, 22, 'cobble');                                                         // estalagmita
-  // rincón del lago (al este de la caverna)
-  for (let x = -10; x <= -7; x++) for (let z = 18; z <= 20; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
-  for (let x = -10; x <= -8; x++) for (let z = 18; z <= 19; z++) { put(x, -6, z, 'agua'); put(x, -7, z, 'sand'); }   // mini lago
-  put(-11, -5, 18, 'air');                                                                                          // paso libre al lago
-  put(-13, -6, 18, 'lava'); put(-14, -6, 18, 'lava'); put(-13, -6, 19, 'lava');      // charco de lava
+  for (let x = -17; x <= -11; x++) for (let z = -3; z <= 3; z++) { for (let y = -5; y <= -2; y++) put(x, y, z, 'air'); put(x, -6, z, 'stone'); }
+  // agujero del río: el agua cae desde la superficie hasta el lago de la cueva
+  for (let x = -18; x <= -15; x++) for (let z = -2; z <= 1; z++) for (let y = -1; y <= 4; y++) {
+    const wall = x === -18 || z === -2 || z === 1;
+    if (x === -15 && !wall) { if (y === -1) put(x, y, z, 'stone'); continue; }
+    put(x, y, z, y > 0 ? 'air' : wall ? (y === 0 ? 'cobble' : 'stone') : 'air');
+  }
+  // lago del ajolote, justo debajo de la caída de agua
+  CAVE_LAKE.forEach(([x, z]) => { put(x, -6, z, 'agua'); put(x, -7, z, 'sand'); });
+  // gradas: bajan desde la orilla sur hacia el río
+  for (let i = 1; i <= 5; i++) { const z = 9 - i; for (const x of [-14, -13]) { for (let y = -i + 1; y <= 0; y++) put(x, y, z, 'air'); put(x, -i, z, 'cobble'); } }
+  [[-12, 0], [-14, -3], [-11, -1], [-16, 3]].forEach(([x, z]) => put(x, -2, z, 'stone'));   // estalactitas
+  put(-11, -5, 3, 'cobble');                                                               // estalagmita
+  put(-11, -6, 1, 'lava'); put(-11, -6, 2, 'lava'); put(-12, -6, 2, 'lava');             // charco de lava
 }
 const lampSpots = [[-7, 3], [7, 3], [-7, -5], [7, -5], [-7, 10], [7, 10], [-5, 20], [5, 20], [-11, -7], [11, -7], [-2, -11], [2, -11], [-13, 18], [13, 18]];
 const lamps = [];
@@ -685,8 +684,8 @@ const caveMouth = new THREE.Mesh(new THREE.PlaneGeometry(2, 2.6), new THREE.Mesh
 caveMouth.rotation.y = -Math.PI / 2; caveMouth.position.set(16.75, 1.0, -0.5); scene.add(caveMouth);
 const foam = []; for (let i = 0; i < 14; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 })); f.userData.t = Math.random(); scene.add(f); foam.push(f); }
 // chorro que cae al agujero del oeste
-const drainFall = new THREE.Mesh(new THREE.PlaneGeometry(2, 4.4), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
-drainFall.rotation.y = Math.PI / 2; drainFall.position.set(-15.55, -2.1, -0.5); scene.add(drainFall);
+const drainFall = new THREE.Mesh(new THREE.PlaneGeometry(2, 5.8), new THREE.MeshLambertMaterial({ map: fallTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
+drainFall.rotation.y = Math.PI / 2; drainFall.position.set(-15.55, -2.75, -0.5); scene.add(drainFall);
 // espuma que se mete al agujero del oeste
 const drain = []; for (let i = 0; i < 10; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.18), new THREE.MeshLambertMaterial({ color: 0xe0f4ff, transparent: true, opacity: 0.8 })); f.userData.t = Math.random(); f.userData.z = -1.3 + Math.random() * 1.6; scene.add(f); drain.push(f); }
 // peces que saltan
@@ -714,7 +713,7 @@ const lugares = [
   { id: 'apps', n: 'Aplicaciones', l: 'Torre arcade · Apps', door: [9, -8.6], at: [9, -12, 13.6], c: '#db2777', q: 'Juega en la torre arcade', open: () => panelApps() },
   { id: 'castillo', n: 'Contacto', l: 'Castillo · Sube las gradas', door: [0, -14.6], at: [0, -20, 15], c: '#d97706', q: 'Llega al castillo (contacto)', open: () => panelCastillo() },
   { id: 'granja', n: 'Granja', l: 'Granja · Corral', door: [0, -2.4], at: [0, -5, 3.4], c: '#16a34a', open: () => panelGranja() },
-  { id: 'cueva', n: 'Cueva secreta', l: 'Cueva · Baja con cuidado', door: [-13.9, 20.4], go: [-4.6, 21.5], at: [-7, 21.5, 2.4], c: '#78716c', open: () => panelCueva() },
+  { id: 'cueva', n: 'Cueva secreta', l: 'Cueva · Baja con cuidado', door: [-12, -2.3], go: [-11.4, 7.8], at: [-13.5, 7.2, 2.4], c: '#78716c', open: () => panelCueva() },
   { id: 'cofre', n: 'Mi CV', l: 'Cofre · Mi CV', door: [5.5, -13.9], at: [5.5, -15.5, 2.6], c: '#0d9488', open: () => panelCofre() }
 ];
 const visited = new Set();
@@ -731,7 +730,7 @@ const chest = new THREE.Group(); chest.position.set(5.5, 0.5, -15.5); scene.add(
 part(1.1, 0.6, 0.8, 0x9a6744, 0, 0.3, 0, chest); const lid = part(1.14, 0.3, 0.84, 0xb07a55, 0, 0.72, 0, chest); part(0.2, 0.26, 0.06, 0xfcd34d, 0, 0.55, 0.42, chest);
 solid(4.8, -16.1, 6.2, -14.9);
 // Cofre secreto de la cueva
-const caveChest = new THREE.Group(); caveChest.position.set(-14.7, -5.5, 20.4); caveChest.rotation.y = Math.PI / 2; scene.add(caveChest);
+const caveChest = new THREE.Group(); caveChest.position.set(-12, -5.5, -3.1); caveChest.rotation.y = 0; scene.add(caveChest);
 part(1.1, 0.6, 0.8, 0x6b4a33, 0, 0.3, 0, caveChest); const caveLid = part(1.14, 0.3, 0.84, 0x80583c, 0, 0.72, 0, caveChest); part(0.2, 0.26, 0.06, 0x22d3ee, 0, 0.55, 0.42, caveChest);
 const caveLights = [];
 function torch(x, y, z) {
@@ -740,9 +739,9 @@ function torch(x, y, z) {
   const fl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.16), new THREE.MeshBasicMaterial({ color: 0xffb347 })); fl.position.y = 0.3; g.add(fl);
   const L = new THREE.PointLight(0xffa64d, 7, 7, 1.6); L.position.y = 0.4; g.add(L); caveLights.push({ L, base: 7, fl });
 }
-torch(-15.4, -3.8, 21.5); torch(-11.2, -3.8, 17.6); torch(-8.5, -1.8, 20.6);
-{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-13.4, -4.9, 18.6); scene.add(L); caveLights.push({ L, base: 9 }); }
-[[-15.2, 18.3], [-11.3, 22.4], [-14.6, 22.5]].forEach(([x, z], i) => {
+torch(-10.6, -3.8, -0.5); torch(-14, -3.8, -3.6); torch(-12.4, -2.8, 6);
+{ const L = new THREE.PointLight(0xff6a1a, 9, 6, 1.6); L.position.set(-11.4, -4.9, 1.8); scene.add(L); caveLights.push({ L, base: 9 }); }
+[[-11.4, -2.9], [-16.6, 2.6], [-11.4, 3.4]].forEach(([x, z], i) => {
   for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.5 - k * 0.12, 0.16), new THREE.MeshLambertMaterial({ color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.9 }));
     c.position.set(x + (k - 1) * 0.18, -5.5 + (0.5 - k * 0.12) / 2, z + (k % 2) * 0.12); c.rotation.z = (k - 1) * 0.3; scene.add(c); }
 });
@@ -760,9 +759,8 @@ function buildAxolotl() {
   [[-0.2, 0.2], [0.2, 0.2], [-0.2, -0.2], [0.2, -0.2]].forEach(([x, z]) => part(0.1, 0.06, 0.08, pink, x, -0.1, z, body)); // patitas
   return { g, body, tail };
 }
-const axo = buildAxolotl(); axo.g.position.set(-9, -5.6, 18.5); scene.add(axo.g); axo.t = 0; axo.dir = 1; axo.happy = 0;
-{ const L = new THREE.PointLight(0x22d3ee, 5, 6, 1.6); L.position.set(-9, -4.6, 18.5); scene.add(L); caveLights.push({ L, base: 5 }); }
-torch(-7.4, -3.8, 18.5);
+const axo = buildAxolotl(); axo.g.position.set(-16, -5.6, -0.5); scene.add(axo.g); axo.t = 0; axo.dir = 1; axo.happy = 0;
+{ const L = new THREE.PointLight(0x22d3ee, 5, 6, 1.6); L.position.set(-16, -4.4, -0.5); scene.add(L); caveLights.push({ L, base: 5 }); }
 let axoMet = false, wasInWater = false;
 function greetAxolotl() {
   award('axo', 40, 'Amigo ajolote');
@@ -774,6 +772,28 @@ const axoHearts = [];
 const heartTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.fillStyle = '#ec4899';
   ['0110110', '1111111', '1111111', '0111110', '0011100', '0001000'].forEach((row, y) => [...row].forEach((v, x) => v === '1' && g.fillRect(x + 4, y + 5, 1, 1)));
   const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; return t; })();
+// murciélagos (diseño original): unos cuelgan de cabeza del techo y otros vuelan en círculos
+function buildBat() {
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  part(0.22, 0.26, 0.18, 0x3f2a1d, 0, 0, 0, body);                                   // cuerpo
+  part(0.2, 0.18, 0.18, 0x4a3426, 0, 0.2, 0.02, body);                               // cabeza
+  part(0.05, 0.08, 0.04, 0x3f2a1d, -0.07, 0.32, 0.02, body); part(0.05, 0.08, 0.04, 0x3f2a1d, 0.07, 0.32, 0.02, body); // orejas
+  part(0.04, 0.04, 0.02, 0xfacc15, -0.05, 0.22, 0.11, body); part(0.04, 0.04, 0.02, 0xfacc15, 0.05, 0.22, 0.11, body); // ojos
+  const wl = new THREE.Group(), wr = new THREE.Group(); wl.position.set(-0.1, 0.06, 0); wr.position.set(0.1, 0.06, 0); body.add(wl, wr);
+  part(0.36, 0.22, 0.03, 0x2b1d14, -0.18, 0, 0, wl); part(0.36, 0.22, 0.03, 0x2b1d14, 0.18, 0, 0, wr);
+  return { g, body, wl, wr };
+}
+const bats = [];
+[[-13, 1], [-15, -2.6], [-12.4, -1.6], [-16, 2.4], [-14.2, 2.6]].forEach(([x, z], i) => { const b = buildBat(); b.hang = true; b.g.position.set(x, -1.72, z); b.g.rotation.z = Math.PI; b.ph = i; scene.add(b.g); bats.push(b); });
+[0, 1].forEach(i => { const b = buildBat(); b.hang = false; b.ph = i * Math.PI; scene.add(b.g); bats.push(b); });
+function updateBats(dt, t) {
+  bats.forEach(b => {
+    if (b.hang) { b.body.rotation.y = Math.sin(t * 0.8 + b.ph) * 0.3; const f = 0.15 + Math.sin(t * 3 + b.ph) * 0.05; b.wl.rotation.y = 1.3 - f; b.wr.rotation.y = -1.3 + f; return; }
+    const a = t * 0.9 + b.ph, r = 2.2 + Math.sin(t * 0.5 + b.ph) * 0.6;
+    b.g.position.set(-14 + Math.cos(a) * r, -3.2 + Math.sin(t * 2 + b.ph) * 0.35, 0 + Math.sin(a) * r);
+    b.g.rotation.y = -a; const flap = Math.sin(t * 22 + b.ph) * 0.9; b.wl.rotation.y = flap; b.wr.rotation.y = -flap;
+  });
+}
 let caveK = 0, caveFound = false;
 
 /* ---------------- BLOQUES DE HABILIDAD ---------------- */
@@ -824,11 +844,11 @@ const chestBox = [4.85, -16, 6.15, -15, 1.5];
 function solidCell(i, j, k) { const t = blocks.get(`${i},${j},${k}`); return (t && t !== 'air' && t !== 'agua') || oreCells.has(`${i},${j},${k}`); }
 function hits(x, y, z) {
   if (x < -17.6 || x > 16.6 || z < -27.6 || z > 24.6) return true;
-  if (z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
+  if (y > -0.8 && z + PR > -1.5 && z - PR < 0.5 && !bridges.some(([a, b]) => x - PR > a - 0.5 && x + PR < b + 0.5)) return true;
   const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.ceil(y - 0.5 + 0.001), j1 = Math.ceil(y + PH + 0.5 - 0.001) - 1;
   for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
   if (x + PR > 9.45 && x - PR < 12.55 && z + PR > 12.48 && z - PR < 13.52 && y < 2.25 && y > 0.9) return true; // cabina del DJ
-  if (x + PR > -15.2 && x - PR < -14.2 && z + PR > 19.85 && z - PR < 20.95 && y < -4.6) return true; // cofre secreto
+  if (x + PR > -12.55 && x - PR < -11.45 && z + PR > -3.5 && z - PR < -2.7 && y < -4.6) return true; // cofre secreto
   if (x + PR > chestBox[0] && x - PR < chestBox[2] && z + PR > chestBox[1] && z - PR < chestBox[3] && y < chestBox[4] - 0.01) return true;
   return false;
 }
@@ -848,7 +868,7 @@ function planTo(tx, tz, cb) {
   }
   waypoints.push([tx, tz]); target = waypoints.shift(); onArrive = cb; stuckT = 0; lastDist = Infinity;
 }
-function travel(L) { closeMenu(); if (L.go) planTo(L.go[0], L.go[1], () => toast('⛏', 'LA CUEVA', 'Baja por las gradas', 'Camina hacia la izquierda: los escalones te llevan hasta la caverna.', '#78716c')); else planTo(L.door[0], L.door[1], () => openPlace(L)); }
+function travel(L) { closeMenu(); if (L.go) planTo(L.go[0], L.go[1], () => toast('⛏', 'LA CUEVA', 'Baja por las gradas', 'Camina hacia el río: los escalones bajan hasta la caverna, justo debajo de la cascada.', '#78716c')); else planTo(L.door[0], L.door[1], () => openPlace(L)); }
 
 /* ---------------- INTERACCIÓN ---------------- */
 let near = null;
@@ -970,16 +990,17 @@ function updateGuards(dt, t) {
 function updateCave(dt, t) {
   const p = player.position, inside = inCaveArea(p.x, p.z) && feet < -1;
   caveK += ((inside ? 1 : 0) - caveK) * Math.min(1, dt * 3);
+  updateBats(dt, t); water.material.opacity = 0.88 - 0.5 * caveK; // el río se ve transparente desde la cueva
   hemi.intensity = baseHemi * (1 - 0.6 * caveK); sun.intensity = baseSun * (1 - 0.8 * caveK);
   caveLights.forEach((c, i) => { c.L.intensity = c.base * (0.85 + Math.sin(t * 9 + i * 2) * 0.1 + Math.sin(t * 23 + i) * 0.05); });
   T.lava.offset.y = (t * 0.05) % 1;
   // el ajolote nada de un lado a otro del lago
   axo.t += dt * (axo.happy > 0 ? 0 : 0.35) * axo.dir;
   if (axo.t > 1) { axo.t = 1; axo.dir = -1; } if (axo.t < 0) { axo.t = 0; axo.dir = 1; }
-  const ax = -10 + axo.t * 2, az = 18.5 + Math.sin(t * 0.8) * 0.3;
+  const ax = -16.1 + Math.sin(t * 0.8) * 0.5, az = -1.8 + axo.t * 2.6;
   axo.g.position.x = ax; axo.g.position.z = az; axo.g.position.y = -5.6 + Math.sin(t * 2) * 0.05;
   if (axo.happy > 0) { axo.happy -= dt; axo.g.rotation.y += dt * 8; axo.g.position.y += Math.abs(Math.sin(t * 10)) * 0.3; }
-  else { const want = axo.dir > 0 ? Math.PI / 2 : -Math.PI / 2; axo.g.rotation.y += Math.atan2(Math.sin(want - axo.g.rotation.y), Math.cos(want - axo.g.rotation.y)) * Math.min(1, dt * 4); }
+  else { const want = axo.dir > 0 ? 0 : Math.PI; axo.g.rotation.y += Math.atan2(Math.sin(want - axo.g.rotation.y), Math.cos(want - axo.g.rotation.y)) * Math.min(1, dt * 4); }
   axo.tail.rotation.y = Math.sin(t * 6) * 0.5;
   for (let i = axoHearts.length - 1; i >= 0; i--) { const h = axoHearts[i]; h.position.y += dt * h.userData.v; h.material.opacity = Math.max(0, 1 - (h.position.y + 5.2) / 1.6); if (h.material.opacity <= 0) { scene.remove(h); axoHearts.splice(i, 1); } }
   // chapoteo al entrar al agua
@@ -988,7 +1009,7 @@ function updateCave(dt, t) {
   wasInWater = inWater;
   if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); award('cave', 80, 'Cueva secreta'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
   if (onGround && groundType() === 'lava') {
-    sfx('hurt'); p.set(-4.6, 0.5, 21.5); feet = 0.5; vy = 0;
+    sfx('hurt'); p.set(-11.4, 0.5, 7.8); feet = 0.5; vy = 0;
     toast('♨', '¡AY, LAVA!', 'Volviste a la entrada', 'La lava quema: rodéala para llegar al cofre.', '#ea580c');
   }
 }
