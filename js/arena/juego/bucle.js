@@ -14,6 +14,7 @@ function update(dt, t) {
     if (keys.w || keys.arrowup) mz -= 1; if (keys.s || keys.arrowdown) mz += 1;
     if (keys.a || keys.arrowleft) mx -= 1; if (keys.d || keys.arrowright) mx += 1;
   }
+  if (muriendo) { mx = 0; mz = 0; target = null; } // sin moverse mientras pierdes una vida
   const p = player.position; let moving = false;
   const speed = (keys.shift ? 8.5 : 5) * (swimming ? 0.35 : 1);
   if (mx || mz) { target = null; waypoints = []; onArrive = null; marker.visible = false; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
@@ -53,6 +54,7 @@ function update(dt, t) {
   wasSwimming = swimming;
   // al caer al río desde la orilla, te acomoda dentro del cauce para que no quedes colgada del borde
   if (inRiverChannel(p.x, feet, p.z)) p.z = Math.max(-1.15, Math.min(0.15, p.z));
+  updateVidas(dt, t);
   // salto y gravedad
   coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
   if (jumpReq > 0) {

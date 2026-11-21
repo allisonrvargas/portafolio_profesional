@@ -89,6 +89,7 @@ function hurt(m, power) {
   for (let i = 0; i < 10; i++) { const nx = p.x + dx / d * power * 0.12, nz = p.z + dz / d * power * 0.12; if (!hits(nx, feet, nz)) { p.x = nx; p.z = nz; } }
   vy = 5; onGround = false; target = null; waypoints = []; mining = null; crack.visible = false;
   const f = $('#hurt'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); sfx('hurt');
+  perderVida(m.kind);
 }
 function updateMonsters(dt, t) {
   if (!started || selecting) return;
@@ -123,13 +124,12 @@ function updateMonsters(dt, t) {
         m.g.traverse(o => { if (o.isMesh && o !== m.g.userData.spark) o.material.emissive?.setHex(Math.floor(m.fuse * 8) % 2 ? 0x664455 : 0x000000); });
         if (m.fuse > 1.2) {
           sfx('boom'); poof(m.g.position.x, m.g.position.y + 0.6, m.g.position.z, 0xfcd34d); poof(m.g.position.x, m.g.position.y + 0.8, m.g.position.z, 0xec4899);
-          if (Math.hypot(p.x - m.g.position.x, p.z - m.g.position.z) < 3) { hurt(m, 9); toast('✸', '¡BOOM!', 'Te alcanzó la explosión', 'El Petardín explotó cerca de ti.', '#f59e0b'); }
+          if (Math.hypot(p.x - m.g.position.x, p.z - m.g.position.z) < 3) hurt(m, 9);
           scene.remove(m.g); monsters.splice(i, 1);
         }
       }
     } else if (close && m.cool === 0) {
       m.cool = 1.4; hurt(m, 5);
-      toast(m.kind === 'arana' ? '✶' : '☠', '¡AUCH!', `Te atrapó ${m.kind === 'arana' ? 'la araña' : 'el esqueleto'}`, 'Corre con Shift o pica un bloque para salvarte.', '#e11d48');
     }
   }
   lantern.position.set(p.x, feet + 2.2, p.z);

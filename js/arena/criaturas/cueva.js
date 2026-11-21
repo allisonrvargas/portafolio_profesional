@@ -115,7 +115,6 @@ function updateCave(dt, t) {
   wasInWater = inWater;
   if (inside && feet < -3 && !caveFound) { caveFound = true; sfx('pop'); award('cave', 80, 'Cueva secreta'); toast('⛏', 'CUEVA SECRETA', '¡Encontraste la cueva!', 'Busca el cofre del fondo: guarda un secreto. Cuidado con la lava.', '#78716c'); }
   if (onGround && groundType() === 'lava') {
-    sfx('hurt'); p.set(-11.4, 0.5, 7.8); feet = 0.5; vy = 0;
-    toast('♨', '¡AY, LAVA!', 'Volviste a la entrada', 'La lava quema: rodéala para llegar al cofre.', '#ea580c');
+    perderVida('lava');
   }
 }
