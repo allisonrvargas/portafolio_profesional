@@ -18,7 +18,7 @@ const galeria = [];
     const g = new THREE.Group(); scene.add(g);
     const west = o.w === 'oeste';
     g.position.set(west ? -11.45 : -9.55, -3.95, o.z); g.rotation.y = west ? Math.PI / 2 : -Math.PI / 2;
-    const tilt = new THREE.Group(); tilt.position.z = 0.42; tilt.rotation.x = -0.75; g.add(tilt); // inclinada para verla desde arriba
+    const tilt = new THREE.Group(); tilt.position.z = 0.1; tilt.rotation.x = 0; g.add(tilt); // inclinada para verla desde arriba
     const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat); canvas.position.z = 0.05; tilt.add(canvas);
     const frame = part(1, 1, 0.08, 0xc9a227, 0, 0, 0, tilt);                    // marco dorado
@@ -53,8 +53,9 @@ function cambiarObra(paso) { if (!viendo) return; verObra(galeria[(viendo.i + pa
 function camaraObra(dt) {
   galeria.forEach(gp => {
     const on = gp === viendo;
-    gp.tilt.rotation.x += ((on ? 0 : -0.75) - gp.tilt.rotation.x) * Math.min(1, dt * 6);
-    gp.tilt.position.z += ((on ? 0.14 : 0.42) - gp.tilt.position.z) * Math.min(1, dt * 6);
+    const lean = !on && camMode === 'arriba';                 // solo se inclinan en la vista desde arriba
+    gp.tilt.rotation.x += ((lean ? -0.75 : 0) - gp.tilt.rotation.x) * Math.min(1, dt * 6);
+    gp.tilt.position.z += ((lean ? 0.42 : 0.1) - gp.tilt.position.z) * Math.min(1, dt * 6);
   });
   camera.fov += ((viendo ? verFov : started && !selecting ? camFov() : 38) - camera.fov) * Math.min(1, dt * 5); camera.updateProjectionMatrix();
   if (!viendo) return false;
