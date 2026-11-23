@@ -55,7 +55,7 @@ function update(dt, t) {
   wasSwimming = swimming;
   // al caer al río desde la orilla, te acomoda dentro del cauce para que no quedes colgada del borde
   if (inRiverChannel(p.x, feet, p.z)) p.z = Math.max(-1.15, Math.min(0.15, p.z));
-  updateVidas(dt, t); updateKart(dt, t, moving); updateLockUI(); updateMascota(dt, t); updatePeces(dt, t);
+  updateVidas(dt, t); updateKart(dt, t, moving); updateLockUI(); updateMascota(dt, t); updatePeces(dt, t); updatePecesLago(dt, t);
   // salto y gravedad
   coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
   if (jumpReq > 0) {

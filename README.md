@@ -43,7 +43,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 
 - **Ciclo de día y noche automático** (amanecer, tarde, atardecer rosa y noche con estrellas y luna).
 - **Faroles** junto a los caminos que se encienden de noche, **luciérnagas**, **flores** y **pasto** que se mueve con el viento.
-- **Río vivo** con brillos, **peces** que saltan y una **cascada**. El río sale de una cueva escondida detrás de la cascada, cruza la arena y al otro lado cae dentro de un agujero en el suelo. Si caes al río, nadas y la corriente te arrastra por debajo de los puentes hasta el agujero, y bajas por la cascada al lago de la cueva.
+- **Río vivo** con brillos, **peces** que saltan (también abajo, en el lago de la cueva donde cae el agua) y una **cascada**. El río sale de una cueva escondida detrás de la cascada, cruza la arena y al otro lado cae dentro de un agujero en el suelo. Si caes al río, nadas y la corriente te arrastra por debajo de los puentes hasta el agujero, y bajas por la cascada al lago de la cueva.
 - **Interiores**: la casa tiene cama, librero y escritorio con computadora; la torre de proyectos tiene libreros y la torre arcade, maquinitas. Los techos se ocultan al entrar.
 - **Pisadas con sonido** distinto en pasto, arena, madera y piedra, y polvito al caminar y al caer.
 - **Progreso guardado**: habilidades, animales, historia y personaje se recuerdan entre visitas. Se puede reiniciar desde el menú.
