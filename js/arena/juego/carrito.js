@@ -21,15 +21,15 @@ const kartWheels = [[-0.62, 0.62], [0.62, 0.62], [-0.62, -0.62], [0.62, -0.62]].
 const trailer = new THREE.Group(); trailer.position.z = -1.95; kart.add(trailer);
 part(0.1, 0.1, 0.75, 0x4b5563, 0, 0.3, 0.62, trailer);                       // enganche
 part(1.0, 0.1, 1.0, 0x1f1530, 0, 0.32, 0, trailer);                           // piso
-part(1.0, 0.5, 0.08, 0xec4899, 0, 0.6, 0.46, trailer); part(1.0, 0.5, 0.08, 0xec4899, 0, 0.6, -0.46, trailer); // frente y atrás
-part(0.08, 0.5, 1.0, 0xec4899, 0.5, 0.6, 0, trailer); part(0.08, 0.5, 1.0, 0xec4899, -0.5, 0.6, 0, trailer);   // lados
-part(1.04, 0.06, 1.04, 0x22d3ee, 0, 0.87, 0, trailer);                        // borde turquesa
-const glassMat = new THREE.MeshLambertMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.35, depthWrite: false });
-[[0.52, 0, Math.PI / 2], [-0.52, 0, Math.PI / 2], [0, -0.52, 0]].forEach(([x, z, r]) => { const w = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.6), glassMat); w.position.set(x, 1.2, z); w.rotation.y = r; trailer.add(w); }); // ventanas
-[[0.5, 0.5], [-0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]].forEach(([x, z]) => part(0.06, 0.62, 0.06, 0xec4899, x, 1.2, z, trailer)); // postes
-part(1.12, 0.08, 1.12, 0x7c3aed, 0, 1.54, 0, trailer);                        // techo
-part(0.16, 0.1, 0.06, 0xef4444, 0.34, 0.5, -0.5, trailer); part(0.16, 0.1, 0.06, 0xef4444, -0.34, 0.5, -0.5, trailer); // luces traseras
-part(0.03, 0.8, 0.03, 0x9ca3af, 0.44, 1.9, -0.44, trailer); part(0.3, 0.2, 0.02, 0xf472b6, 0.6, 2.2, -0.44, trailer); // banderita
+part(1.0, 0.2, 0.08, 0xec4899, 0, 0.46, 0.46, trailer); part(1.0, 0.2, 0.08, 0xec4899, 0, 0.46, -0.46, trailer); // frente y atrás (bajitos para que se vea la mascota)
+part(0.08, 0.2, 1.0, 0xec4899, 0.5, 0.46, 0, trailer); part(0.08, 0.2, 1.0, 0xec4899, -0.5, 0.46, 0, trailer);   // lados
+part(1.04, 0.05, 1.04, 0x22d3ee, 0, 0.58, 0, trailer);                        // borde turquesa
+const glassMat = new THREE.MeshLambertMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.22, depthWrite: false });
+[[0.52, 0, Math.PI / 2], [-0.52, 0, Math.PI / 2], [0, -0.52, 0]].forEach(([x, z, r]) => { const w = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.92), glassMat); w.position.set(x, 1.06, z); w.rotation.y = r; trailer.add(w); }); // ventanas grandes
+[[0.5, 0.5], [-0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]].forEach(([x, z]) => part(0.06, 0.96, 0.06, 0xec4899, x, 1.06, z, trailer)); // postes
+part(1.12, 0.08, 1.12, 0x7c3aed, 0, 1.56, 0, trailer);                        // techo
+part(0.16, 0.08, 0.06, 0xef4444, 0.34, 0.44, -0.5, trailer); part(0.16, 0.08, 0.06, 0xef4444, -0.34, 0.44, -0.5, trailer); // luces traseras
+part(0.03, 0.8, 0.03, 0x9ca3af, 0.44, 1.92, -0.44, trailer); part(0.3, 0.2, 0.02, 0xf472b6, 0.6, 2.22, -0.44, trailer); // banderita
 const trailerWheels = [0.62, -0.62].map(x => { const w = new THREE.Group(); w.position.set(x, 0.22, 0); trailer.add(w); part(0.16, 0.44, 0.44, 0x1f2937, 0, 0, 0, w); part(0.18, 0.18, 0.18, 0xe5e7eb, 0, 0, 0, w); return w; });
 const trailerSeat = new THREE.Object3D(); trailerSeat.position.set(0, 0.37, 0); trailer.add(trailerSeat);
 trailer.visible = false;

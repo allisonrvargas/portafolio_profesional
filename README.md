@@ -19,7 +19,7 @@ Mi portafolio es un mundo 3D de bloques inspirado en lo que más me gusta: los j
 | Torre arcade | Aplicaciones: mis páginas publicadas, funcionando dentro del portafolio |
 | Escenario | Radio Allison: música chiptune original. Hay un DJ con tornamesas que baila cuando suena la música |
 | Castillo | Contacto. Adentro hay gradas: al subirlas aparece mi línea de tiempo "Bloque a bloque", dos princesas cuidan las torres, el rey está en lo más alto y en el patio hay una cama que te regresa al inicio |
-| Granja | Corral donde llevas con un lazo a 6 animales originales; cada uno te muestra un proyecto y al juntarlos todos ganas una mascota |
+| Granja | Corral donde llevas con un lazo a 6 animales originales (vaca, cerdito, chihuahua, gallina, conejo y pato); cada uno te muestra un proyecto y al juntarlos todos ganas una mascota |
 | Cofre | Mi CV para abrir o descargar |
 | Cuevas | Dos cuevas unidas por un túnel de mina que pasa debajo de la casa. La del río tiene el lago del ajolote (donde cae el río), murciélagos y el cofre secreto; la del jardín tiene un laguito con un ajolote azul (el más raro), una cama para volver al inicio, lava y minerales. Se entra por gradas junto a la casa o en el jardín |
 | Bloques brillantes | 18 habilidades para picar y llenar el inventario |

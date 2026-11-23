@@ -9,12 +9,12 @@ const toMap = (x, z) => [(x + 16.5) / 33 * mm.width, (z + 26.5) / 50 * mm.height
 const headIcons = {
   vaca:    ['  y   y  ','.wwwwwww.','.wkwwwkw.','.wwwwwww.','.wpppppw.','.pdpppdp.','.ppppppp.','  .....  ','         '],
   cerdo:   [' pp   pp ','.ppppppp.','.pkpppkp.','.ppppppp.','.prrrrrp.','.rdrrrdr.','.ppppppp.','  .....  ','         '],
-  oveja:   ['.lllllll.','lllllllll','lgggggggl','lgkgggkgl','lgggggggl','lgggpgggl',' ggggggg ','  .....  ','         '],
+  chihuahua:['bb     bb','bbb   bbb','.bbwwwww.','.bkbwwkw.','.bbbwwww.','.wwwkwww.','.wwwwwww.','  .....  ','         '],
   gallina: ['   rr    ','  rrr    ','.wwwwwww.','.wkwwwkw.','.wwoooww.','.wwrooww.','.wwwrwww.','  .....  ','         '],
   conejo:  [' cp   pc ',' cp   pc ',' cp   pc ','.ccccccc.','.ckcccck.','.cccpccc.','.ccccccc.','  .....  ','         '],
   pato:    ['   mmm   ','.yyyyyyy.','.ykyyyky.','.yyyyyyy.','.oooooooy','.yyyyyyy.','.yyyyyyy.','  .....  ','         ']
 };
-const headPal = { '.': '#4a1238', w: '#ffffff', k: '#111111', p: '#f9a8d4', d: '#9d174d', r: '#ec4899', y: '#fde68a', l: '#fbcfe8', g: '#71717a', o: '#f97316', c: '#f5e6d3', m: '#ec4899' };
+const headPal = { '.': '#4a1238', w: '#ffffff', k: '#111111', p: '#f9a8d4', d: '#9d174d', r: '#ec4899', y: '#fde68a', l: '#fbcfe8', g: '#71717a', o: '#f97316', c: '#f5e6d3', m: '#ec4899', b: '#c97b45' };
 function drawHead(id, cx, cy, active) {
   const rows = headIcons[id], S = 1.4, ox = cx - 4.5 * S, oy = cy - 4.5 * S;
   mg.fillStyle = active ? '#ec4899' : '#ffffff'; mg.fillRect(ox - 1.5, oy - 1.5, 9 * S + 3, 8 * S + 3);

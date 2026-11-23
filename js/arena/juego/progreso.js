@@ -43,6 +43,10 @@ function saveProgress() {
 }
 function restoreProgress() {
   let any = false;
+  // la oveja ahora es un chihuahua: actualiza partidas guardadas
+  if (progress.penned) progress.penned = progress.penned.map(id => id === 'oveja' ? 'chihuahua' : id);
+  if (progress.pet === 'oveja') progress.pet = 'chihuahua';
+  if (xpKeys.has('pen:oveja')) { xpKeys.delete('pen:oveja'); xpKeys.add('pen:chihuahua'); }
   (progress.mined || []).forEach(i => { const o = ores[i]; if (!o || o.mined) return; o.mined = true; scene.remove(o.m); scene.remove(o.tag); oreCells.delete(`${o.x},1,${o.z}`); const k = hitMeshes.indexOf(o.m); if (k > -1) hitMeshes.splice(k, 1);
     const h = habilidades[i], slot = document.querySelectorAll('.slot')[i]; slot.classList.add('got'); slot.textContent = h.a.length > 4 ? h.a.slice(0, 4) : h.a; minedCount++; any = true; });
   $('#invCount').textContent = minedCount;

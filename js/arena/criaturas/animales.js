@@ -5,31 +5,48 @@
 const animalesDef = [
   { id: 'vaca', n: 'Vaca Fresita', p: 0, frase: 'La vaca te trae mi proyecto más completo de consola:' },
   { id: 'cerdo', n: 'Cerdito Bit', p: 2, frase: 'El cerdito te trae el proyecto que hicimos en equipo:' },
-  { id: 'oveja', n: 'Oveja Nube', p: 1, frase: 'La oveja te trae el proyecto del que más aprendí trabajando en células:' },
+  { id: 'chihuahua', n: 'Chihuahua Chispa', p: 1, frase: 'El chihuahua te trae el proyecto del que más aprendí trabajando en células:' },
   { id: 'gallina', n: 'Gallina Pixel', p: 7, frase: 'La gallina te trae mi tienda hecha solo con HTML y CSS:' },
   { id: 'conejo', n: 'Conejo Byte', p: 4, frase: 'El conejo te trae la API con más pruebas que he escrito:' },
   { id: 'pato', n: 'Pato Query', p: 3, frase: 'El pato te trae mi sistema de biblioteca:' }
 ];
 // el orden de "p" apunta a la lista de proyectos: 0 Kid-Fit, 1 Gym Manager, 2 MarisolliFlix, 3 Librarian, 4 Postulaciones, 7 CampusShop
 animalesDef[0].p = 1; animalesDef[2].p = 0;
-const FLOAT_H = { vaca: 0.55, cerdo: 0.5, oveja: 0.55, gallina: 0.35, pato: 0.35, conejo: 0.32 };
+const FLOAT_H = { vaca: 0.55, cerdo: 0.5, chihuahua: 0.3, gallina: 0.35, pato: 0.35, conejo: 0.32 };
 const spawnAnimal = [[-4, 3], [3, 4], [-1, 7], [11, -6], [-12, -12], [12, 18]];
 function animalModel(id) {
   const g = new THREE.Group(); const legs = []; let headG = new THREE.Group(); g.add(headG);
+  const prevRig = rig; rig = g; // las piezas sin padre van al animal, no a la jugadora
   const leg = (x, z, h, c, w = 0.16) => { const l = new THREE.Group(); l.position.set(x, h, z); g.add(l); part(w, h, w, c, 0, -h / 2, 0, l); legs.push(l); };
-  if (id === 'vaca' || id === 'cerdo' || id === 'oveja') {
-    const C = { vaca: [0xfafafa, 0xf9a8d4, 0x3f3f46], cerdo: [0xf9a8d4, 0xec4899, 0xf472b6], oveja: [0xfbe4f0, 0xfbcfe8, 0x52525b] }[id];
+  if (id === 'chihuahua') { // perrito chihuahua: blanco con manchas café, orejas grandes y arnés azul
+    const W = 0xfaf7f2, B = 0xc97b45, D = 0x2b1a12;
+    leg(-0.1, 0.16, 0.26, W, 0.09); leg(0.1, 0.16, 0.26, W, 0.09); leg(-0.1, -0.18, 0.26, W, 0.09); leg(0.1, -0.18, 0.26, W, 0.09);
+    part(0.3, 0.24, 0.56, W, 0, 0.36, -0.01);                                   // cuerpo
+    part(0.31, 0.14, 0.2, B, 0, 0.42, -0.14); part(0.12, 0.1, 0.16, B, 0.1, 0.33, 0.1); // manchas café
+    part(0.33, 0.27, 0.07, 0x38bdf8, 0, 0.36, 0.17); part(0.33, 0.06, 0.2, 0x38bdf8, 0, 0.5, 0.17); part(0.06, 0.06, 0.04, 0xe5e7eb, 0, 0.53, 0.25); // arnés azul
+    const tail = new THREE.Group(); tail.position.set(0, 0.44, -0.28); tail.rotation.x = -0.9; g.add(tail);
+    part(0.07, 0.26, 0.07, W, 0, 0.12, 0, tail); part(0.075, 0.08, 0.075, B, 0, 0.24, 0, tail); // colita hacia arriba
+    headG.position.set(0, 0.6, 0.3);
+    part(0.3, 0.26, 0.26, W, 0, 0, 0, headG);                                    // cabeza
+    part(0.16, 0.27, 0.1, B, -0.08, 0.005, 0.085, headG);                         // mancha café del ojo
+    part(0.14, 0.1, 0.12, W, 0, -0.06, 0.18, headG);                              // hocico
+    part(0.06, 0.05, 0.02, D, 0, -0.03, 0.245, headG);                            // nariz
+    part(0.06, 0.06, 0.02, D, -0.08, 0.04, 0.135, headG); part(0.06, 0.06, 0.02, D, 0.08, 0.04, 0.135, headG); // ojitos
+    [[-1, 0.16], [1, 0.16]].forEach(([sx, x]) => {                                // orejas grandes y paradas
+      const e = new THREE.Group(); e.position.set(sx * x * 0.75, 0.13, -0.02); e.rotation.z = -sx * 0.35; headG.add(e);
+      part(0.17, 0.14, 0.05, B, 0, 0.07, 0, e); part(0.11, 0.08, 0.05, B, 0, 0.18, 0, e); part(0.05, 0.06, 0.05, B, 0, 0.25, 0, e); part(0.09, 0.14, 0.02, 0xf9a8d4, 0, 0.1, 0.03, e);
+    });
+  } else if (id === 'vaca' || id === 'cerdo') {
+    const C = { vaca: [0xfafafa, 0xf9a8d4, 0x3f3f46], cerdo: [0xf9a8d4, 0xec4899, 0xf472b6] }[id];
     leg(-0.22, 0.3, 0.42, C[2]); leg(0.22, 0.3, 0.42, C[2]); leg(-0.22, -0.3, 0.42, C[2]); leg(0.22, -0.3, 0.42, C[2]);
-    if (id === 'oveja') { legs.forEach(l => l.children[0].material.color.set(0xd4d4d8)); part(0.72, 0.58, 1.0, C[0], 0, 0.72, 0); }
-    else part(0.64, 0.5, 0.96, C[0], 0, 0.68, 0);
+    part(0.64, 0.5, 0.96, C[0], 0, 0.68, 0);
     if (id === 'vaca') { part(0.66, 0.2, 0.3, C[1], 0.02, 0.8, 0.12); part(0.3, 0.24, 0.24, C[1], -0.18, 0.62, -0.26); part(0.2, 0.12, 0.2, C[1], 0, 0.42, 0.25); }
     headG.position.set(0, 0.86, 0.52);
-    part(0.46, 0.42, 0.38, id === 'oveja' ? 0x71717a : C[0], 0, 0, 0.12, headG);
+    part(0.46, 0.42, 0.38, C[0], 0, 0, 0.12, headG);
     part(0.3, 0.18, 0.08, C[1], 0, -0.08, 0.33, headG);
     part(0.06, 0.06, 0.02, 0x111111, -0.14, 0.08, 0.32, headG); part(0.06, 0.06, 0.02, 0x111111, 0.14, 0.08, 0.32, headG);
     if (id === 'vaca') { part(0.08, 0.12, 0.08, 0xfde68a, -0.2, 0.26, 0.05, headG); part(0.08, 0.12, 0.08, 0xfde68a, 0.2, 0.26, 0.05, headG); }
     if (id === 'cerdo') { part(0.12, 0.1, 0.06, C[0], -0.17, 0.24, 0.04, headG); part(0.12, 0.1, 0.06, C[0], 0.17, 0.24, 0.04, headG); part(0.08, 0.08, 0.08, C[1], 0, 0.62, -0.52); }
-    if (id === 'oveja') part(0.5, 0.18, 0.34, C[0], 0, 0.22, 0.08, headG);
   } else if (id === 'gallina' || id === 'pato') {
     const body = id === 'gallina' ? 0xfafafa : 0xfde047;
     leg(-0.1, 0, 0.26, 0xf59e0b, 0.07); leg(0.1, 0, 0.26, 0xf59e0b, 0.07);
@@ -49,6 +66,7 @@ function animalModel(id) {
     part(0.04, 0.26, 0.02, 0xf9a8d4, -0.08, 0.32, 0.035, headG); part(0.04, 0.26, 0.02, 0xf9a8d4, 0.08, 0.32, 0.035, headG);
     part(0.05, 0.05, 0.02, 0x111111, -0.09, 0.04, 0.2, headG); part(0.05, 0.05, 0.02, 0x111111, 0.09, 0.04, 0.2, headG); part(0.06, 0.04, 0.02, 0xec4899, 0, -0.04, 0.2, headG);
   }
+  rig = prevRig;
   return { g, legs, headG };
 }
 const animals = animalesDef.map((d, i) => {
