@@ -43,6 +43,8 @@ const archivos = [
   'juego/bucle.js',
   'juego/progreso.js',
   'juego/vidas.js',
+  'criaturas/mascota.js',
+  'criaturas/peces.js',
   'interfaz/final.js',
   'interfaz/tutorial.js',
   'juego/pisadas.js',

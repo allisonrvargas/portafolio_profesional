@@ -55,7 +55,7 @@ function update(dt, t) {
   wasSwimming = swimming;
   // al caer al río desde la orilla, te acomoda dentro del cauce para que no quedes colgada del borde
   if (inRiverChannel(p.x, feet, p.z)) p.z = Math.max(-1.15, Math.min(0.15, p.z));
-  updateVidas(dt, t); updateKart(dt, t, moving); updateLockUI();
+  updateVidas(dt, t); updateKart(dt, t, moving); updateLockUI(); updateMascota(dt, t); updatePeces(dt, t);
   // salto y gravedad
   coyote = onGround ? 0.12 : Math.max(0, coyote - dt);
   if (jumpReq > 0) {
@@ -131,7 +131,7 @@ function update(dt, t) {
     near = mining || viendo ? null : nearest();
     ores.forEach(o => { if (!o.mined) o.tag.visible = near?.o === o; });
     const pr = $('#prompt');
-    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'kart' ? 'Subir al carrito' : near.kind === 'obra' ? 'Ver la obra: ' + near.g.o.t : near.kind === 'kartExit' ? 'Bajar del carrito' : near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
+    if (near) { pr.hidden = false; $('#promptText').textContent = near.kind === 'kart' ? 'Subir al carrito' : near.kind === 'petHouse' ? (pet ? `Casita de ${petName || pet.n}` : 'Ver la casita') : near.kind === 'obra' ? 'Ver la obra: ' + near.g.o.t : near.kind === 'kartExit' ? 'Bajar del carrito' : near.kind === 'npc' ? 'Hablar con la guía' : near.kind === 'animal' ? (near.a.state === 'corral' ? 'Elegir de mascota: ' : 'Lazar: ') + near.a.n : near.kind === 'bed' ? 'Acostarse y volver al inicio' : near.kind === 'axo' ? (near.a && near.a.blue ? 'Saludar al ajolote azul' : 'Saludar al ajolote') : near.kind === 'loc' ? (near.L.id === 'cofre' ? 'Abrir el cofre' : near.L.id === 'cueva' ? 'Abrir el cofre secreto' : 'Entrar: ' + near.L.n) : 'Picar bloque: ' + habilidades[near.o.i].n; }
     else pr.hidden = true;
   }
 

@@ -67,7 +67,7 @@ function animalOk(x, z, from) {
 
 function panelGranja() {
   const rows = animals.map(a => {
-    const st = a.state === 'corral' ? 'En el corral' : a.state === 'mascota' ? 'Tu mascota' : a.state === 'lazo' ? 'Te sigue' : 'Suelto';
+    const st = a.state === 'corral' ? 'En el corral' : a.state === 'mascota' ? 'Tu mascota' : a.state === 'casa' ? 'En su casita' : a.state === 'lazo' ? 'Te sigue' : 'Suelto';
     return `<li class="${a.state === 'libre' ? '' : 'ok'}"><b>${a.n}</b><span>${st}</span>${a.state === 'libre' ? `<button class="btn" data-find="${a.i}">Llévame</button>` : `<em>${proyectos[a.p].t}</em>`}</li>`;
   }).join('');
   showPanel(`<p class="p-kicker">LA GRANJA · ${penned}/${animals.length} EN EL CORRAL</p><h2 id="panelTitle">Junta a los animales</h2>
@@ -106,8 +106,8 @@ function afterPen() {
   if (penned === animals.length) setTimeout(() => { sfx('win'); confetti(); toast('★', 'GRANJA COMPLETA', '¡Juntaste a todos!', 'Ganaste una mascota: entra al corral y pulsa E junto al animal que quieras.', '#16a34a'); }, 600);
 }
 function choosePet(a) {
-  if (pet) { pet.state = 'corral'; const [x, z] = [(Math.random() * 6 - 3), -5]; pet.g.position.set(x, pet.y, z); }
-  pet = a; a.state = 'mascota'; sfx('win'); award('pet', 60, 'Mascota nueva'); saveProgress();
+  if (pet) { if (petTag) petTag.visible = false; pet.state = 'corral'; const [x, z] = [(Math.random() * 6 - 3), -5]; pet.g.position.set(x, pet.y, z); }
+  pet = a; a.state = 'mascota'; sfx('win'); award('pet', 60, 'Mascota nueva'); onNewPet(); saveProgress();
   toast('♥', 'NUEVA MASCOTA', a.n, 'Ahora te acompaña por toda la arena.', '#ec4899');
 }
 // ¿puede pisar aquí un animal que te sigue? Sube o baja como tú (máx. 1 bloque hacia arriba) y su cuerpo no queda dentro de un bloque
@@ -128,6 +128,7 @@ function updateAnimals(dt, t) {
   const p = player.position; const leashed = animals.filter(a => a.state === 'lazo');
   const followers = animals.filter(a => a.state === 'lazo' || a.state === 'mascota');
   animals.forEach(a => {
+    if (a.state === 'casa') { a.t += dt; updatePetHome(a, dt, t); return; } // jugando en su casita
     a.t += dt; let moving = false; let tx = null, tz = null, speed = 1.2;
     if ((a.state === 'lazo' || a.state === 'mascota') && swimming) {
       // en el río: nadan detrás de ti y la corriente los lleva contigo (también por debajo de los puentes)

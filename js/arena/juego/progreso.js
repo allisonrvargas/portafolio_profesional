@@ -10,7 +10,7 @@ const niveles = [
   { xp: 800, n: 'Granjera' }, { xp: 1080, n: 'Arquera' }, { xp: 1400, n: 'Hechicera' }, { xp: 1720, n: 'Campeona' }, { xp: 2000, n: 'Leyenda de la arena' }
 ];
 const xpKeys = new Set(progress.xpKeys || []); let xp = 0; var xpReady = true;
-const xpValue = k => k.startsWith('obra:') ? 20 : k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, axoBlue: 60, sleep: 30 })[k] || 0;
+const xpValue = k => k.startsWith('obra:') ? 20 : k.startsWith('ore:') ? 40 : k.startsWith('pen:') ? 50 : k.startsWith('visit:') ? 100 : k.startsWith('hito:') ? 30 : ({ cofre: 50, pet: 60, cave: 80, caveChest: 80, axo: 40, axoBlue: 60, sleep: 30, petName: 20 })[k] || 0;
 const levelOf = v => { let l = 0; while (l < niveles.length - 1 && v >= niveles[l + 1].xp) l++; return l; };
 function renderLevel() {
   const l = levelOf(xp), cur = niveles[l], next = niveles[l + 1];
@@ -37,7 +37,7 @@ function award(key, amount, why, silent) {
 function saveProgress() {
   progress.xpKeys = [...xpKeys];
   progress.mined = ores.filter(o => o.mined).map(o => o.i);
-  progress.penned = animals.filter(a => a.state === 'corral' || a.state === 'mascota').map(a => a.id);
+  progress.penned = animals.filter(a => a.state === 'corral' || a.state === 'mascota' || a.state === 'casa').map(a => a.id);
   progress.pet = pet ? pet.id : null; progress.char = charIndex; progress.visited = [...visited]; progress.tl = tlShown; progress.time = Math.round(playTime);
   try { localStorage.setItem('arenaSave', JSON.stringify(progress)); } catch (e) { }
 }
@@ -47,14 +47,15 @@ function restoreProgress() {
     const h = habilidades[i], slot = document.querySelectorAll('.slot')[i]; slot.classList.add('got'); slot.textContent = h.a.length > 4 ? h.a.slice(0, 4) : h.a; minedCount++; any = true; });
   $('#invCount').textContent = minedCount;
   (progress.penned || []).forEach(id => { const a = animals.find(x => x.id === id); if (!a) return; a.state = 'corral'; a.g.position.set(-2.5 + a.i, 0.5, -5); a.y = 0.5; penned++; any = true; });
-  if (progress.pet) { const a = animals.find(x => x.id === progress.pet); if (a) { pet = a; a.state = 'mascota'; a.g.position.set(1, 0.5, 18); } }
+  if (progress.pet) { const a = animals.find(x => x.id === progress.pet); if (a) { pet = a; if (progress.petHome) { a.state = 'casa'; a.g.position.set(6, 0.5, -4.4); a.y = 0.5; } else { a.state = 'mascota'; a.g.position.set(1, 0.5, 18); } } }
+  renderHouseSign(); renderPetTag();
   (progress.visited || []).forEach(v => visited.add(v));
   for (let k = 0; k < (progress.tl || 0); k++) { const h = hitos[k]; h.done = true; h.sprite.material.opacity = 1; const li = document.createElement('li'); if (h.now) li.className = 'now'; li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d; $('#tlList').appendChild(li); tlShown++; }
   $('#tlCount').textContent = tlShown;
   if (typeof progress.char === 'number') buildCharacter(progress.char); else buildTool();
   [...xpKeys].forEach(k => { xpKeys.delete(k); award(k, xpValue(k), '', true); });
   ores.forEach(o => o.mined && award(`ore:${o.i}`, 40, '', true));
-  animals.forEach(a => (a.state === 'corral' || a.state === 'mascota') && award(`pen:${a.id}`, 50, '', true));
+  animals.forEach(a => (a.state === 'corral' || a.state === 'mascota' || a.state === 'casa') && award(`pen:${a.id}`, 50, '', true));
   if (pet) award('pet', 60, '', true);
   visited.forEach(v => award(`visit:${v}`, 100, '', true));
   hitos.forEach((h, k) => h.done && award(`hito:${k}`, 30, '', true));

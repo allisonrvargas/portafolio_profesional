@@ -18,7 +18,8 @@ function nearest() {
   for (const L of lugares) for (const pt of [L.door, L.alt].filter(Boolean)) { const d = Math.hypot(p.x - pt[0], p.z - pt[1]); if (d < 2.4 && d < bd) { bd = d; best = { kind: 'loc', L }; } }
   for (const o of ores) { if (o.mined) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < 1.9 && d < bd) { bd = d; best = { kind: 'ore', o }; } }
   if (guide.state === 'home' || guide.state === 'returning') { const d = Math.hypot(p.x - npc.position.x, p.z - npc.position.z); if (d < 2.2 && d < bd) { bd = d; best = { kind: 'npc' }; } }
-  for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
+  for (const a of animals) { if (a.state === 'lazo' || a.state === 'mascota' || a.state === 'casa' || (a.state === 'corral' && penned < animals.length)) continue; const d = Math.hypot(p.x - a.g.position.x, p.z - a.g.position.z); if (d < 2.6 && d < bd) { bd = d; best = { kind: 'animal', a }; } }
+  if (nearPetHouse(p)) best = { kind: 'petHouse' };
   if (feet < 3 && Math.hypot(p.x - BED[0], p.z - BED[1]) < 2.4) best = { kind: 'bed' };
   if (feet > 1.2 && best?.kind === 'loc' && best.L.id === 'castillo') best = null;
   if (best?.kind === 'loc' && best.L.id === 'cueva' && feet > -3) best = null;
@@ -27,6 +28,7 @@ function nearest() {
 function interact() {
   if (!near || panelOpen) return;
   if (near.kind === 'kart') return enterKart();
+  if (near.kind === 'petHouse') return openPetHouse();
   if (near.kind === 'obra') return verObra(near.g);
   if (near.kind === 'kartExit') return leaveKart();
   if (near.kind === 'npc') talkNpc(); else if (near.kind === 'animal') lasso(near.a); else if (near.kind === 'bed') sleep(near.where); else if (near.kind === 'axo') greetAxolotl(near.a); else if (near.kind === 'loc') openPlace(near.L); else mine(near.o);

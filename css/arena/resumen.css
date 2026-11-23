@@ -27,3 +27,10 @@
 .farm-list span{font-size:13px;color:var(--ink-2)}
 .farm-list em{font-size:12px;color:#16a34a}
 .farm-list .btn{font-size:15px;padding:6px 12px}
+/* Casita de la mascota: nombre y botones */
+.pet-name{display:block;margin-top:12px;font-weight:700;color:var(--ink)}
+.pet-name span{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.pet-name input{flex:1;min-width:160px;font:inherit;font-size:16px;padding:9px 12px;border:3px solid #f9a8d4;background:#fff;color:var(--ink)}
+.pet-name input:focus{outline:none;border-color:#db2777}
+.pet-actions{margin-top:14px}
+.pet-tip{margin-top:10px;font-size:13px;color:var(--ink-2)}
