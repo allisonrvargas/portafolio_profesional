@@ -52,6 +52,7 @@ function kartZone(x, z) {
   if (inR(roofZones[2])) return 'la torre arcade';
   if (x > -6.6 && x < 6.6 && z < -14.4 && z > -24.5) return 'el castillo';
   if (x > 7 && x < 15 && z > 10 && z < 16) return 'el escenario';
+  if (x > PET_BOX[0] - 0.5 && x < PET_BOX[2] + 0.5 && z > PET_BOX[1] - 0.5 && z < PET_BOX[3] + 0.5) return 'la casita de tu mascota';
   if (x > CORRAL.x1 - 0.2 && x < CORRAL.x2 + 0.2 && z > CORRAL.z1 - 0.2 && z < CORRAL.z2 + 0.2) return 'el corral';
   return null;
 }

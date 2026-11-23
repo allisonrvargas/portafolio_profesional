@@ -51,7 +51,7 @@ function restoreProgress() {
     const h = habilidades[i], slot = document.querySelectorAll('.slot')[i]; slot.classList.add('got'); slot.textContent = h.a.length > 4 ? h.a.slice(0, 4) : h.a; minedCount++; any = true; });
   $('#invCount').textContent = minedCount;
   (progress.penned || []).forEach(id => { const a = animals.find(x => x.id === id); if (!a) return; a.state = 'corral'; a.g.position.set(-2.5 + a.i, 0.5, -5); a.y = 0.5; penned++; any = true; });
-  if (progress.pet) { const a = animals.find(x => x.id === progress.pet); if (a) { pet = a; if (progress.petHome) { a.state = 'casa'; a.g.position.set(6, 0.5, -4.4); a.y = 0.5; } else { a.state = 'mascota'; a.g.position.set(1, 0.5, 18); } } }
+  if (progress.pet) { const a = animals.find(x => x.id === progress.pet); if (a) { pet = a; if (progress.petHome) { a.state = 'casa'; a.g.position.set(PET_HOUSE.x + 1.2, 0.5, PET_HOUSE.z + 2); a.y = 0.5; } else { a.state = 'mascota'; a.g.position.set(1, 0.5, 18); } } }
   renderHouseSign(); renderPetTag();
   (progress.visited || []).forEach(v => visited.add(v));
   for (let k = 0; k < (progress.tl || 0); k++) { const h = hitos[k]; h.done = true; h.sprite.material.opacity = 1; const li = document.createElement('li'); if (h.now) li.className = 'now'; li.innerHTML = '<small></small><b></b><p></p>'; li.querySelector('small').textContent = h.f; li.querySelector('b').textContent = h.t; li.querySelector('p').textContent = h.d; $('#tlList').appendChild(li); tlShown++; }

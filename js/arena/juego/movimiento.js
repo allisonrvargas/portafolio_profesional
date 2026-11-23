@@ -15,6 +15,7 @@ function hits(x, y, z) {
   const i0 = Math.round(x - PR), i1 = Math.round(x + PR), k0 = Math.round(z - PR), k1 = Math.round(z + PR), j0 = Math.ceil(y - 0.5 + 0.001), j1 = inRiverChannel(x, y, z) ? Math.max(j0, -1) : Math.ceil(y + PH + 0.5 - 0.001) - 1; // dentro del cauce del río solo cuenta lo que está bajo el agua
   for (let i = i0; i <= i1; i++) for (let k = k0; k <= k1; k++) for (let j = j0; j <= j1; j++) if (solidCell(i, j, k)) return true;
   if (x + PR > 9.45 && x - PR < 12.55 && z + PR > 12.48 && z - PR < 13.52 && y < 2.25 && y > 0.9) return true; // cabina del DJ
+  if (typeof PET_BOX !== 'undefined' && x + PR > PET_BOX[0] && x - PR < PET_BOX[2] && z + PR > PET_BOX[1] && z - PR < PET_BOX[3] && y < 2.3 && y > -0.5) return true; // casita de la mascota
   if (x + PR > -12.55 && x - PR < -11.45 && z + PR > -3.5 && z - PR < -2.7 && y < -4.6) return true; // cofre secreto
   if (x + PR > chestBox[0] && x - PR < chestBox[2] && z + PR > chestBox[1] && z - PR < chestBox[3] && y < chestBox[4] - 0.01) return true;
   return false;

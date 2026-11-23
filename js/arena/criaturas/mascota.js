@@ -1,9 +1,11 @@
 'use strict';
-// Casita de la mascota: aparece junto al corral. Le pones nombre, la dejas jugando en su casita o la llevas contigo.
+// Casita de la mascota: está en el pasto junto a la casa. Le pones nombre, la dejas jugando en su casita o la llevas contigo.
 // De noche duerme dentro (Zzz) y cuando pasas cerca sale a saludarte.
 
-const PET_HOUSE = { x: 6, z: -6.4 }, PET_DOOR = [7.25, -6.4], PET_BOWL = [5.5, -3.7];
-const PET_YARD = { x1: 5.15, x2: 6.85, z1: -5.5, z2: -3.25 };
+const PET_HOUSE = { x: -5, z: 11.8 }; // en el pasto junto al camino de la casa
+const PET_DOOR = [PET_HOUSE.x + 1.25, PET_HOUSE.z], PET_BOWL = [PET_HOUSE.x + 1.3, PET_HOUSE.z + 2.6];
+const PET_YARD = { x1: PET_HOUSE.x + 0.55, x2: PET_HOUSE.x + 2.0, z1: PET_HOUSE.z + 0.9, z2: PET_HOUSE.z + 3.15 };
+const PET_BOX = [PET_HOUSE.x - 0.8, PET_HOUSE.z - 0.75, PET_HOUSE.x + 0.8, PET_HOUSE.z + 0.75]; // nadie la atraviesa
 let petName = (progress.petName || '').slice(0, 16);
 let petHome = !!progress.petHome, petGreetT = 0, petTag = null, petWander = null, petNapT = 0;
 
@@ -18,8 +20,8 @@ part(0.06, 0.08, 0.78, 0xffffff, 0.76, 0.74, 0, petHouse);                    //
 part(0.04, 0.24, 0.24, 0xfde68a, 0.76, 0.85, 0.48, petHouse);                 // ventanita con luz
 const bowl = new THREE.Group(); bowl.position.set(PET_BOWL[0], 0.5, PET_BOWL[1]); scene.add(bowl);
 part(0.46, 0.14, 0.46, 0x38bdf8, 0, 0.07, 0, bowl); part(0.34, 0.05, 0.34, 0xa16207, 0, 0.15, 0, bowl); // plato con comida
-const ball = part(0.22, 0.22, 0.22, 0xfacc15, 6.4, 0.61, -4.6, scene);       // pelotita para jugar
-solid(5.2, -7.15, 6.8, -5.65);
+const ball = part(0.22, 0.22, 0.22, 0xfacc15, PET_HOUSE.x + 1.0, 0.61, PET_HOUSE.z + 1.6, scene);       // pelotita para jugar
+solid(...PET_BOX);
 let houseSign = null;
 function renderHouseSign() {
   if (houseSign) scene.remove(houseSign);
@@ -122,6 +124,6 @@ function updateMascota(dt, t) {
 }
 // se llama al elegir mascota
 function onNewPet() { petHome = false; progress.petHome = false; renderHouseSign(); renderPetTag();
-  setTimeout(() => toast('⌂', 'CASITA LISTA', 'Tu mascota tiene casita', 'Está junto al corral: pulsa E en la puerta para ponerle nombre.', '#7c3aed'), 2600); }
+  setTimeout(() => toast('⌂', 'CASITA LISTA', 'Tu mascota tiene casita', 'Está en el pasto junto a tu casa: pulsa E en la puerta para ponerle nombre.', '#7c3aed'), 2600); }
 // al cargar la partida
 renderHouseSign(); renderPetTag();
