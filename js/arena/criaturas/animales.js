@@ -126,9 +126,23 @@ function spotNear(px, pz) {
 }
 function updateAnimals(dt, t) {
   const p = player.position; const leashed = animals.filter(a => a.state === 'lazo');
+  const followers = animals.filter(a => a.state === 'lazo' || a.state === 'mascota');
   animals.forEach(a => {
     a.t += dt; let moving = false; let tx = null, tz = null, speed = 1.2;
-    if (a.state === 'lazo' || a.state === 'mascota') {
+    if ((a.state === 'lazo' || a.state === 'mascota') && swimming) {
+      // en el río: nadan detrás de ti y la corriente los lleva contigo (también por debajo de los puentes)
+      const k = followers.indexOf(a);
+      if (!a.swim) { a.swim = true; sfx('splash'); dust(a.g.position.x, -0.4, a.g.position.z, 12, 0x67e8f9); }
+      const tx2 = p.x + 1.1 * (k + 1), tz2 = Math.max(-1.1, Math.min(0.1, p.z + (k % 2 ? 0.35 : -0.35)));
+      a.g.position.x += (tx2 - a.g.position.x) * Math.min(1, dt * 4); a.g.position.z += (tz2 - a.g.position.z) * Math.min(1, dt * 4);
+      a.y = -0.95; a.g.position.y = a.y + Math.sin(t * 3 + k) * 0.06;
+      a.g.rotation.y += (-Math.PI / 2 - a.g.rotation.y) * Math.min(1, dt * 4);
+      a.legs.forEach((l, j) => l.rotation.x = Math.sin(a.t * 12 + j) * 0.7);           // patalean nadando
+      if (Math.random() < dt * 3) dust(a.g.position.x + 0.3, -0.45, a.g.position.z, 1, 0xe0f4ff);
+    } else if (a.state === 'lazo' || a.state === 'mascota') {
+      if (a.swim) { // saliste del río (o caíste por el hoyo): te sigue a donde fuiste
+        a.swim = false; const k = followers.indexOf(a), [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx + 0.9 + k * 0.8, sy + 0.4, sz + (k % 2 ? 0.6 : -0.6)); a.y = sy + 0.4;
+      }
       const idx = leashed.indexOf(a), lead = a.state === 'mascota' ? null : idx > 0 ? leashed[idx - 1].g.position : null;
       const fx = lead ? lead.x : p.x, fz = lead ? lead.z : p.z, d = Math.hypot(fx - a.g.position.x, fz - a.g.position.z);
       if (d > (a.state === 'mascota' ? 1.4 : 1.6)) { tx = fx; tz = fz; speed = Math.min(9, d * 2.4); }
@@ -157,12 +171,13 @@ function updateAnimals(dt, t) {
         const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; a.stuck = 0; dust(sx, sy + 0.3, sz, 6, 0xffffff); }
       const want = Math.atan2(dx, dz); let df = want - a.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); a.g.rotation.y += df * Math.min(1, dt * 8);
     }
+    if (a.swim) { if (a.rope.visible) { const pos = a.rope.geometry.attributes.position; pos.setXYZ(0, p.x, feet + 0.5, p.z); pos.setXYZ(1, a.g.position.x, a.g.position.y + 0.6, a.g.position.z); pos.needsUpdate = true; } return; }
     const climb = a.state === 'libre' ? 1.2 : 1.3;
     const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + climb);
     if (gy > a.y + 0.3) a.jumpT = 0.35;                                     // brinca para subir
     a.y += (gy - a.y) * Math.min(1, dt * (gy > a.y ? 9 : 12));
     a.jumpT = Math.max(0, (a.jumpT || 0) - dt);
-    if ((a.state === 'lazo' || a.state === 'mascota') && a.y > feet + 2.2) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; } // si quedó en lo alto, baja junto a ti
+    if ((a.state === 'lazo' || a.state === 'mascota') && (a.y > feet + 2.2 || a.y < feet - 2.2)) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; } // si quedó en lo alto, baja junto a ti
     const hop = (a.id === 'conejo' && moving ? Math.abs(Math.sin(a.t * 9)) * 0.25 : 0) + Math.sin((a.jumpT || 0) / 0.35 * Math.PI) * 0.45;
     a.g.position.y = a.y + hop;
     const sw = moving ? Math.sin(a.t * 10) * 0.6 : 0; a.legs.forEach((l, k) => l.rotation.x = sw * (k % 2 ? 1 : -1) * (k > 1 ? -1 : 1));
