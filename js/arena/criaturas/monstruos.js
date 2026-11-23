@@ -107,7 +107,7 @@ function updateMonsters(dt, t) {
       const sp = info.speed * dt, nx = m.g.position.x + dx / d * sp, nz = m.g.position.z + dz / d * sp;
       const gy = groundBelow(nx, nz, m.y + 1.2);
       // solo caminan por suelo al mismo nivel (sin subirse a faroles ni muros) y sin meterse en bloques
-      const ok = (x, z) => Math.abs(groundBelow(x, z, m.y + 0.6) - m.y) <= 0.55 && !hits(x, m.y, z) && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4));
+      const ok = (x, z) => { const g = groundBelow(x, z, m.y + 1.3); return g - m.y <= 1.05 && m.y - g <= 0.55 && !hits(x, g, z) && !(x < -15.4 || x > 15.4 || z < -25.4 || z > 22.4) && !(z > -1.8 && z < 0.8 && !bridges.some(([a, b]) => x > a - 0.4 && x < b + 0.4)); }; // suben 1 bloque (como en Minecraft) si les cabe el cuerpo; no bajan a hoyos
       const ang = Math.atan2(dx, dz);
       // si algo estorba, prueba rodearlo (hacia el lado que eligió la última vez)
       m.side = m.side || (Math.random() < 0.5 ? 1 : -1);
@@ -118,7 +118,7 @@ function updateMonsters(dt, t) {
       }
       if (!moved) { m.side = -m.side; m.stuckT = (m.stuckT || 0) + dt; } else m.stuckT = 0;
       if (m.stuckT > 3) { killMonster(m, 0x7c3aed); monsters.splice(i, 1); continue; }   // atrapado del todo: desaparece en humo
-      const gy2 = groundBelow(m.g.position.x, m.g.position.z, m.y + 0.6); m.y += (gy2 - m.y) * Math.min(1, dt * 10); m.g.position.y = m.y;
+      const gy2 = groundBelow(m.g.position.x, m.g.position.z, m.y + 1.3); m.y += (gy2 - m.y) * Math.min(1, dt * 10); m.g.position.y = m.y;
       m.g.rotation.y = Math.atan2(dx, dz);
     }
     const sw = moving ? Math.sin(m.t * (m.kind === 'arana' ? 16 : 10)) : 0;
