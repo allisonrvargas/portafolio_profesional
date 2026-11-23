@@ -12,6 +12,7 @@ const animalesDef = [
 ];
 // el orden de "p" apunta a la lista de proyectos: 0 Kid-Fit, 1 Gym Manager, 2 MarisolliFlix, 3 Librarian, 4 Postulaciones, 7 CampusShop
 animalesDef[0].p = 1; animalesDef[2].p = 0;
+const FLOAT_H = { vaca: 0.55, cerdo: 0.5, oveja: 0.55, gallina: 0.35, pato: 0.35, conejo: 0.32 };
 const spawnAnimal = [[-4, 3], [3, 4], [-1, 7], [11, -6], [-12, -12], [12, 18]];
 function animalModel(id) {
   const g = new THREE.Group(); const legs = []; let headG = new THREE.Group(); g.add(headG);
@@ -55,7 +56,7 @@ const animals = animalesDef.map((d, i) => {
   g.position.set(x, groundBelow(x, z, 1.2), z); g.rotation.y = Math.random() * 6.28; scene.add(g);
   const rope = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0x9a6744 }));
   rope.visible = false; rope.frustumCulled = false; scene.add(rope);
-  return { ...d, i, g, legs, headG, rope, state: 'libre', goal: null, wait: Math.random() * 3, t: Math.random() * 9, y: g.position.y };
+  return { ...d, i, g, legs, headG, rope, state: 'libre', goal: null, wait: Math.random() * 3, t: Math.random() * 9, y: g.position.y, floatH: FLOAT_H[d.id] || 0.4 };
 });
 let penned = 0, pet = null;
 const inCorral = (x, z, m = 0) => x > CORRAL.x1 + 0.5 + m && x < CORRAL.x2 - 0.5 - m && z > CORRAL.z1 + 0.5 + m && z < CORRAL.z2 - 0.5 - m;
@@ -130,13 +131,14 @@ function updateAnimals(dt, t) {
   animals.forEach(a => {
     if (a.state === 'casa') { a.t += dt; updatePetHome(a, dt, t); return; } // jugando en su casita
     a.t += dt; let moving = false; let tx = null, tz = null, speed = 1.2;
+    if (a === pet && a.state === 'mascota' && driving && !swimming) { rideTrailer(a, dt, t); return; } // va en su remolque
     if ((a.state === 'lazo' || a.state === 'mascota') && swimming) {
       // en el río: nadan detrás de ti y la corriente los lleva contigo (también por debajo de los puentes)
       const k = followers.indexOf(a);
       if (!a.swim) { a.swim = true; sfx('splash'); dust(a.g.position.x, -0.4, a.g.position.z, 12, 0x67e8f9); }
       const tx2 = p.x + 1.1 * (k + 1), tz2 = Math.max(-1.1, Math.min(0.1, p.z + (k % 2 ? 0.35 : -0.35)));
       a.g.position.x += (tx2 - a.g.position.x) * Math.min(1, dt * 4); a.g.position.z += (tz2 - a.g.position.z) * Math.min(1, dt * 4);
-      a.y = -0.95; a.g.position.y = a.y + Math.sin(t * 3 + k) * 0.06;
+      a.y = -0.445 - a.floatH; a.g.position.y = a.y + Math.sin(t * 3 + k) * 0.06; // flota: medio cuerpo fuera del agua
       a.g.rotation.y += (-Math.PI / 2 - a.g.rotation.y) * Math.min(1, dt * 4);
       a.legs.forEach((l, j) => l.rotation.x = Math.sin(a.t * 12 + j) * 0.7);           // patalean nadando
       if (Math.random() < dt * 3) dust(a.g.position.x + 0.3, -0.45, a.g.position.z, 1, 0xe0f4ff);
@@ -176,11 +178,16 @@ function updateAnimals(dt, t) {
     const climb = a.state === 'libre' ? 1.2 : 1.3;
     const gy = groundBelow(a.g.position.x, a.g.position.z, a.y + climb);
     if (gy > a.y + 0.3) a.jumpT = 0.35;                                     // brinca para subir
-    a.y += (gy - a.y) * Math.min(1, dt * (gy > a.y ? 9 : 12));
+    const wj = Math.round(gy + 0.5), inLake = blocks.get(`${Math.round(a.g.position.x)},${wj},${Math.round(a.g.position.z)}`) === 'agua';
+    const goal = inLake ? wj + 0.5 - a.floatH : gy;                           // en un lago flota en la superficie
+    if (inLake && !a.inLake) { sfx('splash'); dust(a.g.position.x, wj + 0.6, a.g.position.z, 10, 0x67e8f9); }
+    a.inLake = inLake;
+    a.y += (goal - a.y) * Math.min(1, dt * (goal > a.y ? 9 : 12));
     a.jumpT = Math.max(0, (a.jumpT || 0) - dt);
     if ((a.state === 'lazo' || a.state === 'mascota') && (a.y > feet + 2.2 || a.y < feet - 2.2)) { const [sx, sz, sy] = spotNear(p.x, p.z); a.g.position.set(sx, sy, sz); a.y = sy; } // si quedó en lo alto, baja junto a ti
     const hop = (a.id === 'conejo' && moving ? Math.abs(Math.sin(a.t * 9)) * 0.25 : 0) + Math.sin((a.jumpT || 0) / 0.35 * Math.PI) * 0.45;
-    a.g.position.y = a.y + hop;
+    a.g.position.y = a.y + hop + (a.inLake ? Math.sin(t * 3 + a.i) * 0.05 : 0);
+    if (a.inLake) { a.legs.forEach((l, j) => l.rotation.x = Math.sin(a.t * 12 + j) * 0.7); if (Math.random() < dt * 2) dust(a.g.position.x, a.y + a.floatH + 0.05, a.g.position.z, 1, 0xe0f4ff); }
     const sw = moving ? Math.sin(a.t * 10) * 0.6 : 0; a.legs.forEach((l, k) => l.rotation.x = sw * (k % 2 ? 1 : -1) * (k > 1 ? -1 : 1));
     a.headG.rotation.x = !moving && a.state !== 'lazo' ? Math.max(0, Math.sin(a.t * 0.8)) * 0.5 : 0; // come pasto
     if (a.rope.visible) {
