@@ -1,0 +1,14 @@
+# Archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.log
+
+# Dependencias, compilados y secretos
+node_modules/
+dist/
+.env
+.env.*
