@@ -143,7 +143,7 @@ Los datos están en `js/arena/datos/contenido.js` (las canciones, en `js/arena/m
 ## Contacto
 
 - **Correo:** av503640@gmail.com
-- **LinkedIn:** [linkedin.com/in/allisonrvargas](https://www.linkedin.com/in/allisonrvargas)
+- **LinkedIn:** [linkedin.com/in/allis-vargas-181519335](https://www.linkedin.com/in/allis-vargas-181519335)
 - **GitHub:** [@allisonrvargas](https://github.com/allisonrvargas)
 
 ---

@@ -19,7 +19,7 @@ function checkComplete() {
       <p>Jugaste como <strong>${personajes[charIndex].n}</strong>${pet ? ` con tu mascota <strong>${pet.n}</strong>` : ''}. Si quieres formar equipo para la siguiente misión, aquí me encuentras:</p>
       <div class="contact"><a class="btn big" href="${CV}" target="_blank" rel="noopener">Ver mi CV <small>PDF</small></a>
       <a class="btn" href="mailto:av503640@gmail.com">Correo <small>av503640@gmail.com</small></a>
-      <a class="btn" href="https://www.linkedin.com/in/allisonrvargas" target="_blank" rel="noopener">LinkedIn <small>/in/allisonrvargas</small></a>
+      <a class="btn" href="https://www.linkedin.com/in/allis-vargas-181519335" target="_blank" rel="noopener">LinkedIn <small>/in/allis-vargas-181519335</small></a>
       <a class="btn" href="https://github.com/allisonrvargas" target="_blank" rel="noopener">GitHub <small>@allisonrvargas</small></a></div>`);
   }, 1500);
 }
@@ -38,7 +38,7 @@ function openQuick() {
     <h3>Contacto</h3>
     <div class="contact"><a class="btn big" href="${CV}" target="_blank" rel="noopener">Ver mi CV <small>PDF</small></a>
     <a class="btn" href="mailto:av503640@gmail.com">Correo <small>av503640@gmail.com</small></a>
-    <a class="btn" href="https://www.linkedin.com/in/allisonrvargas" target="_blank" rel="noopener">LinkedIn</a>
+    <a class="btn" href="https://www.linkedin.com/in/allis-vargas-181519335" target="_blank" rel="noopener">LinkedIn</a>
     <a class="btn" href="https://github.com/allisonrvargas" target="_blank" rel="noopener">GitHub</a>
     <a class="btn" href="clasico.html">Modo clásico</a></div>
     </div></div>`);
