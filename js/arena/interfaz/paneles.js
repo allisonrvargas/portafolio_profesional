@@ -96,7 +96,7 @@ function panelCastillo() {
     <div class="contact">
       <a class="btn big" href="${CV}" target="_blank" rel="noopener">Ver mi CV <small>PDF</small></a>
       <a class="btn" href="mailto:av503640@gmail.com">Correo <small>av503640@gmail.com</small></a>
-      <a class="btn" href="https://www.linkedin.com/in/allisonrvargas" target="_blank" rel="noopener">LinkedIn <small>/in/allisonrvargas</small></a>
+      <a class="btn" href="https://www.linkedin.com/in/allis-vargas-181519335" target="_blank" rel="noopener">LinkedIn <small>/in/allis-vargas-181519335</small></a>
       <a class="btn" href="https://github.com/allisonrvargas" target="_blank" rel="noopener">GitHub <small>@allisonrvargas</small></a>
     </div>
     <p style="margin-top:22px">También puedes abrir el <strong>cofre</strong> que está junto al castillo.</p>`);
