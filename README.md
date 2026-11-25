@@ -1,5 +1,8 @@
 # La Arena de Allison · Portafolio 3D
 
+[![CI](https://github.com/allisonrvargas/portafolio_profesional/actions/workflows/ci.yml/badge.svg)](https://github.com/allisonrvargas/portafolio_profesional/actions/workflows/ci.yml)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
+
 Portafolio interactivo de **Allison Rocío Vargas Mejía**, técnico en desarrollo de software en formación en **Campuslands Guatemala** y estudiante de Ingeniería en Ciencias y Sistemas.
 
 **Sitio en vivo:** https://allisonrvargas.github.io/portafolio_profesional/
@@ -119,6 +122,13 @@ portafolio_profesional/
 ```
 
 Los archivos de `js/arena/` comparten variables entre sí, por eso `main.js` los carga en un orden fijo: primero los datos y el motor, luego el mundo y los personajes, y al final el bucle del juego y el arranque.
+
+## Pruebas
+
+```bash
+npm test
+```n
+11 pruebas de integridad con `node:test` (sin instalar nada): los números del README coinciden con los datos (15 proyectos, 18 habilidades), cada proyecto tiene sus campos y categorías válidas, los enlaces son HTTPS, el modo clásico y el modo juego listan los mismos proyectos, todo archivo local que enlazan `index.html` y `clasico.html` existe, el CV existe y los más de 40 scripts tienen sintaxis válida.
 
 ## Cómo verlo en local
 
