@@ -1,0 +1,12 @@
+{
+  "name": "portafolio-profesional",
+  "version": "1.0.0",
+  "description": "Portafolio interactivo en 3D de Allison Vargas (sitio estático). Solo tiene pruebas de integridad.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
